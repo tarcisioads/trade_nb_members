@@ -96,7 +96,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="(trade, index) in trades" :key="index" :id="`symbol-${trade.symbol}`">
+              <tr v-for="(trade, index) in paginatedTrades" :key="getTradeIndex(index)" :id="`symbol-${trade.symbol}`">
                 <td class="px-3 py-2">
                   <div class="d-flex flex-column">
                     <strong>{{ trade.symbol }}</strong>
@@ -124,7 +124,7 @@
                 <td class="px-3 py-2">{{ trade.stop }}</td>
                 <td class="px-3 py-2">
                   <div class="d-flex flex-wrap gap-1">
-                    <template v-for="(tp, index) in getFormattedTPs(trade)" :key="index">
+                    <template v-for="(tp, tpIndex) in getFormattedTPs(trade)" :key="tpIndex">
                       <span class="badge bg-info">
                         {{ tp.label }}: {{ tp.value }}
                       </span>
@@ -156,13 +156,13 @@
                 <td class="px-3 py-2">
                   <div class="d-flex gap-2">
                     <router-link
-                      :to="`/trade/${index}/edit`"
+                      :to="`/trade/${getTradeIndex(index)}/edit`"
                       class="btn btn-sm btn-outline-primary"
                     >
                       Edit
                     </router-link>
                     <button
-                      @click="deleteTrade(index)"
+                      @click="deleteTrade(getTradeIndex(index))"
                       class="btn btn-sm btn-outline-danger"
                     >
                       Delete
@@ -192,6 +192,67 @@
           </table>
         </div>
       </div>
+
+      <!-- Pagination Controls -->
+      <div v-if="totalPages > 1" class="d-flex justify-content-between align-items-center mt-4">
+        <div class="text-muted">
+          Showing {{ startIndex + 1 }} to {{ endIndex }} of {{ trades.length }} trades
+        </div>
+        <nav aria-label="Trade pagination">
+          <ul class="pagination mb-0">
+            <li class="page-item" :class="{ disabled: currentPage === 1 }">
+              <button 
+                class="page-link" 
+                @click="goToPage(currentPage - 1)"
+                :disabled="currentPage === 1"
+              >
+                Previous
+              </button>
+            </li>
+            
+            <!-- First page -->
+            <li v-if="currentPage > 3" class="page-item">
+              <button class="page-link" @click="goToPage(1)">1</button>
+            </li>
+            
+            <!-- Ellipsis before -->
+            <li v-if="currentPage > 4" class="page-item disabled">
+              <span class="page-link">...</span>
+            </li>
+            
+            <!-- Page numbers around current page -->
+            <li 
+              v-for="page in visiblePages" 
+              :key="page" 
+              class="page-item" 
+              :class="{ active: page === currentPage }"
+            >
+              <button class="page-link" @click="goToPage(page)">{{ page }}</button>
+            </li>
+            
+            <!-- Ellipsis after -->
+            <li v-if="currentPage < totalPages - 3" class="page-item disabled">
+              <span class="page-link">...</span>
+            </li>
+            
+            <!-- Last page -->
+            <li v-if="currentPage < totalPages - 2" class="page-item">
+              <button class="page-link" @click="goToPage(totalPages)">{{ totalPages }}</button>
+            </li>
+            
+            <li class="page-item" :class="{ disabled: currentPage === totalPages }">
+              <button 
+                class="page-link" 
+                @click="goToPage(currentPage + 1)"
+                :disabled="currentPage === totalPages"
+              >
+                Next
+              </button>
+            </li>
+          </ul>
+        </nav>
+      </div>
+
       <TradeNotifications />    
     </main>
   </template>
@@ -205,6 +266,42 @@
   
   
   const trades = ref<Trade[]>([])
+  
+  // Pagination variables
+  const currentPage = ref(1)
+  const itemsPerPage = ref(10)
+  
+  // Pagination computed properties
+  const totalPages = computed(() => {
+    return Math.ceil(trades.value.length / itemsPerPage.value)
+  })
+  
+  const startIndex = computed(() => {
+    return (currentPage.value - 1) * itemsPerPage.value
+  })
+  
+  const endIndex = computed(() => {
+    const end = currentPage.value * itemsPerPage.value
+    return Math.min(end, trades.value.length)
+  })
+  
+  const paginatedTrades = computed(() => {
+    // Reverse the trades array to show most recent first
+    const reversedTrades = [...trades.value].reverse()
+    return reversedTrades.slice(startIndex.value, endIndex.value)
+  })
+  
+  const visiblePages = computed(() => {
+    const pages = []
+    const start = Math.max(1, currentPage.value - 2)
+    const end = Math.min(totalPages.value, currentPage.value + 2)
+    
+    for (let i = start; i <= end; i++) {
+      pages.push(i)
+    }
+    
+    return pages
+  })
   
   const uniquePairs = computed(() => {
     const pairs = new Set(trades.value.map(trade => trade.symbol))
@@ -241,6 +338,12 @@
         isLoading: false,
         isLoadingTP1: false
       }))
+      
+      // Reset to first page if current page doesn't exist
+      const newTotalPages = Math.ceil(trades.value.length / itemsPerPage.value)
+      if (currentPage.value > newTotalPages && newTotalPages > 0) {
+        currentPage.value = 1
+      }
     } catch (error) {
       console.error('Failed to load trades:', error)
     }
@@ -400,6 +503,24 @@
     }
   }
   
+  // Pagination functions
+  const goToPage = (page: number) => {
+    if (page >= 1 && page <= totalPages.value) {
+      currentPage.value = page
+      // Scroll to top of the table when changing pages
+      const tableElement = document.querySelector('.table-responsive')
+      if (tableElement) {
+        tableElement.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }
+    }
+  }
+  
+  const getTradeIndex = (paginatedIndex: number) => {
+    // Since we reversed the array, we need to calculate the original index
+    const reversedIndex = startIndex.value + paginatedIndex
+    return trades.value.length - 1 - reversedIndex
+  }
+  
   // Initialize
   onMounted(() => {
     loadTrades()
@@ -448,5 +569,101 @@
 [data-bs-theme="dark"] .btn-outline-info:hover {
   background-color: var(--bs-info);
   color: var(--bs-dark);
+}
+
+/* Pagination Styles */
+.pagination {
+  --bs-pagination-padding-x: 0.75rem;
+  --bs-pagination-padding-y: 0.375rem;
+  --bs-pagination-font-size: 1rem;
+  --bs-pagination-color: var(--bs-link-color);
+  --bs-pagination-bg: var(--bs-body-bg);
+  --bs-pagination-border-width: var(--bs-border-width);
+  --bs-pagination-border-color: var(--bs-border-color);
+  --bs-pagination-border-radius: var(--bs-border-radius);
+  --bs-pagination-hover-color: var(--bs-link-hover-color);
+  --bs-pagination-hover-bg: var(--bs-tertiary-bg);
+  --bs-pagination-hover-border-color: var(--bs-border-color);
+  --bs-pagination-focus-color: var(--bs-link-hover-color);
+  --bs-pagination-focus-bg: var(--bs-secondary-bg);
+  --bs-pagination-focus-box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+  --bs-pagination-active-color: #fff;
+  --bs-pagination-active-bg: #0d6efd;
+  --bs-pagination-active-border-color: #0d6efd;
+  --bs-pagination-disabled-color: var(--bs-secondary-color);
+  --bs-pagination-disabled-bg: var(--bs-secondary-bg);
+  --bs-pagination-disabled-border-color: var(--bs-border-color);
+}
+
+.page-link {
+  position: relative;
+  display: block;
+  padding: var(--bs-pagination-padding-y) var(--bs-pagination-padding-x);
+  font-size: var(--bs-pagination-font-size);
+  color: var(--bs-pagination-color);
+  text-decoration: none;
+  background-color: var(--bs-pagination-bg);
+  border: var(--bs-pagination-border-width) solid var(--bs-pagination-border-color);
+  transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.page-link:hover {
+  z-index: 2;
+  color: var(--bs-pagination-hover-color);
+  background-color: var(--bs-pagination-hover-bg);
+  border-color: var(--bs-pagination-hover-border-color);
+}
+
+.page-link:focus {
+  z-index: 3;
+  color: var(--bs-pagination-focus-color);
+  background-color: var(--bs-pagination-focus-bg);
+  outline: 0;
+  box-shadow: var(--bs-pagination-focus-box-shadow);
+}
+
+.page-item:not(:first-child) .page-link {
+  margin-left: calc(var(--bs-border-width) * -1);
+}
+
+.page-item:first-child .page-link {
+  border-top-left-radius: var(--bs-pagination-border-radius);
+  border-bottom-left-radius: var(--bs-pagination-border-radius);
+}
+
+.page-item:last-child .page-link {
+  border-top-right-radius: var(--bs-pagination-border-radius);
+  border-bottom-right-radius: var(--bs-pagination-border-radius);
+}
+
+.page-item.active .page-link {
+  z-index: 3;
+  color: var(--bs-pagination-active-color);
+  background-color: var(--bs-pagination-active-bg);
+  border-color: var(--bs-pagination-active-border-color);
+}
+
+.page-item.disabled .page-link {
+  color: var(--bs-pagination-disabled-color);
+  pointer-events: none;
+  background-color: var(--bs-pagination-disabled-bg);
+  border-color: var(--bs-pagination-disabled-border-color);
+}
+
+[data-bs-theme="dark"] .pagination {
+  --bs-pagination-color: #6ea8fe;
+  --bs-pagination-bg: #212529;
+  --bs-pagination-border-color: #495057;
+  --bs-pagination-hover-color: #86b7fe;
+  --bs-pagination-hover-bg: #2c3034;
+  --bs-pagination-hover-border-color: #596267;
+  --bs-pagination-focus-color: #86b7fe;
+  --bs-pagination-focus-bg: #2c3034;
+  --bs-pagination-active-color: #000;
+  --bs-pagination-active-bg: #0d6efd;
+  --bs-pagination-active-border-color: #0d6efd;
+  --bs-pagination-disabled-color: #6c757d;
+  --bs-pagination-disabled-bg: #343a40;
+  --bs-pagination-disabled-border-color: #495057;
 }
 </style>
