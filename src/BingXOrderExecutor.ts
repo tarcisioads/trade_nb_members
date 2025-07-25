@@ -3,9 +3,8 @@ import { LeverageCalculator } from './LeverageCalculator';
 import { PositionValidator } from './PositionValidator';
 import { TradeDatabase } from './TradeDatabase';
 import { normalizeSymbolBingX, getPairPrice } from './utils/bingxUtils';
-import { Trade, BingXOrderResponse, TradeRecord, TradeExecutionResult } from './utils/types';
+import { Trade, BingXOrderResponse, TradeRecord } from './utils/types';
 import * as dotenv from 'dotenv';
-import { textChangeRangeIsUnchanged } from 'typescript';
 
 // Load environment variables
 dotenv.config();
