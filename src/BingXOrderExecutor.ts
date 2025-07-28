@@ -418,7 +418,8 @@ export class BingXOrderExecutor {
         trade.symbol,
         currentPrice,
         trade.stop,
-        trade.type
+        trade.type,
+        trade.interval || '1h'
       );
 
       console.log(`Calculated leverage info:`, leverageInfo);
