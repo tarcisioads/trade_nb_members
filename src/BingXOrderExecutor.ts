@@ -403,16 +403,6 @@ export class BingXOrderExecutor {
         throw new Error(`Invalid stop price for SHORT position: stop (${trade.stop}) must be above current price (${currentPrice})`);
       }
 
-      // If modify_tp1 is true, adjust tp1 to create 1:1 risk-reward ratio
-      if (trade.modify_tp1) {
-        if (trade.type === 'LONG') {
-          trade.tp1 = currentPrice + (currentPrice - trade.stop);
-        } else {
-          trade.tp1 = currentPrice - (trade.stop - currentPrice);
-        }
-        console.log(`Modified tp1 to ${trade.tp1} for 1:1 risk-reward ratio`);
-      }
-
       // Calculate and set optimal leverage
       const leverageInfo = await this.leverageCalculator.calculateOptimalLeverage(
         trade.symbol,
@@ -544,6 +534,18 @@ export class BingXOrderExecutor {
         undefined,
         position?.positionId
       );
+
+      // If modify_tp1 is true, adjust tp1 to create 1:1 risk-reward ratio
+      if (trade.modify_tp1 && position) {
+        const avgPrice = parseFloat(position.avgPrice)
+        if (trade.type === 'LONG') {
+          trade.tp1 = avgPrice + (avgPrice - trade.stop);
+        } else {
+          trade.tp1 = avgPrice - (trade.stop - avgPrice);
+        }
+        console.log(`Modified tp1 to ${trade.tp1} for 1:1 risk-reward ratio`);
+      }
+
 
       // Place take profit orders based on the scenario
       const tpOrders = await this.placeTakeProfitOrders(trade, quantity, tradeRecord.id, position?.positionId);
