@@ -553,8 +553,9 @@ export class PositionHistoryService {
     }
     const tradesWithInfo = positions.filter(position => position.tradeInfo && position.tradeInfo?.trade && position.tradeInfo?.found);
     const profits = positions.map(p => parseFloat(p.netProfit)).filter(p => p > 0);
-    const totalProfit = profits.reduce((sum, p) => p > 0 ? sum + p : sum, 0);
-    const totalLoss = profits.reduce((sum, p) => p < 0 ? sum + Math.abs(p) : sum, 0);
+    const results = positions.map(p => parseFloat(p.netProfit));
+    const totalProfit = results.reduce((sum, p) => p > 0 ? sum + p : sum, 0);
+    const totalLoss = results.reduce((sum, p) => p < 0 ? sum + Math.abs(p) : sum, 0);
     const netProfit = totalProfit - totalLoss;
 
     // Análise de risco
@@ -730,7 +731,7 @@ export class PositionHistoryService {
     }
 
     // Calcular Sortino Ratio (usando apenas retornos negativos)
-    const negativeReturns = profits.filter(p => p < 0);
+    const negativeReturns = results.filter(p => p < 0);
     const downsideDeviation = negativeReturns.length > 0 ?
       Math.sqrt(negativeReturns.reduce((sum, ret) => sum + Math.pow(ret, 2), 0) / negativeReturns.length) : 0;
     const sortinoRatio = downsideDeviation > 0 ? avgReturn / downsideDeviation : 0;
@@ -739,7 +740,7 @@ export class PositionHistoryService {
     let runningBalance = 0;
     let peakBalance = 0;
     let maxDrawdown = 0;
-    profits.forEach(profit => {
+    results.forEach(profit => {
       runningBalance += profit;
       if (runningBalance > peakBalance) {
         peakBalance = runningBalance;
