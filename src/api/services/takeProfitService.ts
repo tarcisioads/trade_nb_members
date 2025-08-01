@@ -47,8 +47,7 @@ export class TakeProfitService {
 
     let takeProfits: number[];
     if (filteredZones.length === 0) {
-      // Se não houver zonas, sugere por risco-retorno: 1:1, 1.5:1, 2:1, 2.5:1, 3:1, 4:1
-      const rrSteps = [1, 1.5, 2, 2.5, 3, 4];
+      const rrSteps = [1, 2, 3, 3.5, 4, 5];
       takeProfits = rrSteps.map(rr => {
         let tp: number;
         if (side === 'LONG') {
@@ -60,7 +59,29 @@ export class TakeProfitService {
       });
     } else {
       // Retorna até 6 zonas como take profits, sendo o primeiro o 1:1
-      takeProfits = [tp1, ...filteredZones.slice(0, 5).map(z => Number(z.price.toFixed(5)))];
+      const rrSteps = [2, 3, 3.5, 4, 5];
+      const filteredTakeProfits = rrSteps.map(rr => {
+        let tp: number;
+        if (side === 'LONG') {
+          tp = entry + rr * (entry - stop);
+        } else {
+          tp = entry - rr * (stop - entry);
+        }
+        const findZone = filteredZones.filter(z => {
+          if (side === 'LONG') {
+            return z.price >= tp
+          } else {
+            return z.price <= tp
+          }
+        })
+        let tpValue = tp
+        if (findZone.length > 0) {
+          tpValue = findZone[0].price
+        }
+        return Number(tpValue.toFixed(5));
+      });
+
+      takeProfits = [tp1, ...filteredTakeProfits.slice(0, 5)];
     }
     return takeProfits;
   }
