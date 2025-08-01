@@ -98,10 +98,10 @@ export class BingXOrderExecutor {
       const priceNum = parseFloat(price.toString());
       if (positionSide === 'SHORT') {
         // For SHORT positions, activation price should be slightly below the target price
-        params.stopPrice = (priceNum * 0.98).toString();
+        params.stopPrice = (priceNum * 0.99).toString();
       } else {
         // For LONG positions, activation price should be slightly above the target price
-        params.stopPrice = (priceNum * 1.02).toString();
+        params.stopPrice = (priceNum * 1.01).toString();
       }
     }
 
@@ -622,10 +622,10 @@ export class BingXOrderExecutor {
       const priceNum = parseFloat(price.toString());
       if (positionSide === 'SHORT') {
         // For SHORT positions, activation price should be slightly below the target price
-        params.stopPrice = (priceNum * 0.98).toString();
+        params.stopPrice = (priceNum * 0.99).toString();
       } else {
         // For LONG positions, activation price should be slightly above the target price
-        params.stopPrice = (priceNum * 1.02).toString();
+        params.stopPrice = (priceNum * 1.01).toString();
       }
     }
 
