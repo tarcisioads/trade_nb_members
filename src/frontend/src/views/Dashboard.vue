@@ -46,40 +46,22 @@
                   </div>
                   <div class="col-md-2">
                     <label for="startDate" class="form-label fw-semibold">Start Date</label>
-                    <input 
-                      type="date" 
-                      v-model="filters.startDate" 
-                      @change="loadData" 
-                      class="form-control" 
-                      id="startDate"
-                    >
+                    <input type="date" v-model="filters.startDate" @change="loadData" class="form-control"
+                      id="startDate">
                   </div>
                   <div class="col-md-2">
                     <label for="endDate" class="form-label fw-semibold">End Date</label>
-                    <input 
-                      type="date" 
-                      v-model="filters.endDate" 
-                      @change="loadData" 
-                      class="form-control" 
-                      id="endDate"
-                    >
+                    <input type="date" v-model="filters.endDate" @change="loadData" class="form-control" id="endDate">
                   </div>
                   <div class="col-md-2">
                     <label for="minResult" class="form-label fw-semibold">
                       Min Result ($)
                       <span class="form-text small text-muted">
-                      Shows trades with absolute result ≥ this amount
+                        Shows trades with absolute result ≥ this amount
                       </span>
                     </label>
-                    <input 
-                      type="number" 
-                      v-model="filters.minResult" 
-                      @change="loadData" 
-                      class="form-control" 
-                      id="minResult"
-                      placeholder="0.00"
-                      step="0.01"
-                    >
+                    <input type="number" v-model="filters.minResult" @change="loadData" class="form-control"
+                      id="minResult" placeholder="0.00" step="0.01">
                   </div>
                   <div class="col-md-2">
                     <div class="d-flex gap-2">
@@ -174,7 +156,9 @@
                 <div class="d-flex justify-content-between align-items-center">
                   <div>
                     <h6 class="card-subtitle mb-2 text-muted text-uppercase fw-semibold">Sharpe Ratio</h6>
-                    <h3 class="card-title mb-0 text-warning">{{ formatNumber(detailedStats?.performanceMetrics?.sharpeRatio || 0) }}</h3>
+                    <h3 class="card-title mb-0 text-warning">{{
+                        formatNumber(detailedStats?.performanceMetrics?.sharpeRatio || 0)
+                    }}</h3>
                   </div>
                   <div class="text-warning fs-1">📊</div>
                 </div>
@@ -203,13 +187,14 @@
                 <div class="row g-3">
                   <div class="col-6">
                     <div class="text-center">
-                      <div class="h4 text-primary fw-bold">{{ formatNumber(stats.tradeMetrics?.avgLeverage || 0) }}x</div>
+                      <div class="h4 text-primary fw-bold">{{ formatNumber(stats.tradeMetrics?.avgLeverage || 0) }}x
+                      </div>
                       <div class="text-muted small">Avg Leverage</div>
                     </div>
                   </div>
                   <!-- Removidos avgEntryPrice, avgStopPrice, avgTakeProfit1 -->
                 </div>
-                
+
                 <!-- Best/Worst Trades -->
                 <div class="row mt-3">
                   <div class="col-12">
@@ -301,18 +286,10 @@
         <!-- Analysis Tables -->
         <div class="row mb-4">
           <div class="col-lg-4 mb-3">
-            <AnalysisTable 
-              title="Symbol Analysis" 
-              columnTitle="Symbol" 
-              :data="detailedStats?.symbolAnalysis || {}" 
-            />
+            <AnalysisTable title="Symbol Analysis" columnTitle="Symbol" :data="detailedStats?.symbolAnalysis || {}" />
           </div>
           <div class="col-lg-4 mb-3">
-            <AnalysisTable 
-              title="Side Analysis" 
-              columnTitle="Side" 
-              :data="detailedStats?.sideAnalysis || {}" 
-            />
+            <AnalysisTable title="Side Analysis" columnTitle="Side" :data="detailedStats?.sideAnalysis || {}" />
           </div>
           <div class="col-lg-4 mb-3">
             <SetupAnalysisCard :positions="positions" />
@@ -405,7 +382,7 @@
                       </div>
                     </div>
                   </div>
-                  
+
                   <!-- Funding Summary -->
                   <div class="col-lg-4">
                     <div class="text-center p-3 border-end border-secondary">
@@ -416,7 +393,7 @@
                       </div>
                     </div>
                   </div>
-                  
+
                   <!-- Total Costs -->
                   <div class="col-lg-4">
                     <div class="text-center p-3">
@@ -428,7 +405,7 @@
                     </div>
                   </div>
                 </div>
-                
+
                 <!-- Detailed Breakdown -->
                 <div class="row mt-4">
                   <div class="col-12">
@@ -509,10 +486,7 @@
                           </div>
                         </td>
                         <td>
-                          <span 
-                            class="badge" 
-                            :class="position.positionSide === 'LONG' ? 'bg-success' : 'bg-danger'"
-                          >
+                          <span class="badge" :class="position.positionSide === 'LONG' ? 'bg-success' : 'bg-danger'">
                             {{ position.positionSide }}
                           </span>
                         </td>
@@ -527,10 +501,8 @@
                           </div>
                         </td>
                         <td>
-                          <span 
-                            class="fw-bold" 
-                            :class="parseFloat(position.netProfit) >= 0 ? 'text-success' : 'text-danger'"
-                          >
+                          <span class="fw-bold"
+                            :class="parseFloat(position.netProfit) >= 0 ? 'text-success' : 'text-danger'">
                             ${{ formatNumber(parseFloat(position.netProfit)) }}
                           </span>
                         </td>
@@ -541,7 +513,8 @@
                           </div>
                         </td>
                         <td>
-                          <div v-if="position.tradeInfo?.found && position.tradeInfo.trade?.setup_description" class="small">
+                          <div v-if="position.tradeInfo?.found && position.tradeInfo.trade?.setup_description"
+                            class="small">
                             <span class="badge bg-info">{{ position.tradeInfo.trade.setup_description }}</span>
                           </div>
                           <div v-else class="text-muted small">-</div>
@@ -549,15 +522,18 @@
                         <td>
                           <div v-if="position.tradeInfo?.found" class="small">
                             <div class="text-success">Trade #{{ position.tradeInfo.trade?.id }}</div>
-                            <div class="text-muted">Entry: ${{ formatNumber(parseFloat(position.avgPrice) || 0, 5) }}</div>
-                            <div class="text-muted">Stop: ${{ formatNumber(position.tradeInfo.trade?.stop || 0, 5) }}</div>
+                            <div class="text-muted">Entry: ${{ formatNumber(parseFloat(position.avgPrice) || 0, 5) }}
+                            </div>
+                            <div class="text-muted">Stop: ${{ formatNumber(position.tradeInfo.trade?.stop || 0, 5) }}
+                            </div>
                           </div>
                           <div v-else class="text-muted small">No trade info</div>
                         </td>
                         <td>{{ formatDate(position.openTime) }}</td>
                         <td>{{ formatDate(getEffectiveCloseTime(position)) }}</td>
                         <td>
-                          <router-link :to="`/position-history/edit/${position.positionId}`" class="btn btn-sm btn-outline-primary" title="Edit Position">
+                          <router-link :to="`/position-history/edit/${position.positionId}`"
+                            class="btn btn-sm btn-outline-primary" title="Edit Position">
                             <i class="bi bi-pencil"></i>
                           </router-link>
                         </td>
@@ -609,21 +585,21 @@ const calculateRiskAmount = (position: PositionHistory): number => {
     const quantity = parseFloat(position.closePositionAmt)
     const avgPrice = parseFloat(position.avgPrice)
     const leverage = position.leverage
-    
+
     // Check if we have trade info with stop loss
     if (position.tradeInfo?.found && position.tradeInfo.trade?.stop) {
       const stopPrice = position.tradeInfo.trade.stop
-      
+
       // Calculate the price difference to stop loss
       const priceDifference = Math.abs(avgPrice - stopPrice)
-      
+
       // Calculate the potential loss in dollars (price difference * quantity)
       const potentialLoss = priceDifference * quantity
-      
+
       // Calculate the margin used (position value / leverage)
       const positionValue = quantity * avgPrice
       const marginUsed = positionValue / leverage
-      
+
       // Risk is the potential loss (limited by margin used)
       return Math.min(potentialLoss, marginUsed)
     } else {
@@ -648,33 +624,33 @@ const calculateFinancialRR = (position: PositionHistory): string => {
     const avgPrice = parseFloat(position.avgPrice)
     const leverage = position.leverage
     const netProfit = parseFloat(position.netProfit)
-    
+
     // Check if we have trade info with stop loss
     if (position.tradeInfo?.found && position.tradeInfo.trade?.stop) {
       const stopPrice = position.tradeInfo.trade.stop
-      
+
       // Calculate the price difference to stop loss
       const priceDifference = Math.abs(avgPrice - stopPrice)
-      
+
       // Calculate the potential loss in dollars (price difference * quantity)
       const potentialLoss = priceDifference * quantity
-      
+
       // Calculate the margin used (position value / leverage)
       const positionValue = quantity * avgPrice
       const marginUsed = positionValue / leverage
-      
+
       // Risk is the potential loss (limited by margin used)
       const risk = Math.min(potentialLoss, marginUsed)
-      
+
       // Reward is the net profit
       const reward = netProfit
-      
+
       // Calculate R:R ratio
       if (risk > 0 && reward > 0) {
         const ratio = reward / risk
-        return `1:${ratio.toFixed(2)}`
+        return `${ratio.toFixed(2)}`
       } else if (risk > 0) {
-        return `1:0.00`
+        return `-1`
       } else {
         return '-'
       }
@@ -684,12 +660,12 @@ const calculateFinancialRR = (position: PositionHistory): string => {
       const marginUsed = positionValue / leverage
       const risk = marginUsed
       const reward = netProfit
-      
+
       if (risk > 0 && reward > 0) {
         const ratio = reward / risk
-        return `1:${ratio.toFixed(2)}`
+        return `${ratio.toFixed(2)}`
       } else if (risk > 0) {
-        return `1:0.00`
+        return `-1`
       } else {
         return '-'
       }
@@ -742,7 +718,7 @@ const riskStats = computed(() => {
       avgRiskReturnedPositive: 0
     }
   }
-  
+
   return {
     avgRiskPerTrade: detailedStats.value.riskAnalysis.avgRiskPerTrade,
     avgRiskRewardRatio: detailedStats.value.riskRewardAnalysis.avgRiskRewardRatio,
@@ -767,7 +743,7 @@ const performanceStats = computed(() => {
       avgDrawdown: 0
     }
   }
-  
+
   return {
     sharpeRatio: detailedStats.value.performanceMetrics.sharpeRatio,
     sortinoRatio: detailedStats.value.performanceMetrics.sortinoRatio,
@@ -805,13 +781,13 @@ const averageFunding = computed(() => {
 
 const costsBySymbol = computed(() => {
   const costs: { [key: string]: CostsBySymbol } = {}
-  
+
   positions.value.forEach((position: PositionHistory) => {
     const symbol = position.symbol
     const commission = parseFloat(position.positionCommission || '0')
     const funding = parseFloat(position.totalFunding || '0')
     const netProfit = parseFloat(position.netProfit || '0')
-    
+
     if (!costs[symbol]) {
       costs[symbol] = {
         commission: 0,
@@ -820,18 +796,18 @@ const costsBySymbol = computed(() => {
         percentageOfProfit: '0.0'
       }
     }
-    
+
     costs[symbol].commission += commission
     costs[symbol].funding += funding
     costs[symbol].total += commission + funding
-    
+
     // Calculate percentage of net profit
     if (netProfit !== 0) {
       const percentage = ((commission + funding) / Math.abs(netProfit)) * 100
       costs[symbol].percentageOfProfit = percentage.toFixed(1)
     }
   })
-  
+
   return costs
 })
 
@@ -839,19 +815,19 @@ const costsBySymbol = computed(() => {
 const loadAvailableSymbols = async () => {
   try {
     const response = await fetch('/api/position-history/symbols')
-    
+
     if (!response.ok) {
       console.error('HTTP error loading symbols:', response.status, response.statusText)
       return
     }
-    
+
     const text = await response.text()
     if (!text) {
       console.warn('Empty response from symbols endpoint')
       availableSymbols.value = []
       return
     }
-    
+
     const result = await JSON.parse(text)
     if (result.success) {
       availableSymbols.value = result.data || []
@@ -868,19 +844,19 @@ const loadAvailableSymbols = async () => {
 const loadAvailableSetupDescriptions = async () => {
   try {
     const response = await fetch('/api/position-history/setup-descriptions')
-    
+
     if (!response.ok) {
       console.error('HTTP error loading setup descriptions:', response.status, response.statusText)
       return
     }
-    
+
     const text = await response.text()
     if (!text) {
       console.warn('Empty response from setup descriptions endpoint')
       availableSetupDescriptions.value = []
       return
     }
-    
+
     const result = await JSON.parse(text)
     if (result.success) {
       availableSetupDescriptions.value = result.data || []
@@ -909,10 +885,10 @@ const loadData = async () => {
 
     // Load position data
     await loadPositions()
-    
+
     // Load statistics
     await loadStats()
-    
+
     // Load detailed risk statistics
     await loadDetailedRiskStats()
   } catch (error) {
@@ -943,7 +919,7 @@ const loadPositions = async () => {
 
     const response = await fetch(`/api/position-history?${params}`)
     const result = await response.json()
-    
+
     if (result.success) {
       positions.value = result.data
     }
@@ -975,7 +951,7 @@ const loadStats = async () => {
 
     const response = await fetch(`/api/position-history/stats?${params}`)
     const result = await response.json()
-    
+
     if (result.success) {
       stats.value = result.data
     }
@@ -1007,7 +983,7 @@ const loadDetailedRiskStats = async () => {
 
     const response = await fetch(`/api/position-history/risk-stats?${params}`)
     const result = await response.json()
-    
+
     if (result.success) {
       detailedStats.value = result.data
     }
@@ -1075,13 +1051,15 @@ onMounted(() => {
   background: rgba(255, 255, 255, 0.05);
 }
 
-.form-control, .form-select {
+.form-control,
+.form-select {
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
   color: inherit;
 }
 
-.form-control:focus, .form-select:focus {
+.form-control:focus,
+.form-select:focus {
   background: rgba(255, 255, 255, 0.15);
   border-color: #0d6efd;
   color: inherit;
@@ -1125,11 +1103,11 @@ onMounted(() => {
   .display-4 {
     font-size: 2rem;
   }
-  
+
   .h3 {
     font-size: 1.5rem;
   }
-  
+
   .card-body {
     padding: 1rem;
   }
@@ -1139,7 +1117,7 @@ onMounted(() => {
   .display-4 {
     font-size: 1.5rem;
   }
-  
+
   .fs-1 {
     font-size: 2rem !important;
   }
@@ -1187,7 +1165,7 @@ onMounted(() => {
   .col-lg-2 .card-title {
     font-size: 1.2rem;
   }
-  
+
   .col-lg-2 .fs-1 {
     font-size: 1.5rem !important;
   }
@@ -1197,7 +1175,7 @@ onMounted(() => {
   .col-lg-2 .card-title {
     font-size: 1rem;
   }
-  
+
   .col-lg-2 .fs-1 {
     font-size: 1.2rem !important;
   }

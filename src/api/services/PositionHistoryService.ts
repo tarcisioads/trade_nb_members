@@ -404,32 +404,74 @@ export class PositionHistoryService {
         worstTradeId = position.tradeInfo && position.tradeInfo.trade && position.tradeInfo?.found ? position.tradeInfo.trade.id : null;
       }
 
-      // Métricas baseadas no trade
-      if (position.tradeInfo && position.tradeInfo?.trade && position.tradeInfo?.found) {
+      const quantity = parseFloat(position.closePositionAmt)
+      const avgPrice = parseFloat(position.avgPrice)
+      const leverage = position.leverage
+
+      // Acumular métricas do trade
+      totalEntryPrice += avgPrice;
+      totalLeverage += leverage;
+      totalQuantity += quantity;
+
+
+      // Check if we have trade info with stop loss
+      if (position.tradeInfo?.found && position.tradeInfo.trade?.stop) {
         totalTradesWithInfo++;
         const trade = position.tradeInfo.trade;
 
-        // Calcular risco (distância do entry ao stop)
-        const entryPrice = parseFloat(position.avgPrice);
-        const stopPrice = trade.stop;
-        const risk = Math.abs(entryPrice - stopPrice);
-        risks.push(risk);
+        const stopPrice = position.tradeInfo.trade.stop
 
-        // Calcular risco-retorno
-        if (risk > 0 && netProfit > 0) {
-          const riskRewardRatio = Math.abs(parseFloat(position.avgPrice) - position.avgClosePrice) / risk;
-          riskRewardRatios.push(riskRewardRatio);
-        }
-
-        // Acumular métricas do trade
-        totalEntryPrice += entryPrice;
         totalStopPrice += stopPrice;
         if (trade.tp1) {
           totalTakeProfit1 += trade.tp1;
         }
-        totalLeverage += trade.leverage;
-        totalQuantity += trade.quantity;
+
+        // Calculate the price difference to stop loss
+        const priceDifference = Math.abs(avgPrice - stopPrice)
+
+        // Calculate the potential loss in dollars (price difference * quantity)
+        const potentialLoss = priceDifference * quantity
+
+        // Calculate the margin used (position value / leverage)
+        const positionValue = quantity * avgPrice
+        const marginUsed = positionValue / leverage
+
+        // Risk is the potential loss (limited by margin used)
+        const risk = Math.min(potentialLoss, marginUsed)
+
+        risks.push(risk);
+
+        // Reward is the net profit
+        const reward = netProfit
+
+        if (risk > 0) {
+          risks.push(risk);
+        }
+
+        // Calculate R:R ratio
+        if (risk > 0 && reward > 0) {
+          const ratio = reward / risk
+          riskRewardRatios.push(ratio);
+        }
+      } else {
+        // Fallback to margin-based calculation if no stop loss info
+        const positionValue = quantity * avgPrice
+        const marginUsed = positionValue / leverage
+        const risk = marginUsed
+        const reward = netProfit
+
+
+        if (risk > 0) {
+          risks.push(risk);
+        }
+
+        if (risk > 0 && reward > 0) {
+          const ratio = reward / risk
+          riskRewardRatios.push(ratio);
+        }
       }
+
+
     });
 
     // Calcular total de posições e win rate
@@ -583,7 +625,6 @@ export class PositionHistoryService {
 
 
     positions.forEach(position => {
-
       const netProfit = parseFloat(position.netProfit);
       const entryPrice = parseFloat(position.avgPrice);
       const quantity = parseFloat(position.positionAmt);
