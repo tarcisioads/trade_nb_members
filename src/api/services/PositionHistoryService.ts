@@ -598,17 +598,13 @@ export class PositionHistoryService {
     const results = positions.map(p => parseFloat(p.netProfit));
     const totalProfit = results.reduce((sum, p) => p > 0 ? sum + p : sum, 0);
     const totalLoss = results.reduce((sum, p) => p < 0 ? sum + Math.abs(p) : sum, 0);
-    const netProfit = totalProfit - totalLoss;
+    const totProfit = totalProfit - totalLoss;
 
     // Análise de risco
     const risks: number[] = [];
     const rewards: number[] = [];
     const riskRewardRatios: number[] = [];
     const leverages: number[] = [];
-    // Removido: const quantities: number[] = [];
-    // Removido: const entryPrices: number[] = [];
-    // Removido: const stopPrices: number[] = [];
-    // Removido: const takeProfit1s: number[] = [];
     // Novo: array local para R:R positivos
     const positiveRRs: number[] = [];
 
@@ -635,7 +631,7 @@ export class PositionHistoryService {
 
         // Calcular risco financeiro (margem arriscada)
         const stopPrice = trade.stop;
-        risk = leverage > 0 ? Math.abs(entryPrice - stopPrice) * quantity / leverage : 0;
+        risk = Math.abs(entryPrice - stopPrice) * quantity;
       } else {
         const positionValue = quantity * entryPrice
         const marginUsed = positionValue / leverage
@@ -648,19 +644,14 @@ export class PositionHistoryService {
       const reward = netProfit;
       if (reward > 0) {
         rewards.push(reward);
+        if (risk > 0) {
+          const riskRewardRatio = reward / risk;
+          riskRewardRatios.push(riskRewardRatio);
+          positiveRRs.push(riskRewardRatio);
+        }
       }
 
-      // Calcular risco-retorno
-      if ((reward > 0) && (risk > 0)) {
-        const riskRewardRatio = reward / risk;
-        riskRewardRatios.push(riskRewardRatio);
-        positiveRRs.push(riskRewardRatio);
-      }
-      // Acumular dados para distribuições
       leverages.push(leverage);
-      // Removido: entryPrices.push(entryPrice);
-      // Removido: stopPrices.push(stopPrice);
-      // Removido: if (trade.tp1) { takeProfit1s.push(trade.tp1); }
 
       // Análise por símbolo
       if (!symbolAnalysis[position.symbol]) {
@@ -792,8 +783,8 @@ export class PositionHistoryService {
       }
     });
 
-    const calmarRatio = maxDrawdown > 0 ? netProfit / maxDrawdown : 0;
-    const recoveryFactor = maxDrawdown > 0 ? netProfit / maxDrawdown : 0;
+    const calmarRatio = maxDrawdown > 0 ? totProfit / maxDrawdown : 0;
+    const recoveryFactor = maxDrawdown > 0 ? totProfit / maxDrawdown : 0;
 
     return {
       summary: {
@@ -801,7 +792,7 @@ export class PositionHistoryService {
         totalTradesWithInfo: tradesWithInfo.length,
         totalProfit: Math.round(totalProfit * 100) / 100,
         totalLoss: Math.round(totalLoss * 100) / 100,
-        netProfit: Math.round(netProfit * 100) / 100
+        netProfit: Math.round(totProfit * 100) / 100
       },
       riskAnalysis: {
         avgRiskPerTrade: risks.length > 0 ? Math.round(risks.reduce((a, b) => a + b, 0) / risks.length * 100) / 100 : 0,
