@@ -64,7 +64,7 @@ export class PositionMonitor {
       return;
     }
 
-    const stopPrice = parseFloat(stopLossOrder.stopPrice);
+    const stopPrice = parseFloat(stopLossOrder.price);
     const currentPrice = parseFloat(position.markPrice);
     const entryPrice = parseFloat(position.avgPrice);
 
@@ -134,7 +134,7 @@ export class PositionMonitor {
         stopPrice: initialStopPrice,
         quantity: parseFloat(position.positionAmt)
       });
-      
+
       const newStopOrder = await this.orderExecutor.placeOrder(
         position.symbol,
         position.positionSide === 'LONG' ? 'SELL' : 'BUY',
@@ -282,8 +282,8 @@ export class PositionMonitor {
       existingPosition.entryPrice = parseFloat(position.avgPrice);
       if (initialStopPrice) {
         existingPosition.initialStopPrice = initialStopPrice;
-      } else if (stopLossOrder){
-        existingPosition.initialStopPrice = parseFloat(stopLossOrder.stopPrice);
+      } else if (stopLossOrder) {
+        existingPosition.initialStopPrice = parseFloat(stopLossOrder.price);
       }
     }
 
@@ -299,7 +299,7 @@ export class PositionMonitor {
         tradeId,
         lastPrice: undefined,
         stopLossOrder,
-        initialStopPrice: initialStopPrice ? initialStopPrice : stopLossOrder ? parseFloat(stopLossOrder.stopPrice) : undefined,
+        initialStopPrice: initialStopPrice ? initialStopPrice : stopLossOrder ? parseFloat(stopLossOrder.price) : undefined,
         entryPrice: parseFloat(position.avgPrice),
         leverage
       });
@@ -312,7 +312,7 @@ export class PositionMonitor {
     }
 
     const entryPrice = position.entryPrice;
-    const currentStopPrice = parseFloat(position.stopLossOrder.stopPrice);
+    const currentStopPrice = parseFloat(position.stopLossOrder.price);
     const positionSide = position.positionSide;
 
     if (!position.stopLossOrder || isNaN(currentStopPrice)) {
