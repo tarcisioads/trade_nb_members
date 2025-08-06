@@ -16,6 +16,8 @@ export class BingXOrderExecutor {
   private readonly tradeDatabase: TradeDatabase;
   private readonly margin: number;
   private readonly volumeMarginPercentage: number;
+  private readonly activation_perc_below: number;
+  private readonly activation_perc_above: number;
 
   constructor() {
     // Initialize API client
@@ -26,6 +28,8 @@ export class BingXOrderExecutor {
     this.leverageCalculator = new LeverageCalculator();
     this.positionValidator = new PositionValidator();
     this.tradeDatabase = new TradeDatabase();
+    this.activation_perc_below = 0.994
+    this.activation_perc_above = 1.006
   }
 
   private async calculatePositionQuantity(pair: string, leverage: number, trade?: Trade): Promise<number> {
@@ -98,10 +102,10 @@ export class BingXOrderExecutor {
       const priceNum = parseFloat(price.toString());
       if (positionSide === 'SHORT') {
         // For SHORT positions, activation price should be slightly below the target price
-        params.stopPrice = (priceNum * 0.99).toString();
+        params.stopPrice = (priceNum * this.activation_perc_below).toString();
       } else {
         // For LONG positions, activation price should be slightly above the target price
-        params.stopPrice = (priceNum * 1.01).toString();
+        params.stopPrice = (priceNum * this.activation_perc_above).toString();
       }
     }
 
@@ -111,12 +115,12 @@ export class BingXOrderExecutor {
       const priceNum = parseFloat(price.toString());
       if (positionSide === 'LONG') {
         // For LONG positions, activation price should be slightly below the target price
-        params.stopPrice = (priceNum * 0.99).toString();
-        params.activationPrice = (priceNum * 0.99).toString();
+        params.stopPrice = (priceNum * this.activation_perc_below).toString();
+        params.activationPrice = (priceNum * this.activation_perc_below).toString();
       } else {
         // For SHORT positions, activation price should be slightly above the target price
-        params.stopPrice = (priceNum * 1.01).toString();
-        params.activationPrice = (priceNum * 1.01).toString();
+        params.stopPrice = (priceNum * this.activation_perc_above).toString();
+        params.activationPrice = (priceNum * this.activation_perc_above).toString();
       }
     }
 
@@ -624,10 +628,10 @@ export class BingXOrderExecutor {
       const priceNum = parseFloat(price.toString());
       if (positionSide === 'SHORT') {
         // For SHORT positions, activation price should be slightly below the target price
-        params.stopPrice = (priceNum * 0.99).toString();
+        params.stopPrice = (priceNum * this.activation_perc_below).toString();
       } else {
         // For LONG positions, activation price should be slightly above the target price
-        params.stopPrice = (priceNum * 1.01).toString();
+        params.stopPrice = (priceNum * this.activation_perc_above).toString();
       }
     }
 
@@ -636,10 +640,10 @@ export class BingXOrderExecutor {
       const priceNum = parseFloat(price.toString());
       if (positionSide === 'LONG') {
         // For LONG positions, activation price should be slightly below the target price
-        params.activationPrice = (priceNum * 0.99).toString();
+        params.activationPrice = (priceNum * this.activation_perc_below).toString();
       } else {
         // For SHORT positions, activation price should be slightly above the target price
-        params.activationPrice = (priceNum * 1.01).toString();
+        params.activationPrice = (priceNum * this.activation_perc_above).toString();
       }
     }
 
