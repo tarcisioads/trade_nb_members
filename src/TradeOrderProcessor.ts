@@ -116,10 +116,11 @@ export class TradeOrderProcessor {
               if ((hasPositionRevalidate) && (!message.toLowerCase().includes('error'))) {
                 const currentPrice = await this.dataService.getSymbolPrice(trade.symbol);
                 const entryPrice = monitoredPosition.entryPrice ?? parseFloat(monitoredPosition.position.avgPrice);
-                const currentStopPrice = monitoredPosition.stopLossOrder ? parseFloat(monitoredPosition.stopLossOrder.stopPrice) : undefined;
+                const currentStopPrice = monitoredPosition.stopLossOrder ? parseFloat(monitoredPosition.stopLossOrder.price) : undefined;
                 const positionSide = monitoredPosition.position.positionSide;
                 const risk = Math.abs(entryPrice - (currentStopPrice ?? entryPrice));
                 const reward = Math.abs(currentPrice - entryPrice);
+
                 const breakevenData = StopLossUpdater.calculateBreakeven(
                   entryPrice,
                   parseFloat(monitoredPosition.position.positionAmt),

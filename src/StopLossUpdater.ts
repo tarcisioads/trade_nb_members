@@ -54,8 +54,8 @@ export class StopLossUpdater {
       : currentPrice < breakevenWithFees;
 
     const shouldUpdate = isCurrentPriceBetter && (positionSide === 'LONG'
-      ? currentStopPrice < breakevenWithFees
-      : currentStopPrice > breakevenWithFees);
+      ? currentStopPrice < entryPrice
+      : currentStopPrice > entryPrice);
 
     if (shouldUpdate) {
       if (position.stopLossOrder) {
