@@ -345,6 +345,11 @@ export class PositionMonitor {
       if (!this.stopLossUpdater) {
         this.stopLossUpdater = new StopLossUpdater(this.orderExecutor, this.notificationService);
       }
+
+      if (position.stopLossOrder) {
+        position.stopLossOrder.stopPrice = breakevenData.breakevenWithFees.toString();
+      }
+
       await this.stopLossUpdater.updateStopLossIfNeeded(
         position,
         currentPrice,
@@ -355,6 +360,7 @@ export class PositionMonitor {
         reward,
         breakevenData
       );
+
     }
   }
 

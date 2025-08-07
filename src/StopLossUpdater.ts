@@ -1,6 +1,6 @@
 import { BingXOrderExecutor } from './BingXOrderExecutor';
 import { NotificationService } from './NotificationService';
-import { MonitoredPosition } from './utils/types';
+import { MonitoredPosition, BingXOrderResponse } from './utils/types';
 
 export class StopLossUpdater {
   private orderExecutor: BingXOrderExecutor;
@@ -46,7 +46,7 @@ export class StopLossUpdater {
     risk: number,
     reward: number,
     breakevenData: { breakevenWithFees: number, totalFeeAmount: number, positionValue: number }
-  ): Promise<void> {
+  ): Promise<BingXOrderResponse | null> {
     const { breakevenWithFees, totalFeeAmount, positionValue } = breakevenData;
 
     const isCurrentPriceBetter = positionSide === 'LONG'
@@ -120,6 +120,8 @@ export class StopLossUpdater {
           setup_description: `Stop loss moved to breakeven for ${position.symbol} ${positionSide} position. Fees: ${((totalFeeAmount / positionValue) * 100).toFixed(4)}% of position value (${totalFeeAmount.toFixed(8)}). Risk/Reward: ${(reward / risk).toFixed(2)}:1`,
           interval: '1h'
         });
+
+        return response
       } catch (error) {
         console.error(`Error updating stop loss for ${position.symbol} ${positionSide}:`, error);
         await this.notificationService.sendTradeNotification({
@@ -158,7 +160,9 @@ export class StopLossUpdater {
           setup_description: `❌ Failed updating stop loss for ${position.symbol} ${positionSide}: ${error}`,
           interval: '1h'
         });
+        return null
       }
     }
+    return null
   }
 } 
