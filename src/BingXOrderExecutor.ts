@@ -97,7 +97,6 @@ export class BingXOrderExecutor {
       params.reduceOnly = reduceOnly;
     }
 
-    // Add activationPrice for TRIGGER_LIMIT orders
     if (type === 'STOP') {
       const priceNum = parseFloat(price.toString());
       if (positionSide === 'SHORT') {
@@ -150,7 +149,29 @@ export class BingXOrderExecutor {
       return response;
     } catch (error) {
       console.error('Error placing order:', error);
-      throw error;
+
+      params.stopPrice = stopPrice.toString();
+
+      // Add activationPrice for TRIGGER_LIMIT orders
+      if ((type === 'TRIGGER_LIMIT') || (type === 'LIMIT')) {
+        params.activationPrice = price.toString();
+      }
+
+      try {
+
+        const response = await this.apiClient.post<BingXOrderResponse>(path, params);
+
+        // Check if the response indicates an error
+        if (response && typeof response === 'object' && 'code' in response && response.code !== 0) {
+          throw new Error(`API Error: ${response.msg} (code: ${response.code} params: ${JSON.stringify(params)})`);
+        }
+
+        return response;
+      } catch (error) {
+
+        throw error;
+
+      }
     }
   }
 
@@ -672,8 +693,65 @@ export class BingXOrderExecutor {
 
       return response;
     } catch (error) {
-      console.error('Error placing order:', error);
-      throw error;
+
+      params.price = price.toString()
+      params.stopPrice = stopPrice.toString()
+      try {
+        const response = await this.apiClient.post<BingXOrderResponse>(path, params);
+
+        // Save log if tradeId is provided
+        if (tradeId) {
+          await this.tradeDatabase.saveTradeLog(
+            tradeId,
+            normalizedPair,
+            side,
+            positionSide,
+            type,
+            price || null,
+            stopPrice || null,
+            quantity,
+            response
+          );
+        }
+
+        return response;
+      } catch (error) {
+        console.error('Error placing order:', error);
+
+        try {
+          const response = await this.placeOrder(
+            normalizedPair,
+            side,
+            positionSide,
+            type,
+            price,
+            stopPrice,
+            quantity,
+            tradeId
+          );
+
+          // Save log if tradeId is provided
+          if (tradeId) {
+            await this.tradeDatabase.saveTradeLog(
+              tradeId,
+              normalizedPair,
+              side,
+              positionSide,
+              type,
+              price || null,
+              stopPrice || null,
+              quantity,
+              response
+            );
+          }
+
+          return response;
+        } catch (error) {
+          console.error('Error placing order:', error);
+          throw error
+        }
+
+      }
     }
   }
 
