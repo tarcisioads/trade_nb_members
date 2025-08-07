@@ -347,6 +347,7 @@ export class PositionMonitor {
       }
 
       if (position.stopLossOrder) {
+        position.stopLossOrder.price = breakevenData.breakevenWithFees.toString();
         position.stopLossOrder.stopPrice = breakevenData.breakevenWithFees.toString();
       }
 
