@@ -12,7 +12,7 @@
           </div>
         </div>
       </div>
-      <div class="mb-4 d-flex justify-content-between align-items-center">
+      <div class="sticky-top bg-body-tertiary py-3 mb-4 d-flex justify-content-between align-items-center rounded px-3">
         <div class="d-flex gap-2">
           <router-link
             to="/trade/new"
@@ -449,4 +449,6 @@
   background-color: var(--bs-info);
   color: var(--bs-dark);
 }
+
+
 </style>
