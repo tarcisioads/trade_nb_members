@@ -16,8 +16,8 @@ export class BingXOrderExecutor {
   private readonly tradeDatabase: TradeDatabase;
   private readonly margin: number;
   private readonly volumeMarginPercentage: number;
-  private readonly activation_perc_below: number;
-  private readonly activation_perc_above: number;
+  private readonly activation_fator_below: number;
+  private readonly activation_fator_above: number;
 
   constructor() {
     // Initialize API client
@@ -28,8 +28,8 @@ export class BingXOrderExecutor {
     this.leverageCalculator = new LeverageCalculator();
     this.positionValidator = new PositionValidator();
     this.tradeDatabase = new TradeDatabase();
-    this.activation_perc_below = 0.994
-    this.activation_perc_above = 1.006
+    this.activation_fator_below = parseFloat(process.env.ACTIVATION_FATOR_BELOW || '1');
+    this.activation_fator_above = parseFloat(process.env.ACTIVATION_FATOR_ABOVE || '1')
   }
 
   private async calculatePositionQuantity(pair: string, leverage: number, trade?: Trade): Promise<number> {
@@ -101,10 +101,10 @@ export class BingXOrderExecutor {
       const priceNum = parseFloat(price.toString());
       if (positionSide === 'SHORT') {
         // For SHORT positions, activation price should be slightly below the target price
-        params.stopPrice = (priceNum * this.activation_perc_below).toString();
+        params.stopPrice = (priceNum * this.activation_fator_below).toString();
       } else {
         // For LONG positions, activation price should be slightly above the target price
-        params.stopPrice = (priceNum * this.activation_perc_above).toString();
+        params.stopPrice = (priceNum * this.activation_fator_above).toString();
       }
     }
 
@@ -114,12 +114,12 @@ export class BingXOrderExecutor {
       const priceNum = parseFloat(price.toString());
       if (positionSide === 'LONG') {
         // For LONG positions, activation price should be slightly below the target price
-        params.stopPrice = (priceNum * this.activation_perc_below).toString();
-        params.activationPrice = (priceNum * this.activation_perc_below).toString();
+        params.stopPrice = (priceNum * this.activation_fator_below).toString();
+        params.activationPrice = (priceNum * this.activation_fator_below).toString();
       } else {
         // For SHORT positions, activation price should be slightly above the target price
-        params.stopPrice = (priceNum * this.activation_perc_above).toString();
-        params.activationPrice = (priceNum * this.activation_perc_above).toString();
+        params.stopPrice = (priceNum * this.activation_fator_above).toString();
+        params.activationPrice = (priceNum * this.activation_fator_above).toString();
       }
     }
 
@@ -649,10 +649,10 @@ export class BingXOrderExecutor {
       const priceNum = parseFloat(price.toString());
       if (positionSide === 'SHORT') {
         // For SHORT positions, activation price should be slightly below the target price
-        params.stopPrice = (priceNum * this.activation_perc_below).toString();
+        params.stopPrice = (priceNum * this.activation_fator_below).toString();
       } else {
         // For LONG positions, activation price should be slightly above the target price
-        params.stopPrice = (priceNum * this.activation_perc_above).toString();
+        params.stopPrice = (priceNum * this.activation_fator_above).toString();
       }
     }
 
@@ -661,10 +661,10 @@ export class BingXOrderExecutor {
       const priceNum = parseFloat(price.toString());
       if (positionSide === 'LONG') {
         // For LONG positions, activation price should be slightly below the target price
-        params.activationPrice = (priceNum * this.activation_perc_below).toString();
+        params.activationPrice = (priceNum * this.activation_fator_below).toString();
       } else {
         // For SHORT positions, activation price should be slightly above the target price
-        params.activationPrice = (priceNum * this.activation_perc_above).toString();
+        params.activationPrice = (priceNum * this.activation_fator_above).toString();
       }
     }
 
