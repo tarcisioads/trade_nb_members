@@ -28,8 +28,8 @@ export class BingXOrderExecutor {
     this.leverageCalculator = new LeverageCalculator();
     this.positionValidator = new PositionValidator();
     this.tradeDatabase = new TradeDatabase();
-    this.activation_fator_below = parseFloat(process.env.ACTIVATION_FATOR_BELOW || '1');
-    this.activation_fator_above = parseFloat(process.env.ACTIVATION_FATOR_ABOVE || '1')
+    this.activation_fator_below = parseFloat(process.env.ACTIVATION_FACTOR_BELOW || '1');
+    this.activation_fator_above = parseFloat(process.env.ACTIVATION_FACTOR_ABOVE || '1')
   }
 
   private async calculatePositionQuantity(pair: string, leverage: number, trade?: Trade): Promise<number> {
