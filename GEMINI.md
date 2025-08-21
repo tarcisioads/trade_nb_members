@@ -28,3 +28,4 @@ The project uses Node.js, TypeScript, Vue.js, and SQLite. Tests are written with
 - **Simplify Messages:** Keep commit messages simple and to the point.
 - **Group by Theme:** Group related changes into a single commit.
 - **No Confirmation:** Do not ask for confirmation of the commit message. Proceed directly with the commit.
+- **No AI Co-Author:** Never add AI assistants (like yourself) as co-authors to commits or pull requests. All contributions are considered part of the project's own development process.
