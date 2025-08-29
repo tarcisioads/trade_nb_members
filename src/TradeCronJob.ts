@@ -211,7 +211,7 @@ export class TradeCronJob {
         console.error(`\n❌ Error processing trade #${trades.indexOf(trade) + 1} (${trade.symbol}):`, error);
         console.log('----------------------------------------');
         let msg = error?.message || '';
-        let maxPosMatch = msg.match(/Found open*/);
+        let maxPosMatch = msg.match(/Found open/);
         if (!maxPosMatch) {
           // Send notification about the error
           try {
