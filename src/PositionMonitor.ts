@@ -334,6 +334,8 @@ export class PositionMonitor {
 
     const risk_with_factor = risk * this.activationFactorStoploss;
 
+    console.log(`${position.symbol} - side ${positionSide} - reward ${reward} - risk ${risk} - risk_with_factor ${risk_with_factor}`)
+
     if (reward >= risk_with_factor) {
       // Usar o método estático da nova classe
       const breakevenData = StopLossUpdater.calculateBreakeven(
