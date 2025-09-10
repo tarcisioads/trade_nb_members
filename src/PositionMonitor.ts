@@ -22,6 +22,7 @@ export class PositionMonitor {
   private onPriceUpdate?: (position: MonitoredPosition) => void;
   private readonly limitOrderFee: number;
   private readonly marketOrderFee: number;
+  private readonly activationFactorStoploss: number;
   private stopLossUpdater?: StopLossUpdater; // Add this property
 
   constructor(onPriceUpdate?: (position: MonitoredPosition) => void) {
@@ -33,6 +34,7 @@ export class PositionMonitor {
     this.onPriceUpdate = onPriceUpdate;
     this.limitOrderFee = parseFloat(process.env.BINGX_LIMIT_ORDER_FEE || '0.02');
     this.marketOrderFee = parseFloat(process.env.BINGX_MARKET_ORDER_FEE || '0.05');
+    this.activationFactorStoploss = parseFloat(process.env.ACTIVATION_FACTOR_STOPLOSS || '1');
   }
 
   private getPositionKey(symbol: string, positionSide: 'LONG' | 'SHORT'): string {
@@ -330,7 +332,9 @@ export class PositionMonitor {
     const risk = Math.abs(entryPrice - currentStopPrice);
     const reward = Math.abs(currentPrice - entryPrice);
 
-    if (reward >= risk) {
+    const risk_with_factor = risk * this.activationFactorStoploss;
+
+    if (reward >= risk_with_factor) {
       // Usar o método estático da nova classe
       const breakevenData = StopLossUpdater.calculateBreakeven(
         entryPrice,
