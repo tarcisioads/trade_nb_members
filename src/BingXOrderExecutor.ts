@@ -36,7 +36,18 @@ export class BingXOrderExecutor {
     try {
       const normalizedPair = normalizeSymbolBingX(pair);
       // Get current price
-      const currentPrice = await getPairPrice(normalizedPair, this.apiClient);
+      let currentPrice: number | null = null;
+      for (let i = 0; i < 5; i++) {
+        currentPrice = await getPairPrice(normalizedPair, this.apiClient);
+        if (currentPrice !== null && currentPrice !== undefined) {
+          break;
+        }
+        await new Promise(resolve => setTimeout(resolve, 30000));
+      }
+
+      if (currentPrice === null || currentPrice === undefined) {
+        throw new Error('Failed to get pair price after 5 attempts');
+      }
 
       // Calculate base margin
       let totalMargin = this.margin;
