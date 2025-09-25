@@ -9,15 +9,18 @@ export class TakeProfitService {
   }
 
   public async calculateTakeProfits(symbol: string, side: TradeType, entry: number, stop: number, interval: AllowedInterval = '1h'): Promise<number[]> {
+    const countDecimalPlaces = (value: number): number => {
+      if (Math.floor(value) === value) return 0;
+      const valueStr = value.toString();
+      const decimalPart = valueStr.split('.')[1];
+      return decimalPart ? decimalPart.length : 0;
+    };
+
+    const decimalPlaces = Math.max(countDecimalPlaces(entry), countDecimalPlaces(stop));
+
     // Ajusta o interval conforme as regras fornecidas
     let adjustedInterval = interval;
-    if (interval === '1h') {
-      adjustedInterval = '1d';
-    } else if (interval === '15m') {
-      adjustedInterval = '4h';
-    } else if (interval === '5m') {
-      adjustedInterval = '1h';
-    }
+
     // Calcula o alvo 1:1 (RR 1:1)
     let tp1: number;
     if (side === 'LONG') {
@@ -27,7 +30,7 @@ export class TakeProfitService {
     } else {
       throw new Error('Tipo de trade inválido');
     }
-    tp1 = Number(tp1.toFixed(5));
+    tp1 = Number(tp1.toFixed(decimalPlaces));
 
     // Busca zonas não mitigadas usando ZoneAnalysisService
     const zones = await this.zoneAnalysisService.analyzeZones(symbol, side, entry, stop, adjustedInterval);
@@ -43,7 +46,7 @@ export class TakeProfitService {
       return 0;
     });
     // Remove zona igual ao 1:1 (evita duplicidade)
-    filteredZones = filteredZones.filter(z => Number(z.price.toFixed(5)) !== tp1);
+    filteredZones = filteredZones.filter(z => Number(z.price.toFixed(decimalPlaces)) !== tp1);
 
     let takeProfits: number[];
     if (filteredZones.length === 0) {
@@ -55,7 +58,7 @@ export class TakeProfitService {
         } else {
           tp = entry - rr * (stop - entry);
         }
-        return Number(tp.toFixed(5));
+        return Number(tp.toFixed(decimalPlaces));
       });
     } else {
       // Retorna até 6 zonas como take profits, sendo o primeiro o 1:1
@@ -78,7 +81,7 @@ export class TakeProfitService {
         if (findZone.length > 0) {
           tpValue = findZone[0].price
         }
-        return Number(tpValue.toFixed(5));
+        return Number(tpValue.toFixed(decimalPlaces));
       });
 
       takeProfits = [tp1, ...filteredTakeProfits.slice(0, 5)];
