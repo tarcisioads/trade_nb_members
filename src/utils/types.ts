@@ -37,6 +37,14 @@ export interface Trade {
   isLoading?: boolean;
   isLoadingTP1?: boolean;
   positionId?: string | null;
+  sentiment?: string | null;
+  lsrtrend?: string | null;
+  oitrend?: string | null;
+  lsrsignal?: string | null;
+  oisignal?: string | null;
+  sentiment_required?: boolean | null;
+  sentiment_adds_margin?: boolean | null;
+  volume?: string | null;
 }
 
 export interface BingXOrderResponse {
@@ -102,6 +110,11 @@ export interface TradeRecord extends Trade {
   createdAt: string;
   updatedAt: string;
   positionId?: string | null;
+  sentiment?: string | null;
+  lsrtrend?: string | null;
+  oitrend?: string | null;
+  lsrsignal?: string | null;
+  oisignal?: string | null;
 }
 
 export interface TradeExecutionResult {
@@ -224,6 +237,9 @@ export interface TradeNotification {
   setup_description: string | null;
   manually_generated?: boolean;
   interval?: AllowedInterval | null;
+  sentiment_required?: boolean | null;
+  sentiment_adds_margin?: boolean | null;
+
 }
 
 export interface PositionHistory {
@@ -291,4 +307,72 @@ export interface Zone {
   candle: KlineData;
   mitigated: boolean;
   details?: any;
-} 
+}
+
+// Types from SentimentService
+export type Sentiment = 'Bullish' | 'Bearish' | 'Neutral';
+export type Trend = 'Up' | 'Down' | 'Neutral';
+export type Side = 'Long' | 'Short';
+export type Signal = 'Bullish' | 'Bearish' | 'Neutral';
+
+export interface TrendAnalysis {
+  trend: Trend;
+  score: number;
+}
+
+// Defines the structure for the variation calculation result
+export interface RatioVariationResult {
+  symbol: string;
+  currentRatio: number | null;
+  variation: {
+    vs1h: number | null;
+    vs4h: number | null;
+    vs24h: number | null;
+  };
+  timestamps: {
+    current: number | null;
+    h1: number | null;
+    h4: number | null;
+    d1: number | null;
+  }
+}
+
+// Defines the structure for the variation calculation result
+export interface OpenInterestVariationResult {
+  symbol: string;
+  currentOpenInterestValue: number | null;
+  variation: {
+    vs1h: number | null;
+    vs4h: number | null;
+    vs24h: number | null;
+  };
+  timestamps: {
+    current: number | null;
+    h1: number | null;
+    h4: number | null;
+    d1: number | null;
+  }
+}
+
+export interface SentimentResult {
+  sentiment: Sentiment;
+  details: {
+    side: TradeType;
+    longShortRatio: RatioVariationResult;
+    openInterest: OpenInterestVariationResult;
+    analysis: {
+      lsrTrend: TrendAnalysis;
+      oiTrend: TrendAnalysis;
+      lsrSignal: Signal;
+      oiSignal: Signal;
+    }
+  };
+
+
+}
+
+
+
+
+
+

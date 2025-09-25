@@ -69,6 +69,9 @@ export class TradeCronJob {
         console.log(`Validation: ${validationResult.isValid}`);
         console.log(`Message: ${validationResult.message}`);
         console.log(`Volume Analysis: ${validationResult.volumeAnalysis.color} (StdBar: ${validationResult.volumeAnalysis.stdBar.toFixed(2)})`);
+        console.log(`Sentiment Analysis: ${validationResult.sentimentAnalysis.sentiment} (${validationResult.sentimentAnalysis.sentiment} - lsrTrend ${validationResult.sentimentAnalysis.details.analysis.lsrTrend} - oiTrend ${validationResult.sentimentAnalysis.details.analysis.oiTrend} - lsrSignal ${validationResult.sentimentAnalysis.details.analysis.lsrSignal} - oiSignal ${validationResult.sentimentAnalysis.details.analysis.oiSignal})`);
+        console.log(`Sentiment LSr: (lsr:${validationResult.sentimentAnalysis.details.longShortRatio.currentRatio} - lsr Variations 1h ${validationResult.sentimentAnalysis.details.longShortRatio.variation.vs1h} - 4h ${validationResult.sentimentAnalysis.details.longShortRatio.variation.vs4h} - 24h ${validationResult.sentimentAnalysis.details.longShortRatio.variation.vs24h} )`);
+        console.log(`Sentiment OI: (oi:${validationResult.sentimentAnalysis.details.openInterest.currentOpenInterestValue} - OI Variations 1h ${validationResult.sentimentAnalysis.details.openInterest.variation.vs1h} - 4h ${validationResult.sentimentAnalysis.details.openInterest.variation.vs4h} - 24h ${validationResult.sentimentAnalysis.details.openInterest.variation.vs24h} )`);
         console.log(`Current Close: ${validationResult.entryAnalysis.currentClose}`);
         console.log(`Recent Closes: ${validationResult.recentCloses}`);
 

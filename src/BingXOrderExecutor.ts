@@ -3,8 +3,10 @@ import { LeverageCalculator } from './LeverageCalculator';
 import { PositionValidator } from './PositionValidator';
 import { TradeDatabase } from './TradeDatabase';
 import { normalizeSymbolBingX, getPairPrice } from './utils/bingxUtils';
-import { Trade, BingXOrderResponse, TradeRecord } from './utils/types';
+import { Trade, BingXOrderResponse, TradeRecord, SentimentResult } from './utils/types';
 import * as dotenv from 'dotenv';
+import { VolumeAnalyzer, VolumeColor } from './VolumeAnalyzer';
+import { SentimentService } from './SentimentService';
 
 // Load environment variables
 dotenv.config();
@@ -16,6 +18,7 @@ export class BingXOrderExecutor {
   private readonly tradeDatabase: TradeDatabase;
   private readonly margin: number;
   private readonly volumeMarginPercentage: number;
+  private readonly sentimentMarginPercentage: number;
   private readonly activation_fator_below: number;
   private readonly activation_fator_above: number;
 
@@ -24,6 +27,7 @@ export class BingXOrderExecutor {
     this.apiClient = new BingXApiClient();
     this.margin = parseFloat(process.env.BINGX_MARGIN || '500');
     this.volumeMarginPercentage = parseFloat(process.env.VOLUME_MARGIN_PERCENTAGE || '0');
+    this.sentimentMarginPercentage = parseFloat(process.env.SENTIMENT_MARGIN_PERCENTAGE || '0');
 
     this.leverageCalculator = new LeverageCalculator();
     this.positionValidator = new PositionValidator();
@@ -32,7 +36,18 @@ export class BingXOrderExecutor {
     this.activation_fator_above = parseFloat(process.env.ACTIVATION_FACTOR_ABOVE || '1')
   }
 
-  private async calculatePositionQuantity(pair: string, leverage: number, trade?: Trade): Promise<number> {
+  private isVolumeValid(color: string | null | undefined): boolean {
+    return color === 'YELLOW' ||
+      color === 'ORANGE' ||
+      color === 'RED';
+  }
+
+  private isSentimentValid(trade: Trade): boolean {
+    return ((trade.sentiment == 'Bullish' && trade.type == 'LONG') || (trade.sentiment == 'Bearish' && trade.type == 'SHORT'));
+  }
+
+
+  private async calculatePositionQuantity(pair: string, leverage: number, trade: Trade): Promise<number> {
     try {
       const normalizedPair = normalizeSymbolBingX(pair);
       // Get current price
@@ -52,11 +67,24 @@ export class BingXOrderExecutor {
       // Calculate base margin
       let totalMargin = this.margin;
 
+
+
       // Add volume-based margin if trade has volume_adds_margin
-      if (trade?.volume_adds_margin) {
-        const additionalMargin = this.margin * (this.volumeMarginPercentage / 100);
-        totalMargin += additionalMargin;
+      if (trade.volume_adds_margin) {
+        if (this.isVolumeValid(trade.volume)) {
+          const additionalMargin = this.margin * (this.volumeMarginPercentage / 100);
+          totalMargin += additionalMargin;
+        }
       }
+
+      // Add sentiment-based margin if trade has sentiment_adds_margin
+      if (trade.sentiment_adds_margin) {
+        if (this.isSentimentValid(trade)) {
+          const additionalMargin = this.margin * (this.sentimentMarginPercentage / 100);
+          totalMargin += additionalMargin;
+        }
+      }
+
 
       // Calculate position value based on total margin and leverage
       const positionValue = totalMargin * leverage;
@@ -456,6 +484,19 @@ export class BingXOrderExecutor {
         leverageInfo.optimalLeverage,
         trade.type
       );
+
+      let volumeAnalyzer: VolumeAnalyzer = new VolumeAnalyzer();
+      const volumeAnalysis = await volumeAnalyzer.analyzeVolume(trade.symbol, trade.interval || '1h')
+      trade.volume = volumeAnalysis.color
+
+      let sentimentService: SentimentService = new SentimentService();
+      let sentimentResult: SentimentResult = await sentimentService.getSentiment(trade.symbol, trade.interval || '1h', trade.type);
+      trade.sentiment = sentimentResult.sentiment
+      trade.lsrtrend = sentimentResult.details.analysis.lsrTrend.trend
+      trade.oitrend = sentimentResult.details.analysis.oiTrend.trend
+      trade.lsrsignal = sentimentResult.details.analysis.lsrSignal
+      trade.oisignal = sentimentResult.details.analysis.oiSignal
+
 
       // Calculate position quantity based on margin and leverage, passing the trade object
       let quantity = await this.calculatePositionQuantity(trade.symbol, leverageInfo.optimalLeverage, trade);
