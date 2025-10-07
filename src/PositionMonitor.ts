@@ -267,9 +267,11 @@ export class PositionMonitor {
 
 
     let initialStopPrice: number | undefined;
+    let initialTp1: number | undefined;
     if (tradeId) {
       const trade = await this.tradeDatabase.getTradeById(tradeId);
       initialStopPrice = trade?.stop; // Using the 'stop' field from TradeRecord
+      initialTp1 = trade?.tp1; // Using the 'tp1' field from TradeRecord
       // If no stop loss order exists but we have a trade stop price, create one
       if (!stopLossOrder && initialStopPrice) {
         stopLossOrder = await this.createStopLossOrder(position, initialStopPrice);
@@ -287,6 +289,7 @@ export class PositionMonitor {
       } else if (stopLossOrder) {
         existingPosition.initialStopPrice = parseFloat(stopLossOrder.price);
       }
+      existingPosition.initialTp1 = initialTp1;
     }
 
     if (!existingPosition?.websocket) {
@@ -333,9 +336,17 @@ export class PositionMonitor {
     const reward = Math.abs(currentPrice - entryPrice);
 
     const risk_with_factor = risk * this.activationFactorStoploss;
+    let hitTakeProfit1 = false;
+    if (position.initialTp1) {
+      if ((positionSide == 'LONG') && (currentPrice >= position.initialTp1)) {
+        hitTakeProfit1 = true;
+      }
+      if ((positionSide == 'SHORT') && (currentPrice <= position.initialTp1)) {
+        hitTakeProfit1 = true;
+      }
+    }
 
-
-    if (reward >= risk_with_factor) {
+    if ((reward >= risk_with_factor) || (hitTakeProfit1)) {
       // Usar o método estático da nova classe
       const breakevenData = StopLossUpdater.calculateBreakeven(
         entryPrice,

@@ -185,6 +185,7 @@ export interface MonitoredPosition {
   initialStopPrice?: number;
   entryPrice?: number;
   leverage?: number;
+  initialTp1?: number;
 }
 
 export interface TradeNotification {
