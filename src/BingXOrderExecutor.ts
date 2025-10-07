@@ -530,7 +530,7 @@ export class BingXOrderExecutor {
       } catch (error: any) {
         // Handle max position value error
         let msg = error?.message || '';
-        let maxPosMatch = msg.match(/The maximum position value for this leverage is ([\d.]+) USDT.*code: 80001/);
+        let maxPosMatch = msg.match(/The maximum position value for this leverage is ([\d.]+) USDT/);
         if (!maxPosMatch) {
           throw error;
         }
@@ -567,7 +567,7 @@ export class BingXOrderExecutor {
             maxPosMatch = null; // Exit loop on success
           } catch (error: any) {
             msg = error?.message || '';
-            maxPosMatch = msg.match(/The maximum position value for this leverage is ([\d.]+) USDT.*code: 80001/);
+            maxPosMatch = msg.match(/The maximum position value for this leverage is ([\d.]+) USDT/);
             if ((!maxPosMatch) || (newLeverage == 1)) {
               throw error;
             }
