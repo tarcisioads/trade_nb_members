@@ -3,9 +3,11 @@ import { KlineData, Trade, TradeType, AllowedInterval } from './utils/types';
 
 export class TradeEntryAnalyzer {
   private readonly dataServiceManager: DataServiceManager;
+  private readonly validateRiskReward: number;
 
   constructor() {
     this.dataServiceManager = new DataServiceManager();
+    this.validateRiskReward = parseFloat(process.env.VALIDATE_RISK_REWARD || '1');
   }
 
   private isEntryConditionMet(currentCandle: KlineData, entry: number, type: TradeType): boolean {
@@ -96,13 +98,13 @@ export class TradeEntryAnalyzer {
 
 
         // Validate risk-reward ratio
-        if (riskRewardRatio < 0.8) {
+        if (riskRewardRatio < this.validateRiskReward) {
           return {
             canEnter: false,
             currentClose,
             hasClosePriceBeforeEntry,
             warning: entryConditionMet && hasClosePriceBeforeEntry,
-            message: `Invalid risk-reward ratio. Distance to TP1 (${entryToTP1Distance}) is less than 80% of distance to stop (${entryToStopDistance})`
+            message: `Invalid risk-reward ratio. Entry risk-reward (${riskRewardRatio}) is less than validate risk-reward ratio (${this.validateRiskReward})`
           };
         }
 
