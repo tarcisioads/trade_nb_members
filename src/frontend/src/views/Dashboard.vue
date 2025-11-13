@@ -695,13 +695,16 @@ const stats = ref<PositionStats>({
 const detailedStats = ref<DetailedRiskStats | null>(null)
 const availableSymbols = ref<string[]>([])
 const availableSetupDescriptions = ref<string[]>([])
+const today = new Date();
+const twoMonthsAgo = new Date(new Date().setMonth(today.getMonth() - 2));
+
 const filters = ref({
   symbol: 'ALL',
   setupDescription: 'ALL',
-  startDate: '',
-  endDate: '',
+  startDate: twoMonthsAgo.toISOString().split('T')[0],
+  endDate: new Date().toISOString().split('T')[0],
   minResult: 0
-})
+});
 
 // Computed properties for risk stats
 const riskStats = computed(() => {
@@ -993,11 +996,13 @@ const loadDetailedRiskStats = async () => {
 }
 
 const resetFilters = () => {
+  const today = new Date();
+  const twoMonthsAgo = new Date(new Date().setMonth(today.getMonth() - 2));
   filters.value = {
     symbol: 'ALL',
     setupDescription: 'ALL',
-    startDate: '',
-    endDate: '',
+    startDate: twoMonthsAgo.toISOString().split('T')[0],
+    endDate: new Date().toISOString().split('T')[0],
     minResult: 0
   }
   loadData()
