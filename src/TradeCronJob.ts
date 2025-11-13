@@ -2,10 +2,10 @@ import * as cron from 'node-cron';
 import * as fs from 'fs';
 import * as path from 'path';
 import { TradeValidator } from './TradeValidator';
-import { DataServiceManager } from './DataServiceManager';
 import { NotificationService } from './NotificationService';
 import { TradeExecutor } from './TradeExecutor';
-import { Trade, AllowedInterval } from './utils/types';
+import { Trade } from './utils/types';
+import { PositionValidator } from './PositionValidator';
 
 
 
@@ -13,14 +13,12 @@ import { Trade, AllowedInterval } from './utils/types';
 export class TradeCronJob {
   private readonly dataPath: string;
   private readonly tradeValidator: TradeValidator;
-  private readonly dataServiceManager: DataServiceManager;
   private readonly notificationService: NotificationService;
   private readonly tradeExecutor: TradeExecutor;
 
   constructor() {
     this.dataPath = path.join(__dirname, '../data/trades.json');
     this.tradeValidator = new TradeValidator();
-    this.dataServiceManager = new DataServiceManager();
     this.notificationService = new NotificationService();
     this.tradeExecutor = new TradeExecutor();
   }
@@ -80,38 +78,54 @@ export class TradeCronJob {
         }
         console.log('----------------------------------------');
 
+        // Check if BingX API credentials are available
+        const bingxApiKey = process.env.BINGX_API_KEY;
+        const bingxApiSecret = process.env.BINGX_API_SECRET;
+
+
         // Send notification for trades with warning status
         if (validationResult.warning) {
-          await this.notificationService.sendTradeNotification({
-            symbol: trade.symbol,
-            type: trade.type,
-            entry: trade.entry,
-            stop: trade.stop,
-            takeProfits: {
-              tp1: trade.tp1,
-              tp2: trade.tp2,
-              tp3: trade.tp3,
-              tp4: trade.tp4,
-              tp5: trade.tp5,
-              tp6: trade.tp6
-            },
-            validation: validationResult,
-            analysisUrl: trade.url_analysis || '',
-            isWarning: true,
-            volume_adds_margin: trade.volume_adds_margin,
-            setup_description: trade.setup_description,
-            volume_required: trade.volume_required,
-            interval: trade.interval
-          });
+          let hasPos = false
+          if (!bingxApiKey || !bingxApiSecret) {
+            // Check for existing position
+            const { hasPosition, message } = await new PositionValidator().hasOpenPosition(trade.symbol, trade.type);
+            hasPos = hasPosition
+          }
+
+          if (!hasPos) {
+            //let msg = validationResult.message || '';
+            // let maxPosMatch = msg.match(/Invalid risk-reward ratio/);
+            //if (!maxPosMatch) {
+            //}
+
+            await this.notificationService.sendTradeNotification({
+              symbol: trade.symbol,
+              type: trade.type,
+              entry: trade.entry,
+              stop: trade.stop,
+              takeProfits: {
+                tp1: trade.tp1,
+                tp2: trade.tp2,
+                tp3: trade.tp3,
+                tp4: trade.tp4,
+                tp5: trade.tp5,
+                tp6: trade.tp6
+              },
+              validation: validationResult,
+              analysisUrl: trade.url_analysis || '',
+              isWarning: true,
+              volume_adds_margin: trade.volume_adds_margin,
+              setup_description: trade.setup_description,
+              volume_required: trade.volume_required,
+              interval: trade.interval
+            });
+          }
+
         }
 
         if (validationResult.isValid) {
           validCount++;
 
-
-          // Check if BingX API credentials are available
-          const bingxApiKey = process.env.BINGX_API_KEY;
-          const bingxApiSecret = process.env.BINGX_API_SECRET;
 
           if (!bingxApiKey || !bingxApiSecret) {
             console.log('\nTrade Execution Skipped:');
