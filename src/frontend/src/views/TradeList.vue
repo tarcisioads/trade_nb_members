@@ -304,6 +304,8 @@ const enterMarket = async (trade: Trade) => {
     volume_adds_margin: trade.volume_adds_margin,
     setup_description: trade.setup_description,
     volume_required: trade.volume_required,
+    sentiment_required: trade.sentiment_required,
+    sentiment_adds_margin: trade.sentiment_adds_margin,
     interval: trade.interval,
     timestamp: new Date().toISOString()
   }
@@ -361,6 +363,8 @@ const enterMarketWithTP1 = async (trade: Trade) => {
       volume_adds_margin: trade.volume_adds_margin,
       setup_description: trade.setup_description,
       volume_required: trade.volume_required,
+      sentiment_required: trade.sentiment_required,
+      sentiment_adds_margin: trade.sentiment_adds_margin,
       interval: trade.interval,
       timestamp: new Date().toISOString()
     }
