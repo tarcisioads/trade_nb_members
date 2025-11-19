@@ -24,7 +24,7 @@ export class OpenInterestVariationService {
     if (past === 0) {
       return null; // Avoid division by zero
     }
-    return ((current - past) / past) * 100;
+    return +(((current - past) / past) * 100).toFixed(4);
   }
 
   /**
