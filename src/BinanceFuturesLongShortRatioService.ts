@@ -174,6 +174,7 @@ export class BinanceFuturesLongShortRatioService {
    */
   public async getGlobalLongShortAccountRatio(symbol: string, interval: AllowedInterval = '1h', limit: number = 56, noCache: boolean = false): Promise<GlobalLongShortRatio[]> {
     const timeComponents = this.getCurrentTimeComponents(interval);
+    console.log(`${symbol} ${interval} ${limit} ${noCache}`)
 
     if (!noCache) {
       const cachedData = await this.getCachedData(symbol, timeComponents);
