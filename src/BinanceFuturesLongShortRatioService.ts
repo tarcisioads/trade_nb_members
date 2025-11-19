@@ -178,7 +178,7 @@ export class BinanceFuturesLongShortRatioService {
     if (!noCache) {
       const cachedData = await this.getCachedData(symbol, timeComponents);
       if (cachedData) {
-        logger.info(`Returning cached ratio data for ${symbol} (${interval}) - ${this.ratioType}`);
+        console.info(`Returning cached ratio data for ${symbol} (${interval}) - ${this.ratioType}`);
         return cachedData.slice(0, limit || 500);
       }
     }

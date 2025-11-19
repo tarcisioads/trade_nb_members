@@ -148,7 +148,7 @@ export class BinanceFuturesOpenInterestService {
     if (!noCache) {
       const cachedData = await this.getCachedData(symbol, timeComponents);
       if (cachedData) {
-        logger.info(`Returning cached open interest data for ${symbol} (${period})`);
+        console.info(`Returning cached open interest data for ${symbol} (${period})`);
         return cachedData.slice(0, limit || 500);
       }
     }

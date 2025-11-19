@@ -69,22 +69,22 @@ export class BingXOrderExecutor {
 
 
 
-      // // Add volume-based margin if trade has volume_adds_margin
-      // if (trade.volume_adds_margin) {
-      //   if (this.isVolumeValid(trade.volume)) {
-      //     const additionalMargin = this.margin * (this.volumeMarginPercentage / 100);
-      //     totalMargin += additionalMargin;
-      //   }
-      // }
-      //
-      // // Add sentiment-based margin if trade has sentiment_adds_margin
-      // if (trade.sentiment_adds_margin) {
-      //   if (this.isSentimentValid(trade)) {
-      //     const additionalMargin = this.margin * (this.sentimentMarginPercentage / 100);
-      //     totalMargin += additionalMargin;
-      //   }
-      // }
-      //
+      // Add volume-based margin if trade has volume_adds_margin
+      if (trade.volume_adds_margin) {
+        if (this.isVolumeValid(trade.volume)) {
+          const additionalMargin = this.margin * (this.volumeMarginPercentage / 100);
+          totalMargin += additionalMargin;
+        }
+      }
+
+      // Add sentiment-based margin if trade has sentiment_adds_margin
+      if (trade.sentiment_adds_margin) {
+        if (this.isSentimentValid(trade)) {
+          const additionalMargin = this.margin * (this.sentimentMarginPercentage / 100);
+          totalMargin += additionalMargin;
+        }
+      }
+
 
 
       const positionValue = totalMargin * leverage;
@@ -485,18 +485,18 @@ export class BingXOrderExecutor {
         trade.type
       );
 
-      // let volumeAnalyzer: VolumeAnalyzer = new VolumeAnalyzer();
-      // const volumeAnalysis = await volumeAnalyzer.analyzeVolume(trade.symbol, trade.interval || '1h')
-      // trade.volume = volumeAnalysis.color
-      //
-      // let sentimentService: SentimentService = new SentimentService();
-      // let sentimentResult: SentimentResult = await sentimentService.getSentiment(trade.symbol, trade.interval || '1h', trade.type);
-      // trade.sentiment = sentimentResult.sentiment
-      // trade.lsrtrend = sentimentResult.details.analysis.lsrTrend.trend
-      // trade.oitrend = sentimentResult.details.analysis.oiTrend.trend
-      // trade.lsrsignal = sentimentResult.details.analysis.lsrSignal
-      // trade.oisignal = sentimentResult.details.analysis.oiSignal
-      //
+      let volumeAnalyzer: VolumeAnalyzer = new VolumeAnalyzer();
+      const volumeAnalysis = await volumeAnalyzer.analyzeVolume(trade.symbol, trade.interval || '1h')
+      trade.volume = volumeAnalysis.color
+
+      let sentimentService: SentimentService = new SentimentService();
+      let sentimentResult: SentimentResult = await sentimentService.getSentiment(trade.symbol, trade.interval || '1h', trade.type);
+      trade.sentiment = sentimentResult.sentiment
+      trade.lsrtrend = sentimentResult.details.analysis.lsrTrend.trend
+      trade.oitrend = sentimentResult.details.analysis.oiTrend.trend
+      trade.lsrsignal = sentimentResult.details.analysis.lsrSignal
+      trade.oisignal = sentimentResult.details.analysis.oiSignal
+
 
       // Calculate position quantity based on margin and leverage, passing the trade object
       let quantity = await this.calculatePositionQuantity(trade.symbol, leverageInfo.optimalLeverage, trade);
