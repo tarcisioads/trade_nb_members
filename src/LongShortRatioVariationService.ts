@@ -8,10 +8,8 @@ import { AllowedInterval, RatioVariationResult } from './utils/types';
  * Calculates the percentage variation of the Global Long/Short ratio over different time frames.
  */
 export class LongShortRatioVariationService {
-  private readonly ratioService: BinanceFuturesLongShortRatioService;
 
   constructor() {
-    this.ratioService = new BinanceFuturesLongShortRatioService();
   }
 
   /**
@@ -33,8 +31,10 @@ export class LongShortRatioVariationService {
    * @returns An object containing the current ratio and its variations.
    */
   public async getRatioVariation(symbol: string, interval: AllowedInterval): Promise<RatioVariationResult> {
+
+    const ratioService = await BinanceFuturesLongShortRatioService.create();
     // Fetch the last 25 hours of data to get points for current, 1h, 4h, and 24h ago.
-    const hourlyData = await this.ratioService.getGlobalLongShortAccountRatio(symbol, interval || '1h', 25);
+    const hourlyData = await ratioService.getGlobalLongShortAccountRatio(symbol, interval || '1h', 25);
 
     const getRatio = (data: GlobalLongShortRatio) => data ? parseFloat(data.longShortRatio) : null;
 

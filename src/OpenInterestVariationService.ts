@@ -10,10 +10,8 @@ import { AllowedInterval, OpenInterestVariationResult } from './utils/types';
  * Calculates the percentage variation of the Open Interest value over different time frames.
  */
 export class OpenInterestVariationService {
-  private readonly openInterestService: BinanceFuturesOpenInterestService;
 
   constructor() {
-    this.openInterestService = new BinanceFuturesOpenInterestService();
   }
 
   /**
@@ -35,8 +33,9 @@ export class OpenInterestVariationService {
    * @returns An object containing the current open interest value and its variations.
    */
   public async getVariation(symbol: string, interval: AllowedInterval): Promise<OpenInterestVariationResult> {
+    const openInterestService = await BinanceFuturesOpenInterestService.create();
     // Fetch the last 25 hours of data to get points for current, 1h, 4h, and 24h ago.
-    const hourlyData = await this.openInterestService.getOpenInterestHistory(
+    const hourlyData = await openInterestService.getOpenInterestHistory(
       symbol,
       interval || '1h',
       25

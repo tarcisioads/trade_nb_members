@@ -55,8 +55,14 @@ export class BinanceFuturesLongShortRatioService {
   private readonly ratioType: string = 'global_account_ratio';
 
   constructor() {
-    this.initializeDatabase();
   }
+
+  public static async create(): Promise<BinanceFuturesLongShortRatioService> {
+    const instance = new BinanceFuturesLongShortRatioService();
+    await instance.initializeDatabase(); // <-- Chama e espera a inicialização
+    return instance;
+  }
+
 
   private async initializeDatabase() {
     const dbPath = path.join(__dirname, '../db/binance_futures_lsr_cache.db');

@@ -5,21 +5,16 @@ import { KlineData, AllowedInterval } from './utils/types';
 import { logger } from './utils/logger';
 
 export class DataServiceManager {
-  private binanceFuturesService: BinanceFuturesDataService;
-  private bingxService: BingXDataService;
-  private binanceService: BinanceDataService;
 
   constructor() {
-    this.binanceFuturesService = new BinanceFuturesDataService();
-    this.bingxService = new BingXDataService();
-    this.binanceService = new BinanceDataService();
   }
 
   public async getKlineData(symbol: string, interval: AllowedInterval = '1h', limit: number = 56, noCache: boolean = false): Promise<{ data: KlineData[]; source: 'binance_futures' | 'bingx' | 'binance' }> {
     // Try BingX next
     try {
       logger.info(`Attempting to fetch data from BingX for ${symbol} with interval ${interval}...`);
-      const bingxData = await this.bingxService.getKlineData(symbol, interval, limit, noCache);
+      const bingxService = await BingXDataService.create()
+      const bingxData = await bingxService.getKlineData(symbol, interval, limit, noCache);
       const sortedData = [...bingxData].sort((a, b) => b.closeTime - a.closeTime);
       const dataToCheck = [...sortedData].slice(1)
 
@@ -31,7 +26,8 @@ export class DataServiceManager {
       // Try Binance Futures first
       try {
         logger.info(`Attempting to fetch data from Binance Futures for ${symbol} with interval ${interval}...`);
-        const futuresData = await this.binanceFuturesService.getKlineData(symbol, interval, limit, noCache);
+        const binanceFuturesService = await BinanceFuturesDataService.create()
+        const futuresData = await binanceFuturesService.getKlineData(symbol, interval, limit, noCache);
         const sortedData = [...futuresData].sort((a, b) => b.closeTime - a.closeTime);
         const dataToCheck = [...sortedData].slice(1)
         logger.info('Successfully fetched data from Binance Futures');
@@ -44,7 +40,8 @@ export class DataServiceManager {
         // Finally try Binance Spot
         try {
           logger.info(`Attempting to fetch data from Binance Spot for ${symbol} with interval ${interval}...`);
-          const binanceData = await this.binanceService.getKlineData(symbol, interval, limit, noCache);
+          const binanceService = await BinanceDataService.create()
+          const binanceData = await binanceService.getKlineData(symbol, interval, limit, noCache);
           const sortedData = [...binanceData].sort((a, b) => b.closeTime - a.closeTime);
           const dataToCheck = [...sortedData].slice(1)
           logger.info('Successfully fetched data from Binance Spot');
@@ -64,7 +61,8 @@ export class DataServiceManager {
     // Try Binance Futures first
     try {
       logger.info(`Attempting to fetch data from Binance Futures for ${symbol} with interval ${interval}...`);
-      const futuresData = await this.binanceFuturesService.getKlineData(symbol, interval, limit, noCache);
+      const binanceFuturesService = await BinanceFuturesDataService.create()
+      const futuresData = await binanceFuturesService.getKlineData(symbol, interval, limit, noCache);
       const sortedData = [...futuresData].sort((a, b) => b.closeTime - a.closeTime);
       const dataToCheck = [...sortedData].slice(1)
       logger.info('Successfully fetched data from Binance Futures');
@@ -77,7 +75,8 @@ export class DataServiceManager {
 
       try {
         logger.info(`Attempting to fetch data from BingX for ${symbol} with interval ${interval}...`);
-        const bingxData = await this.bingxService.getKlineData(symbol, interval, limit, noCache);
+        const bingxService = await BingXDataService.create()
+        const bingxData = await bingxService.getKlineData(symbol, interval, limit, noCache);
         const sortedData = [...bingxData].sort((a, b) => b.closeTime - a.closeTime);
         const dataToCheck = [...sortedData].slice(1)
 
@@ -90,7 +89,8 @@ export class DataServiceManager {
         // Finally try Binance Spot
         try {
           logger.info(`Attempting to fetch data from Binance Spot for ${symbol} with interval ${interval}...`);
-          const binanceData = await this.binanceService.getKlineData(symbol, interval, limit, noCache);
+          const binanceService = await BinanceDataService.create()
+          const binanceData = await binanceService.getKlineData(symbol, interval, limit, noCache);
           const sortedData = [...binanceData].sort((a, b) => b.closeTime - a.closeTime);
           const dataToCheck = [...sortedData].slice(1)
           logger.info('Successfully fetched data from Binance Spot');

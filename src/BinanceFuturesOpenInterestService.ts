@@ -38,8 +38,14 @@ export class BinanceFuturesOpenInterestService {
   private readonly dataType: string = 'open_interest_hist';
 
   constructor() {
-    this.initializeDatabase();
   }
+
+  public static async create(): Promise<BinanceFuturesOpenInterestService> {
+    const instance = new BinanceFuturesOpenInterestService();
+    await instance.initializeDatabase(); // <-- Chama e espera a inicialização
+    return instance;
+  }
+
 
   private async initializeDatabase() {
     const dbPath = path.join(__dirname, '../db/binance_futures_oi_cache.db');
