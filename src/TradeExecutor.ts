@@ -140,7 +140,7 @@ export class TradeExecutor {
         message: 'Trade executed successfully',
         data: {
           ...executionResult,
-          volumeMarginAdded: volumeMarginInfo
+          volumeMarginAdded: volumeMarginInfo,
           sentimentMarginAdded: sentimentMarginInfo
         }
       };
