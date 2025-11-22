@@ -8,12 +8,14 @@ export class TradeExecutor {
   private readonly tradeDatabase: TradeDatabase;
   private readonly positionValidator: PositionValidator;
   private readonly volumeMarginPercentage: number;
+  private readonly sentimentMarginPercentage: number;
 
   constructor() {
     this.orderExecutor = new BingXOrderExecutor();
     this.tradeDatabase = new TradeDatabase();
     this.positionValidator = new PositionValidator();
     this.volumeMarginPercentage = Number(process.env.VOLUME_MARGIN_PERCENTAGE) || 10;
+    this.sentimentMarginPercentage = Number(process.env.SENTIMENT_MARGIN_PERCENTAGE || '0');
   }
 
   private async validateTrade(trade: Trade): Promise<{ isValid: boolean; message: string }> {
@@ -117,6 +119,21 @@ export class TradeExecutor {
         console.log(`Base Margin: ${baseMargin.toFixed(2)}`);
         console.log(`Total Margin: ${(baseMargin + marginAddition).toFixed(2)}`);
       }
+      // Calculate sentiment margin if applicable
+      let sentimentMarginInfo = undefined;
+      if (trade.sentiment_adds_margin) {
+        const baseMargin = executionResult.quantity * trade.entry;
+        const marginAddition = (baseMargin * this.sentimentMarginPercentage) / 100;
+        sentimentMarginInfo = {
+          percentage: this.sentimentMarginPercentage,
+          baseMargin,
+          totalMargin: baseMargin + marginAddition
+        };
+        console.log(`Sentiment Margin Added: ${this.sentimentMarginPercentage}%`);
+        console.log(`Base Margin: ${baseMargin.toFixed(2)}`);
+        console.log(`Total Margin: ${(baseMargin + marginAddition).toFixed(2)}`);
+      }
+
 
       return {
         success: true,
@@ -124,6 +141,7 @@ export class TradeExecutor {
         data: {
           ...executionResult,
           volumeMarginAdded: volumeMarginInfo
+          sentimentMarginAdded: sentimentMarginInfo
         }
       };
     } catch (error) {

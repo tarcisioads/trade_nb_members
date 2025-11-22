@@ -137,6 +137,11 @@ export interface TradeExecutionResult {
       baseMargin: number;
       totalMargin: number;
     };
+    sentimentMarginAdded?: {
+      percentage: number;
+      baseMargin: number;
+      totalMargin: number;
+    };
   };
 }
 
@@ -225,6 +230,11 @@ export interface TradeNotification {
     entryOrderId: string;
     stopOrderId: string;
     volumeMarginAdded?: {
+      percentage: number;
+      baseMargin: number;
+      totalMargin: number;
+    };
+    sentimentMarginAdded?: {
       percentage: number;
       baseMargin: number;
       totalMargin: number;
@@ -372,8 +382,20 @@ export interface SentimentResult {
 
 }
 
+export enum VolumeColor {
+  RED = 'red',
+  ORANGE = 'orange',
+  YELLOW = 'yellow',
+  WHITE = 'white',
+  BLUE = 'blue'
+}
 
-
-
+export interface AnalyzeVolumeResult {
+  color: VolumeColor;
+  stdBar: number;
+  mean: number;
+  std: number;
+  currentVolume: number;
+};
 
 

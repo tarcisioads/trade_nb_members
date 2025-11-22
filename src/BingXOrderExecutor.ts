@@ -3,9 +3,10 @@ import { LeverageCalculator } from './LeverageCalculator';
 import { PositionValidator } from './PositionValidator';
 import { TradeDatabase } from './TradeDatabase';
 import { normalizeSymbolBingX, getPairPrice } from './utils/bingxUtils';
-import { Trade, BingXOrderResponse, TradeRecord, SentimentResult } from './utils/types';
+import { Trade, BingXOrderResponse, TradeRecord, SentimentResult, VolumeColor, AnalyzeVolumeResult } from './utils/types';
+import { isVolumeValid, isSentimentValid } from './utils/utils';
 import * as dotenv from 'dotenv';
-import { VolumeAnalyzer, VolumeColor } from './VolumeAnalyzer';
+import { VolumeAnalyzer } from './VolumeAnalyzer';
 import { SentimentService } from './SentimentService';
 
 // Load environment variables
@@ -36,18 +37,8 @@ export class BingXOrderExecutor {
     this.activation_fator_above = parseFloat(process.env.ACTIVATION_FACTOR_ABOVE || '1')
   }
 
-  private isVolumeValid(color: string | null | undefined): boolean {
-    return color === 'YELLOW' ||
-      color === 'ORANGE' ||
-      color === 'RED';
-  }
 
-  private isSentimentValid(trade: Trade): boolean {
-    return ((trade.sentiment == 'Bullish' && trade.type == 'LONG') || (trade.sentiment == 'Bearish' && trade.type == 'SHORT'));
-  }
-
-
-  private async calculatePositionQuantity(pair: string, leverage: number, trade: Trade): Promise<number> {
+  private async calculatePositionQuantity(pair: string, leverage: number, trade: Trade, volumeAnalysis: AnalyzeVolumeResult, sentimentResult: SentimentResult): Promise<number> {
     try {
       const normalizedPair = normalizeSymbolBingX(pair);
       // Get current price
@@ -71,7 +62,7 @@ export class BingXOrderExecutor {
 
       // Add volume-based margin if trade has volume_adds_margin
       if (trade.volume_adds_margin) {
-        if (this.isVolumeValid(trade.volume)) {
+        if (isVolumeValid(volumeAnalysis.color)) {
           const additionalMargin = this.margin * (this.volumeMarginPercentage / 100);
           totalMargin += additionalMargin;
         }
@@ -79,7 +70,7 @@ export class BingXOrderExecutor {
 
       // Add sentiment-based margin if trade has sentiment_adds_margin
       if (trade.sentiment_adds_margin) {
-        if (this.isSentimentValid(trade)) {
+        if (isSentimentValid(trade, sentimentResult)) {
           const additionalMargin = this.margin * (this.sentimentMarginPercentage / 100);
           totalMargin += additionalMargin;
         }
@@ -499,7 +490,7 @@ export class BingXOrderExecutor {
 
 
       // Calculate position quantity based on margin and leverage, passing the trade object
-      let quantity = await this.calculatePositionQuantity(trade.symbol, leverageInfo.optimalLeverage, trade);
+      let quantity = await this.calculatePositionQuantity(trade.symbol, leverageInfo.optimalLeverage, trade, volumeAnalysis, sentimentResult);
       console.log(`Calculated position quantity: ${quantity} based on margin ${this.margin} USDT and leverage ${leverageInfo.optimalLeverage}x`);
 
       // Save trade to database first to get the tradeId
@@ -549,7 +540,7 @@ export class BingXOrderExecutor {
             leverageInfo.optimalLeverage = newLeverage;
             await this.tradeDatabase.updateLeverage(tradeRecord.id, newLeverage);
             // Calculate position quantity based on margin and leverage, passing the trade object
-            quantity = await this.calculatePositionQuantity(trade.symbol, leverageInfo.optimalLeverage, trade);
+            quantity = await this.calculatePositionQuantity(trade.symbol, leverageInfo.optimalLeverage, trade, volumeAnalysis, sentimentResult);
             console.log(`Calculated position quantity: ${quantity} based on margin ${this.margin} USDT and leverage ${leverageInfo.optimalLeverage}x`);
 
 

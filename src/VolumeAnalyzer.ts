@@ -1,13 +1,7 @@
 import { DataServiceManager } from './DataServiceManager';
-import { KlineData, AllowedInterval } from './utils/types';
+import { KlineData, AllowedInterval, VolumeColor, AnalyzeVolumeResult } from './utils/types';
 
-export enum VolumeColor {
-  RED = 'red',
-  ORANGE = 'orange',
-  YELLOW = 'yellow',
-  WHITE = 'white',
-  BLUE = 'blue'
-}
+
 
 export class VolumeAnalyzer {
   private readonly dataServiceManager: DataServiceManager;
@@ -42,13 +36,7 @@ export class VolumeAnalyzer {
     return VolumeColor.BLUE;
   }
 
-  public async analyzeVolume(symbol: string, interval: AllowedInterval | undefined): Promise<{
-    color: VolumeColor;
-    stdBar: number;
-    mean: number;
-    std: number;
-    currentVolume: number;
-  }> {
+  public async analyzeVolume(symbol: string, interval: AllowedInterval | undefined): Promise<AnalyzeVolumeResult> {
     try {
       // Get data from either Binance or BingX using DataServiceManager
       const { data: klineData, source } = await this.dataServiceManager.getKlineDataVolume(symbol, interval);
