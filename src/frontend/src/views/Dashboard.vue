@@ -522,9 +522,9 @@
                         <td>
 
                           <div v-if="position.tradeInfo?.found" class="small">
-                            <div class="text-muted">Volume: ${{ position.tradeInfo.trade?.volume }}
+                            <div class="text-muted">Volume: {{ position.tradeInfo.trade?.volume }}
                             </div>
-                            <div class="text-muted">Stop: ${{ position.tradeInfo.trade?.sentiment }}
+                            <div class="text-muted">Stop: {{ position.tradeInfo.trade?.sentiment }}
                             </div>
                           </div>
                           <div v-else class="text-muted small">No trade info</div>
