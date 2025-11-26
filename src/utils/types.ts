@@ -110,11 +110,6 @@ export interface TradeRecord extends Trade {
   createdAt: string;
   updatedAt: string;
   positionId?: string | null;
-  sentiment?: string | null;
-  lsrtrend?: string | null;
-  oitrend?: string | null;
-  lsrsignal?: string | null;
-  oisignal?: string | null;
 }
 
 export interface TradeExecutionResult {

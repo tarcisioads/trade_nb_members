@@ -215,6 +215,8 @@ export class PositionHistoryService {
         url_analysis: bestTradeFromJson.url_analysis ?? null,
         volume_required: bestTradeFromJson.volume_required ?? false,
         volume_adds_margin: bestTradeFromJson.volume_adds_margin ?? false,
+        sentiment_required: bestTradeFromJson.sentiment_required ?? false,
+        sentiment_adds_margin: bestTradeFromJson.sentiment_adds_margin ?? false,
         createdAt: new Date().toString(),
         updatedAt: new Date().toString(),
         entryOrderId: '',

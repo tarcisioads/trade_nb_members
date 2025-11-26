@@ -470,7 +470,7 @@
                         <th>R:R</th>
                         <th>Result</th>
                         <th>Costs</th>
-                        <th>Setup</th>
+                        <th>Volume/Sentiment</th>
                         <th>Trade Info</th>
                         <th>Open Date</th>
                         <th>Close Date</th>
@@ -483,6 +483,13 @@
                           <div>
                             <span class="badge bg-primary">{{ position.symbol }}</span>
                             <div class="small text-muted mt-1">ID: {{ position.positionId }}</div>
+                            <div class="small text-muted mt-1">
+                              <div v-if="position.tradeInfo?.found && position.tradeInfo.trade?.setup_description"
+                                class="small">
+                                <span class="badge bg-info">{{ position.tradeInfo.trade.setup_description }}</span>
+                              </div>
+                              <div v-else class="text-muted small">-</div>
+                            </div>
                           </div>
                         </td>
                         <td>
@@ -513,11 +520,15 @@
                           </div>
                         </td>
                         <td>
-                          <div v-if="position.tradeInfo?.found && position.tradeInfo.trade?.setup_description"
-                            class="small">
-                            <span class="badge bg-info">{{ position.tradeInfo.trade.setup_description }}</span>
+
+                          <div v-if="position.tradeInfo?.found" class="small">
+                            <div class="text-muted">Volume: ${{ position.tradeInfo.trade?.volume }}
+                            </div>
+                            <div class="text-muted">Stop: ${{ position.tradeInfo.trade?.sentiment }}
+                            </div>
                           </div>
-                          <div v-else class="text-muted small">-</div>
+                          <div v-else class="text-muted small">No trade info</div>
+
                         </td>
                         <td>
                           <div v-if="position.tradeInfo?.found" class="small">
