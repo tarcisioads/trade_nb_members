@@ -188,6 +188,13 @@ export class TradeCronJob {
               console.log(`Base Margin: ${executionResult.data.volumeMarginAdded.baseMargin.toFixed(2)}`);
               console.log(`Total Margin: ${executionResult.data.volumeMarginAdded.totalMargin.toFixed(2)}`);
             }
+            // Sentiment margin info is now handled by TradeExecutor
+            if (executionResult.data?.sentimentMarginAdded) {
+              console.log(`Volume Margin Added: ${executionResult.data.sentimentMarginAdded.percentage}%`);
+              console.log(`Base Margin: ${executionResult.data.sentimentMarginAdded.baseMargin.toFixed(2)}`);
+              console.log(`Total Margin: ${executionResult.data.sentimentMarginAdded.totalMargin.toFixed(2)}`);
+            }
+
 
             console.log('----------------------------------------');
 
@@ -215,7 +222,8 @@ export class TradeCronJob {
                 quantity: executionResult.data.quantity,
                 entryOrderId: executionResult.data.entryOrder.data.order.orderId,
                 stopOrderId: executionResult.data.stopOrder.data.order.orderId,
-                volumeMarginAdded: executionResult.data.volumeMarginAdded
+                volumeMarginAdded: executionResult.data.volumeMarginAdded,
+                sentimentMarginAdded: executionResult.data.sentimentMarginAdded
               } : undefined,
               executionError: !executionResult.success ? executionResult.message : undefined,
               interval: trade.interval
