@@ -117,6 +117,8 @@ export class TradeCronJob {
               volume_adds_margin: trade.volume_adds_margin,
               setup_description: trade.setup_description,
               volume_required: trade.volume_required,
+              sentiment_adds_margin: trade.sentiment_adds_margin,
+              sentiment_required: trade.sentiment_required,
               interval: trade.interval
             });
           }
@@ -152,6 +154,8 @@ export class TradeCronJob {
               volume_adds_margin: trade.volume_adds_margin,
               setup_description: trade.setup_description,
               volume_required: trade.volume_required,
+              sentiment_adds_margin: trade.sentiment_adds_margin,
+              sentiment_required: trade.sentiment_required,
               interval: trade.interval
             });
             continue;
@@ -172,6 +176,8 @@ export class TradeCronJob {
             volume_adds_margin: trade.volume_adds_margin,
             setup_description: trade.setup_description,
             volume_required: trade.volume_required,
+            sentiment_adds_margin: trade.sentiment_adds_margin,
+            sentiment_required: trade.sentiment_required,
             modify_tp1: process.env.MODIFY_TP1 === 'true',
             interval: trade.interval
           });
@@ -185,14 +191,10 @@ export class TradeCronJob {
             // Volume margin info is now handled by TradeExecutor
             if (executionResult.data?.volumeMarginAdded) {
               console.log(`Volume Margin Added: ${executionResult.data.volumeMarginAdded.percentage}%`);
-              console.log(`Base Margin: ${executionResult.data.volumeMarginAdded.baseMargin.toFixed(2)}`);
-              console.log(`Total Margin: ${executionResult.data.volumeMarginAdded.totalMargin.toFixed(2)}`);
             }
             // Sentiment margin info is now handled by TradeExecutor
             if (executionResult.data?.sentimentMarginAdded) {
-              console.log(`Volume Margin Added: ${executionResult.data.sentimentMarginAdded.percentage}%`);
-              console.log(`Base Margin: ${executionResult.data.sentimentMarginAdded.baseMargin.toFixed(2)}`);
-              console.log(`Total Margin: ${executionResult.data.sentimentMarginAdded.totalMargin.toFixed(2)}`);
+              console.log(`Sentiment Margin Added: ${executionResult.data.sentimentMarginAdded.percentage}%`);
             }
 
 
@@ -217,6 +219,8 @@ export class TradeCronJob {
               volume_adds_margin: trade.volume_adds_margin,
               setup_description: trade.setup_description,
               volume_required: trade.volume_required,
+              sentiment_adds_margin: trade.sentiment_adds_margin,
+              sentiment_required: trade.sentiment_required,
               executionResult: executionResult.success && executionResult.data ? {
                 leverage: executionResult.data.leverage.optimalLeverage,
                 quantity: executionResult.data.quantity,
@@ -275,6 +279,8 @@ export class TradeCronJob {
               volume_adds_margin: trade.volume_adds_margin,
               setup_description: trade.setup_description,
               volume_required: trade.volume_required,
+              sentiment_adds_margin: trade.sentiment_adds_margin,
+              sentiment_required: trade.sentiment_required,
               interval: trade.interval
             });
           } catch (notificationError) {

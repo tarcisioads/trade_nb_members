@@ -66,7 +66,7 @@
               </div>
               <div class="mt-1">
                 <small class="text-muted">
-                  Volume: {{ trade.validation.volumeAnalysis.currentVolume.toFixed(2) }} 
+                  Volume: {{ trade.validation.volumeAnalysis.currentVolume.toFixed(2) }}
                   (std: {{ trade.validation.volumeAnalysis.stdBar.toFixed(2) }})
                   <span class="ms-1" :class="{
                     'text-danger': trade.validation.volumeAnalysis.color === 'RED',
@@ -103,27 +103,31 @@
                       <small>Quantity:</small>
                       <small class="fw-bold">{{ trade.executionResult.quantity.toFixed(4) }}</small>
                     </div>
-                    <div v-if="trade.volume_adds_margin && trade.executionResult.volumeMarginAdded" class="mt-2 pt-2 border-top">
+                    <div v-if="trade.volume_adds_margin && trade.executionResult.volumeMarginAdded"
+                      class="mt-2 pt-2 border-top">
                       <div class="d-flex justify-content-between">
                         <small>Volume Margin:</small>
-                        <small class="fw-bold text-success">+{{ trade.executionResult.volumeMarginAdded.percentage }}%</small>
+                        <small class="fw-bold text-success">+{{ trade.executionResult.volumeMarginAdded.percentage
+                        }}%</small>
                       </div>
+                    </div>
+                    <div v-if="trade.sentiment_adds_margin && trade.executionResult.sentimentMarginAdded"
+                      class="mt-2 pt-2 border-top">
                       <div class="d-flex justify-content-between">
-                        <small>Base Margin:</small>
-                        <small class="fw-bold">{{ trade.executionResult.volumeMarginAdded.baseMargin.toFixed(2) }}</small>
-                      </div>
-                      <div class="d-flex justify-content-between">
-                        <small>Total Margin:</small>
-                        <small class="fw-bold">{{ trade.executionResult.volumeMarginAdded.totalMargin.toFixed(2) }}</small>
+                        <small>Sentiment Margin:</small>
+                        <small class="fw-bold text-success">+{{ trade.executionResult.sentimentMarginAdded.percentage
+                        }}%</small>
                       </div>
                     </div>
                     <div class="d-flex justify-content-between">
                       <small>Entry Order:</small>
-                      <small class="text-truncate" style="max-width: 150px;">{{ trade.executionResult.entryOrderId }}</small>
+                      <small class="text-truncate" style="max-width: 150px;">{{ trade.executionResult.entryOrderId
+                      }}</small>
                     </div>
                     <div class="d-flex justify-content-between">
                       <small>Stop Order:</small>
-                      <small class="text-truncate" style="max-width: 150px;">{{ trade.executionResult.stopOrderId }}</small>
+                      <small class="text-truncate" style="max-width: 150px;">{{ trade.executionResult.stopOrderId
+                      }}</small>
                     </div>
                   </div>
                 </div>
@@ -146,20 +150,15 @@
                   View Analysis
                 </a>
                 <template v-if="trade.isWarning">
-                  <button 
-                    @click="enterMarket(trade)" 
-                    class="btn btn-sm btn-success"
-                    :disabled="trade.isLoading"
-                  >
-                    <span v-if="trade.isLoading" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                  <button @click="enterMarket(trade)" class="btn btn-sm btn-success" :disabled="trade.isLoading">
+                    <span v-if="trade.isLoading" class="spinner-border spinner-border-sm me-1" role="status"
+                      aria-hidden="true"></span>
                     {{ trade.isLoading ? 'Entering...' : 'Enter Market' }}
                   </button>
-                  <button 
-                    @click="enterMarketWithTP1(trade)" 
-                    class="btn btn-sm btn-warning"
-                    :disabled="trade.isLoadingTP1"
-                  >
-                    <span v-if="trade.isLoadingTP1" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                  <button @click="enterMarketWithTP1(trade)" class="btn btn-sm btn-warning"
+                    :disabled="trade.isLoadingTP1">
+                    <span v-if="trade.isLoadingTP1" class="spinner-border spinner-border-sm me-1" role="status"
+                      aria-hidden="true"></span>
                     {{ trade.isLoadingTP1 ? 'Entering...' : 'Enter Market (TP1 Adjusted)' }}
                   </button>
                 </template>
