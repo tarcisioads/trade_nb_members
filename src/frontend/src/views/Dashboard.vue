@@ -712,8 +712,8 @@ const twoMonthsAgo = new Date(new Date().setMonth(today.getMonth() - 2));
 const filters = ref({
   symbol: 'ALL',
   setupDescription: 'ALL',
-  startDate: twoMonthsAgo.toISOString().split('T')[0],
-  endDate: new Date().toISOString().split('T')[0],
+  startDate: null,
+  endDate: null,
   minResult: 0
 });
 
