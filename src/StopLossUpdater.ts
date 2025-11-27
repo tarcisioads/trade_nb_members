@@ -26,7 +26,8 @@ export class StopLossUpdater {
 
     const entryFeeAmount = positionValue * (marketOrderFee / 100);
     const exitFeeAmount = positionValue * (limitOrderFee / 100);
-    const totalFeeAmount = entryFeeAmount + exitFeeAmount;
+    const variationFeeAmount = positionValue * (0.01 / 100);
+    const totalFeeAmount = entryFeeAmount + exitFeeAmount + variationFeeAmount;
 
     const feePriceImpact = totalFeeAmount / absPositionAmt;
 
