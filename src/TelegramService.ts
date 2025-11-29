@@ -6,57 +6,57 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 export class TelegramService {
-    private readonly bot?: TelegramBot;
-    private readonly chatId: string;
-    private static instance: TelegramService;
+  private readonly bot?: TelegramBot;
+  private readonly chatId: string;
+  private static instance: TelegramService;
 
-    private constructor() {
-        const telegramToken = process.env.TELEGRAM_BOT_TOKEN;
-        const telegramChatId = process.env.TELEGRAM_CHAT_ID;
+  private constructor() {
+    const telegramToken = process.env.TELEGRAM_BOT_TOKEN;
+    const telegramChatId = process.env.TELEGRAM_CHAT_ID;
 
-        if (!telegramToken || !telegramChatId) {
-            console.warn('Telegram configuration not found in .env file. Telegram notifications will be disabled.');
-            console.warn('Please set TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID in your .env file.');
-            this.chatId = '';
-        } else {
-            this.chatId = telegramChatId;
-            this.bot = new TelegramBot(telegramToken, { polling: false });
-            console.log('Telegram service initialized successfully');
-        }
+    if (!telegramToken || !telegramChatId) {
+      console.warn('Telegram configuration not found in .env file. Telegram notifications will be disabled.');
+      console.warn('Please set TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID in your .env file.');
+      this.chatId = '';
+    } else {
+      this.chatId = telegramChatId;
+      this.bot = new TelegramBot(telegramToken, { polling: false });
+      console.log('Telegram service initialized successfully');
+    }
+  }
+
+  public static getInstance(): TelegramService {
+    if (!TelegramService.instance) {
+      TelegramService.instance = new TelegramService();
+    }
+    return TelegramService.instance;
+  }
+
+  public isConfigured(): boolean {
+    return !!this.bot && !!this.chatId;
+  }
+
+  private async sendMessage(message: string): Promise<void> {
+    if (!this.isConfigured()) {
+      console.warn('Telegram service is not properly configured. Skipping notification.');
+      return;
     }
 
-    public static getInstance(): TelegramService {
-        if (!TelegramService.instance) {
-            TelegramService.instance = new TelegramService();
-        }
-        return TelegramService.instance;
+    try {
+      await this.bot!.sendMessage(this.chatId, message, { parse_mode: 'HTML' });
+      console.log('Telegram notification sent successfully');
+    } catch (error) {
+      console.error('Error sending Telegram notification:', error);
+      throw error;
     }
+  }
 
-    public isConfigured(): boolean {
-        return !!this.bot && !!this.chatId;
-    }
+  private formatTradeMessage(trade: TradeNotification): string {
+    const direction = trade.type === 'LONG' ? '🟢 LONG' : '🔴 SHORT';
+    const status = trade.isWarning ? '⚠️ AVISO' : '✅ TRADE';
+    const validationStatus = trade.validation.isValid ? '✅ Válido' : '❌ Inválido';
 
-    private async sendMessage(message: string): Promise<void> {
-        if (!this.isConfigured()) {
-            console.warn('Telegram service is not properly configured. Skipping notification.');
-            return;
-        }
-
-        try {
-            await this.bot!.sendMessage(this.chatId, message, { parse_mode: 'HTML' });
-            console.log('Telegram notification sent successfully');
-        } catch (error) {
-            console.error('Error sending Telegram notification:', error);
-            throw error;
-        }
-    }
-
-    private formatTradeMessage(trade: TradeNotification): string {
-        const direction = trade.type === 'LONG' ? '🟢 LONG' : '🔴 SHORT';
-        const status = trade.isWarning ? '⚠️ AVISO' : '✅ TRADE';
-        const validationStatus = trade.validation.isValid ? '✅ Válido' : '❌ Inválido';
-        
-        let message = `
+    let message = `
 <b>🚨 ${status} - ${direction}</b>
 
 📊 Par: ${trade.symbol}
@@ -82,22 +82,25 @@ ${trade.executionResult ? `
    Alavancagem: ${trade.executionResult.leverage}x
    Quantidade: ${trade.executionResult.quantity}
    ${trade.executionResult.volumeMarginAdded ? `
-   Margem Adicional: ${trade.executionResult.volumeMarginAdded.percentage}%
-   Margem Base: ${trade.executionResult.volumeMarginAdded.baseMargin.toFixed(2)}
-   Margem Total: ${trade.executionResult.volumeMarginAdded.totalMargin.toFixed(2)}` : ''}` : ''}
+   Volume Margem Adicional: ${trade.executionResult.volumeMarginAdded.percentage}%
+    ` : ''}
+  ${trade.executionResult.sentimentMarginAdded ? `
+   Sentiment Margem Adicional: ${trade.executionResult.sentimentMarginAdded.percentage}%
+    ` : ''}
+` : ''}
 
 ${trade.analysisUrl ? `\n🔍 <a href="${trade.analysisUrl}">Ver Análise</a>` : ''}
         `.trim();
 
-        return message;
-    }
+    return message;
+  }
 
-    public async sendTradeNotification(trade: TradeNotification): Promise<void> {
-        const message = this.formatTradeMessage(trade);
-        await this.sendMessage(message);
-    }
+  public async sendTradeNotification(trade: TradeNotification): Promise<void> {
+    const message = this.formatTradeMessage(trade);
+    await this.sendMessage(message);
+  }
 
-    public async sendCustomMessage(message: string): Promise<void> {
-        await this.sendMessage(message);
-    }
+  public async sendCustomMessage(message: string): Promise<void> {
+    await this.sendMessage(message);
+  }
 } 

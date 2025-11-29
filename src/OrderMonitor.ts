@@ -202,6 +202,8 @@ export class OrderMonitor {
       // Update open orders first to get latest state
       await this.updateOpenOrders();
 
+      let list: string[] = []
+
       // For each open order, check if there's a corresponding monitored position
       for (const order of this.openOrders.values()) {
         const positionKey = `${order.symbol}_${order.positionSide}`;
@@ -214,10 +216,52 @@ export class OrderMonitor {
 
           try {
             // Check for existing position
-            const { hasPosition: hasPositionRevalidate, message } = await this.positionValidator.hasOpenPosition(order.symbol, order.positionSide);
-            if ((!hasPositionRevalidate) && (!message.toLowerCase().includes('error'))) {
+            const { hasPosition: hasPositionRevalidate, position, message } = await this.positionValidator.hasOpenPosition(order.symbol, order.positionSide);
+            if ((!hasPositionRevalidate) && (!position) && (!message.toLowerCase().includes('error'))) {
               console.log(`Found orphaned order for ${order.symbol} ${order.positionSide} (${order.type})`);
-              await this.cancelOrder(order);
+              //await this.cancelOrder(order);
+              const item = list.find(p => p == positionKey)
+              if (!item) {
+                list.push(positionKey)
+                // Send notification about the error cancelling the order
+                await this.notificationService.sendTradeNotification({
+                  symbol: order.symbol,
+                  type: order.positionSide,
+                  entry: 0,
+                  stop: parseFloat(order.stopPrice || '0'),
+                  takeProfits: {
+                    tp1: 0,
+                    tp2: null,
+                    tp3: null,
+                    tp4: null,
+                    tp5: null,
+                    tp6: null
+                  },
+                  validation: {
+                    isValid: false,
+                    message: `Founded orphaned order for ${order.symbol} ${order.positionSide}`,
+                    volumeAnalysis: {
+                      color: 'red',
+                      stdBar: 0,
+                      currentVolume: 0,
+                      mean: 0,
+                      std: 0
+                    },
+                    entryAnalysis: {
+                      currentClose: 0,
+                      canEnter: false,
+                      hasClosePriceBeforeEntry: true,
+                      message: 'Founded orphaned order'
+                    }
+                  },
+                  analysisUrl: '',
+                  volume_required: false,
+                  volume_adds_margin: false,
+                  setup_description: `❌ Founded orphaned order for ${order.symbol} ${order.positionSide}. Order ID: ${order.orderId}`,
+                  interval: null
+                });
+
+              }
             }
           } catch (error) {
             console.error('Error cancelling orphaned orders:', error);

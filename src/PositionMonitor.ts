@@ -7,6 +7,7 @@ import { BingXOrderExecutor } from './BingXOrderExecutor';
 import { normalizeSymbolBingX } from './utils/bingxUtils';
 import { NotificationService } from './NotificationService';
 import * as dotenv from 'dotenv';
+import { StopLossUpdater } from './StopLossUpdater';
 
 // Load environment variables
 dotenv.config();
@@ -21,6 +22,8 @@ export class PositionMonitor {
   private onPriceUpdate?: (position: MonitoredPosition) => void;
   private readonly limitOrderFee: number;
   private readonly marketOrderFee: number;
+  private readonly activationFactorStoploss: number;
+  private stopLossUpdater?: StopLossUpdater; // Add this property
 
   constructor(onPriceUpdate?: (position: MonitoredPosition) => void) {
     this.positionValidator = new PositionValidator();
@@ -31,6 +34,7 @@ export class PositionMonitor {
     this.onPriceUpdate = onPriceUpdate;
     this.limitOrderFee = parseFloat(process.env.BINGX_LIMIT_ORDER_FEE || '0.02');
     this.marketOrderFee = parseFloat(process.env.BINGX_MARKET_ORDER_FEE || '0.05');
+    this.activationFactorStoploss = parseFloat(process.env.ACTIVATION_FACTOR_STOPLOSS || '1');
   }
 
   private getPositionKey(symbol: string, positionSide: 'LONG' | 'SHORT'): string {
@@ -54,7 +58,7 @@ export class PositionMonitor {
     return Math.max(...matchingTrades.map(trade => trade.id));
   }
 
-  private async checkStopLossBeforeLiquidation(
+  public async checkStopLossBeforeLiquidation(
     position: Position,
     stopLossOrder: Order | undefined
   ): Promise<void> {
@@ -62,7 +66,7 @@ export class PositionMonitor {
       return;
     }
 
-    const stopPrice = parseFloat(stopLossOrder.stopPrice);
+    const stopPrice = parseFloat(stopLossOrder.price);
     const currentPrice = parseFloat(position.markPrice);
     const entryPrice = parseFloat(position.avgPrice);
 
@@ -132,7 +136,7 @@ export class PositionMonitor {
         stopPrice: initialStopPrice,
         quantity: parseFloat(position.positionAmt)
       });
-      
+
       const newStopOrder = await this.orderExecutor.placeOrder(
         position.symbol,
         position.positionSide === 'LONG' ? 'SELL' : 'BUY',
@@ -140,7 +144,8 @@ export class PositionMonitor {
         'STOP',
         initialStopPrice,
         initialStopPrice,
-        parseFloat(position.positionAmt)
+        parseFloat(position.positionAmt),
+        undefined, undefined, position.positionId
       );
 
       const stopLossOrder: Order = {
@@ -262,9 +267,11 @@ export class PositionMonitor {
 
 
     let initialStopPrice: number | undefined;
+    let initialTp1: number | undefined;
     if (tradeId) {
       const trade = await this.tradeDatabase.getTradeById(tradeId);
       initialStopPrice = trade?.stop; // Using the 'stop' field from TradeRecord
+      initialTp1 = trade?.tp1; // Using the 'tp1' field from TradeRecord
       // If no stop loss order exists but we have a trade stop price, create one
       if (!stopLossOrder && initialStopPrice) {
         stopLossOrder = await this.createStopLossOrder(position, initialStopPrice);
@@ -279,9 +286,10 @@ export class PositionMonitor {
       existingPosition.entryPrice = parseFloat(position.avgPrice);
       if (initialStopPrice) {
         existingPosition.initialStopPrice = initialStopPrice;
-      } else if (stopLossOrder){
-        existingPosition.initialStopPrice = parseFloat(stopLossOrder.stopPrice);
+      } else if (stopLossOrder) {
+        existingPosition.initialStopPrice = parseFloat(stopLossOrder.price);
       }
+      existingPosition.initialTp1 = initialTp1;
     }
 
     if (!existingPosition?.websocket) {
@@ -296,32 +304,11 @@ export class PositionMonitor {
         tradeId,
         lastPrice: undefined,
         stopLossOrder,
-        initialStopPrice: initialStopPrice ? initialStopPrice : stopLossOrder ? parseFloat(stopLossOrder.stopPrice) : undefined,
+        initialStopPrice: initialStopPrice ? initialStopPrice : stopLossOrder ? parseFloat(stopLossOrder.price) : undefined,
         entryPrice: parseFloat(position.avgPrice),
         leverage
       });
     }
-  }
-
-  private calculateBreakeven(position: MonitoredPosition): { breakevenWithFees: number, totalFeeAmount: number, positionValue: number } | null {
-    if (typeof position.entryPrice === 'undefined') {
-      return null;
-    }
-    const entryPrice = position.entryPrice;
-    const positionAmt = Math.abs(parseFloat(position.position.positionAmt));
-    const positionValue = positionAmt * entryPrice;
-
-    const entryFeeAmount = positionValue * (this.marketOrderFee / 100);
-    const exitFeeAmount = positionValue * (this.limitOrderFee / 100);
-    const totalFeeAmount = entryFeeAmount + exitFeeAmount;
-
-    const feePriceImpact = totalFeeAmount / positionAmt;
-
-    const breakevenWithFees = position.positionSide === 'LONG'
-      ? entryPrice + feePriceImpact
-      : entryPrice - feePriceImpact;
-
-    return { breakevenWithFees, totalFeeAmount, positionValue };
   }
 
   private async checkAndUpdateStopLoss(position: MonitoredPosition, currentPrice: number): Promise<void> {
@@ -330,7 +317,7 @@ export class PositionMonitor {
     }
 
     const entryPrice = position.entryPrice;
-    const currentStopPrice = parseFloat(position.stopLossOrder.stopPrice);
+    const currentStopPrice = parseFloat(position.stopLossOrder.price);
     const positionSide = position.positionSide;
 
     if (!position.stopLossOrder || isNaN(currentStopPrice)) {
@@ -348,125 +335,49 @@ export class PositionMonitor {
     const risk = Math.abs(entryPrice - currentStopPrice);
     const reward = Math.abs(currentPrice - entryPrice);
 
-    if (reward >= risk) {
-      const breakevenData = this.calculateBreakeven(position);
+    const risk_with_factor = risk * this.activationFactorStoploss;
+    let hitTakeProfit1 = false;
+    if (position.initialTp1) {
+      if ((positionSide == 'LONG') && (currentPrice >= position.initialTp1)) {
+        hitTakeProfit1 = true;
+      }
+      if ((positionSide == 'SHORT') && (currentPrice <= position.initialTp1)) {
+        hitTakeProfit1 = true;
+      }
+    }
+
+    if ((reward >= risk_with_factor) || (hitTakeProfit1)) {
+      // Usar o método estático da nova classe
+      const breakevenData = StopLossUpdater.calculateBreakeven(
+        entryPrice,
+        parseFloat(position.position.positionAmt),
+        positionSide,
+        this.marketOrderFee,
+        this.limitOrderFee
+      );
       if (!breakevenData) {
         return;
       }
-      const { breakevenWithFees, totalFeeAmount, positionValue } = breakevenData;
-
-      const isCurrentPriceBetter = positionSide === 'LONG'
-        ? currentPrice > breakevenWithFees
-        : currentPrice < breakevenWithFees;
-
-      const shouldUpdate = isCurrentPriceBetter && (positionSide === 'LONG'
-        ? currentStopPrice < breakevenWithFees
-        : currentStopPrice > breakevenWithFees);
-
-      if (shouldUpdate) {
-        if (position.stopLossOrder) {
-          position.stopLossOrder.stopPrice = breakevenWithFees.toString()
-        }
-        try {
-          const response = await this.orderExecutor.cancelReplaceOrder(
-            position.symbol,
-            positionSide === 'LONG' ? 'SELL' : 'BUY',
-            positionSide,
-            'STOP',
-            breakevenWithFees,
-            breakevenWithFees,
-            parseFloat(position.position.positionAmt),
-            position.tradeId,
-            position.stopLossOrder.orderId
-          );
-
-          // Check if the response code indicates an error
-          if (response.code !== 0) {
-            throw new Error(`API Error: ${response.msg} (code: ${response.code})`);
-          }
-
-          position.stopLossOrder = {
-            ...position.stopLossOrder,
-            stopPrice: breakevenWithFees.toString()
-          };
-
-          await this.notificationService.sendTradeNotification({
-            symbol: position.symbol,
-            type: positionSide,
-            entry: entryPrice,
-            stop: breakevenWithFees,
-            takeProfits: {
-              tp1: 0,
-              tp2: null,
-              tp3: null,
-              tp4: null,
-              tp5: null,
-              tp6: null
-            },
-            validation: {
-              isValid: true,
-              message: `Stop loss moved to breakeven + fees (${((totalFeeAmount / positionValue) * 100).toFixed(4)}% of position value)`,
-              volumeAnalysis: {
-                color: 'green',
-                stdBar: 0,
-                currentVolume: 0,
-                mean: 0,
-                std: 0
-              },
-              entryAnalysis: {
-                currentClose: currentPrice,
-                canEnter: false,
-                hasClosePriceBeforeEntry: true,
-                message: 'Stop loss moved to breakeven'
-              }
-            },
-            analysisUrl: '',
-            volume_required: false,
-            volume_adds_margin: false,
-            setup_description: `Stop loss moved to breakeven for ${position.symbol} ${positionSide} position. Fees: ${((totalFeeAmount / positionValue) * 100).toFixed(4)}% of position value (${totalFeeAmount.toFixed(8)}). Risk/Reward: ${(reward / risk).toFixed(2)}:1`,
-            interval: '1h'
-          });
-
-        } catch (error) {
-          console.error(`Error updating stop loss for ${position.symbol} ${positionSide}:`, error);
-          await this.notificationService.sendTradeNotification({
-            symbol: position.symbol,
-            type: positionSide,
-            entry: entryPrice,
-            stop: breakevenWithFees,
-            takeProfits: {
-              tp1: 0,
-              tp2: null,
-              tp3: null,
-              tp4: null,
-              tp5: null,
-              tp6: null
-            },
-            validation: {
-              isValid: false,
-              message: `❌ Failed updating stop loss for ${position.symbol} ${positionSide}`,
-              volumeAnalysis: {
-                color: 'red',
-                stdBar: 0,
-                currentVolume: 0,
-                mean: 0,
-                std: 0
-              },
-              entryAnalysis: {
-                currentClose: currentPrice,
-                canEnter: false,
-                hasClosePriceBeforeEntry: true,
-                message: '❌ Failed updating stop loss'
-              }
-            },
-            analysisUrl: '',
-            volume_required: false,
-            volume_adds_margin: false,
-            setup_description: `❌ Failed updating stop loss for ${position.symbol} ${positionSide}: ${error}`,
-            interval: '1h'
-          });
-        }
+      if (!this.stopLossUpdater) {
+        this.stopLossUpdater = new StopLossUpdater(this.orderExecutor, this.notificationService);
       }
+
+      if (position.stopLossOrder) {
+        position.stopLossOrder.price = breakevenData.breakevenWithFees.toString();
+        position.stopLossOrder.stopPrice = breakevenData.breakevenWithFees.toString();
+      }
+
+      await this.stopLossUpdater.updateStopLossIfNeeded(
+        position,
+        currentPrice,
+        entryPrice,
+        currentStopPrice,
+        positionSide,
+        risk,
+        reward,
+        breakevenData
+      );
+
     }
   }
 

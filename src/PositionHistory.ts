@@ -42,11 +42,11 @@ export class PositionHistory {
 
         // Set default values for startTs and endTs if not provided
         const now = Date.now();
-        const threeMonthsAgo = now - (3 * 30 * 24 * 60 * 60 * 1000); // 3 months in milliseconds
+        const twoMonthsAgo = now - (2 * 30 * 24 * 60 * 60 * 1000); // 2 months in milliseconds
         
         const apiParams: Record<string, string | number> = {
             symbol: normalizeSymbolBingX(requestParams.symbol),
-            startTs: requestParams.startTs || threeMonthsAgo,
+            startTs: requestParams.startTs || twoMonthsAgo,
             endTs: requestParams.endTs || now
         };
 

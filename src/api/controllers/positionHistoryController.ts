@@ -70,8 +70,9 @@ export class PositionHistoryController {
 
             if (setupDescription && setupDescription !== 'ALL') {
                 positionsWithTradeInfo = positionsWithTradeInfo.filter(position => 
+                    (!position.tradeInfo?.found) ||( 
                     position.tradeInfo?.found && 
-                    position.tradeInfo.trade?.setup_description === setupDescription
+                    position.tradeInfo.trade?.setup_description === setupDescription)
                 );
             }
 
@@ -108,8 +109,9 @@ export class PositionHistoryController {
 
             if (setupDescription && setupDescription !== 'ALL') {
                 positionsWithTradeInfo = positionsWithTradeInfo.filter(position => 
-                    position.tradeInfo?.found && 
-                    position.tradeInfo.trade?.setup_description === setupDescription
+                    (!position.tradeInfo?.found) ||( 
+                        position.tradeInfo?.found && 
+                        position.tradeInfo.trade?.setup_description === setupDescription)
                 );
             }
 
@@ -205,8 +207,9 @@ export class PositionHistoryController {
             let positionsWithTradeInfo = await this.positionHistoryService.enrichPositionsWithTradeInfo(positions);
             if (setupDescription && setupDescription !== 'ALL') {
                 positionsWithTradeInfo = positionsWithTradeInfo.filter(position => 
-                    position.tradeInfo?.found && 
-                    position.tradeInfo.trade?.setup_description === setupDescription
+                    (!position.tradeInfo?.found) ||( 
+                        position.tradeInfo?.found && 
+                        position.tradeInfo.trade?.setup_description === setupDescription)
                 );
             }
 
@@ -241,6 +244,46 @@ export class PositionHistoryController {
                 success: false,
                 error: 'Failed to fetch available setup descriptions'
             });
+        }
+    }
+
+    public async createPositionHistory(req: Request, res: Response): Promise<void> {
+        try {
+            const position: any = req.body;
+            await this.positionHistoryService.savePositionHistory([position]);
+            res.status(201).json({ success: true, message: 'Position history created successfully' });
+        } catch (error) {
+            console.error('Error creating position history:', error);
+            res.status(500).json({ success: false, error: 'Failed to create position history' });
+        }
+    }
+
+    public async updatePositionHistory(req: Request, res: Response): Promise<void> {
+        try {
+            const { positionId } = req.params;
+            const position: any = req.body;
+            position.positionId = positionId;
+            await this.positionHistoryService.savePositionHistory([position]);
+            res.json({ success: true, message: 'Position history updated successfully' });
+        } catch (error) {
+            console.error('Error updating position history:', error);
+            res.status(500).json({ success: false, error: 'Failed to update position history' });
+        }
+    }
+
+    public async getPositionHistoryById(req: Request, res: Response): Promise<void> {
+        try {
+            const { positionId } = req.params;
+            const positions = await this.positionHistoryService.getPositionHistory('ALL', undefined, undefined, 1, 100000);
+            const position = positions.find(p => p.positionId === positionId);
+            if (!position) {
+                res.status(404).json({ success: false, error: 'Position not found' });
+                return;
+            }
+            res.json(position);
+        } catch (error) {
+            console.error('Error fetching position history by id:', error);
+            res.status(500).json({ success: false, error: 'Failed to fetch position history by id' });
         }
     }
 } 

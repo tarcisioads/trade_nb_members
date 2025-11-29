@@ -1,6 +1,6 @@
-# Gemini Workspace Configuration
+# Qwen Code Workspace Configuration
 
-This document provides context and guidelines for the Gemini AI assistant when working within the `trade_nb_members` project.
+This document provides context and guidelines for the Qwen Code AI assistant when working within the `trade_nb_members` project.
 
 ## Project Overview
 
@@ -22,3 +22,10 @@ The project uses Node.js, TypeScript, Vue.js, and SQLite. Tests are written with
 
 - **Language:** All code, comments, and documentation must be written in **English**.
 - **Project Structure:** Do not create `docs` or `documentation` folders. All documentation should be in Markdown files (`.md`) in the root directory or other relevant locations.
+
+## Commit Guidelines
+
+- **Simplify Messages:** Keep commit messages simple and to the point.
+- **Group by Theme:** Group related changes into a single commit.
+- **No Confirmation:** Do not ask for confirmation of the commit message. Proceed directly with the commit.
+- **No AI Co-Author:** Never add AI assistants (like yourself) as co-authors to commits or pull requests. All contributions are considered part of the project's own development process.
