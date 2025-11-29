@@ -9,6 +9,7 @@
     "api": "ts-node src/api/index.ts",
     "frontend:dev": "vite",
     "frontend:build": "vite build",
+    "dev:web": "concurrently \"npm run api\" \"npm run frontend:dev\"",
     "dev:all": "concurrently \"npm run api\" \"npm run frontend:dev\" \"npm run dev\"",
     "build:all": "npm run frontend:build && NODE_ENV=production npm run api"
   },
