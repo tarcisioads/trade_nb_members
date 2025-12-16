@@ -1,5 +1,5 @@
 <template>
-  <div class="container mx-auto mt-4 px-4">
+  <div v-if="connectionStatus !== 'Disconnected' && connectionStatus !== 'Error'" class="container mx-auto mt-4 px-4">
     <audio ref="alertSound" src="/api/alert" preload="auto"></audio>
     <div class="glass-card">
       <div class="p-4 border-b border-white/10 flex justify-between items-center bg-blue-600/10">
