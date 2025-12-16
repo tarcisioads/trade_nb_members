@@ -63,28 +63,60 @@ export class TakeProfitService {
     } else {
       // Retorna até 6 zonas como take profits, sendo o primeiro o 1:1
       const rrSteps = [2, 3, 3.5, 4, 5];
-      const filteredTakeProfits = rrSteps.map(rr => {
+      const usedValues = new Set<number>();
+      usedValues.add(tp1);
+      
+      takeProfits = [tp1];
+
+      for (const rr of rrSteps) {
         let tp: number;
         if (side === 'LONG') {
           tp = entry + rr * (entry - stop);
         } else {
           tp = entry - rr * (stop - entry);
         }
-        const findZone = filteredZones.filter(z => {
+        
+        // Find suitable zones
+        const validZones = filteredZones.filter(z => {
           if (side === 'LONG') {
-            return z.price >= tp
+            return z.price >= tp;
           } else {
-            return z.price <= tp
+            return z.price <= tp;
           }
-        })
-        let tpValue = tp
-        if (findZone.length > 0) {
-          tpValue = findZone[0].price
-        }
-        return Number(tpValue.toFixed(decimalPlaces));
-      });
+        });
 
-      takeProfits = [tp1, ...filteredTakeProfits.slice(0, 5)];
+        // Try to find an unused zone
+        let selectedValue: number | null = null;
+        for (const zone of validZones) {
+          const zonePrice = Number(zone.price.toFixed(decimalPlaces));
+          if (!usedValues.has(zonePrice)) {
+            selectedValue = zonePrice;
+            break;
+          }
+        }
+
+        // If no unused zone found, use theoretical TP
+        if (selectedValue === null) {
+          const theoreticalTp = Number(tp.toFixed(decimalPlaces));
+          // Ensure theoretical TP is also unique (though RR steps should guarantee this mostly)
+          if (!usedValues.has(theoreticalTp)) {
+            selectedValue = theoreticalTp;
+          } else {
+             // Edge case: theoretical matches existing? (unlikely with 1, 2, 3...)
+             // Just skip or keep looking? 
+             // Logic: If theoretical is used, it means we have a duplicate structure somehow.
+             // We can just skip or add epsilon. But simpler to just use it? 
+             // If we rely on Set, we can't add it.
+             // Let's assume distinct RR steps generate distinct values.
+             selectedValue = theoreticalTp;
+          }
+        }
+
+        if (selectedValue !== null && !usedValues.has(selectedValue)) {
+            takeProfits.push(selectedValue);
+            usedValues.add(selectedValue);
+        }
+      }
     }
     return takeProfits;
   }
