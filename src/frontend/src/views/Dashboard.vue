@@ -22,7 +22,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 items-end">
               <div>
                 <label for="symbolFilter" class="block text-sm font-semibold mb-2">Symbol</label>
-                <select v-model="filters.symbol" @change="loadData" class="form-input w-full" id="symbolFilter">
+                <select v-model="filters.symbol" @change="loadData" class="w-full bg-gray-900/50 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all outline-none appearance-none" id="symbolFilter">
                   <option value="ALL">All Symbols</option>
                   <option v-for="symbol in availableSymbols" :key="symbol" :value="symbol">
                     {{ symbol }}
@@ -31,7 +31,7 @@
               </div>
               <div>
                 <label for="setupFilter" class="block text-sm font-semibold mb-2">Setup</label>
-                <select v-model="filters.setupDescription" @change="loadData" class="form-input w-full" id="setupFilter">
+                <select v-model="filters.setupDescription" @change="loadData" class="w-full bg-gray-900/50 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all outline-none appearance-none" id="setupFilter">
                   <option value="ALL">All Setups</option>
                   <option v-for="setup in availableSetupDescriptions" :key="setup" :value="setup">
                     {{ setup }}
@@ -40,12 +40,12 @@
               </div>
               <div>
                 <label for="startDate" class="block text-sm font-semibold mb-2">Start Date</label>
-                <input type="date" v-model="filters.startDate" @change="loadData" class="form-input w-full"
+                <input type="date" v-model="filters.startDate" @change="loadData" class="w-full bg-gray-900/50 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all outline-none"
                   id="startDate">
               </div>
               <div>
                 <label for="endDate" class="block text-sm font-semibold mb-2">End Date</label>
-                <input type="date" v-model="filters.endDate" @change="loadData" class="form-input w-full" id="endDate">
+                <input type="date" v-model="filters.endDate" @change="loadData" class="w-full bg-gray-900/50 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all outline-none" id="endDate">
               </div>
               <div>
                 <label for="minResult" class="block text-sm font-semibold mb-2">
@@ -54,7 +54,7 @@
                     Abs result ≥ amount
                   </span>
                 </label>
-                <input type="number" v-model="filters.minResult" @change="loadData" class="form-input w-full"
+                <input type="number" v-model="filters.minResult" @change="loadData" class="w-full bg-gray-900/50 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all outline-none"
                   id="minResult" placeholder="0.00" step="0.01">
               </div>
               <div>
@@ -241,20 +241,22 @@
         </div>
 
         <!-- Performance Charts -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          <div class="lg:col-span-2">
-            <div class="glass-card h-full flex flex-col">
-              <div class="p-4 border-b border-white/10 bg-green-500/10">
-                <h5 class="flex items-center text-lg font-semibold text-green-400">
-                  <i class="bi bi-graph-up mr-2"></i>
-                  Cumulative Profit Over Time
-                </h5>
-              </div>
-              <div class="p-4 flex-grow">
-                <PerformanceChart :positions="positions" />
-              </div>
+        <div class="mb-8">
+          <div class="glass-card h-full flex flex-col">
+            <div class="p-4 border-b border-white/10 bg-green-500/10">
+              <h5 class="flex items-center text-lg font-semibold text-green-400">
+                <i class="bi bi-graph-up mr-2"></i>
+                Cumulative Profit Over Time
+              </h5>
+            </div>
+            <div class="p-4 flex-grow">
+              <PerformanceChart :positions="positions" />
             </div>
           </div>
+        </div>
+
+        <!-- Symbol Performance Charts -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           <div>
             <div class="glass-card h-full flex flex-col">
               <div class="p-4 border-b border-white/10 bg-green-500/10">
@@ -264,14 +266,10 @@
                 </h5>
               </div>
               <div class="p-4 flex-grow">
-                <ProfitBySymbolChart :positions="positions" />
+                <ProfitBySymbolChart :data="stats.topProfitableSymbols || []" />
               </div>
             </div>
           </div>
-        </div>
-
-        <!-- Loss by Symbol Chart -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
           <div>
             <div class="glass-card h-full flex flex-col">
               <div class="p-4 border-b border-white/10 bg-red-500/10">
@@ -281,7 +279,7 @@
                 </h5>
               </div>
               <div class="p-4 flex-grow">
-                <LossBySymbolChart :positions="positions" />
+                <LossBySymbolChart :data="stats.topLosingSymbols || []" />
               </div>
             </div>
           </div>
@@ -344,7 +342,7 @@
               <!-- Detailed Breakdown -->
               <div class="mt-8">
                 <h6 class="text-gray-400 mb-4 font-semibold">Cost Breakdown by Symbol</h6>
-                <div class="overflow-x-auto">
+                <div class="overflow-x-auto overflow-y-auto max-h-96">
                   <table class="w-full text-sm text-left">
                     <thead class="text-xs uppercase bg-white/5 text-gray-400">
                       <tr>

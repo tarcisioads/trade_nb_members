@@ -11,8 +11,9 @@ export class NotificationController {
 
     async getNotifications(req: Request, res: Response): Promise<void> {
         try {
-            const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
-            const notifications = await this.notificationService.getNotifications(limit);
+            const limit = req.query.limit ? parseInt(req.query.limit as string) : 15;
+            const page = req.query.page ? parseInt(req.query.page as string) : 1;
+            const notifications = await this.notificationService.getNotifications(limit, page);
             res.status(200).json(notifications);
         } catch (error) {
             console.error('Error getting notifications:', error);

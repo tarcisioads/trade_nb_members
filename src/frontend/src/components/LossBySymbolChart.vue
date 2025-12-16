@@ -11,9 +11,9 @@ import { Chart, registerables } from 'chart.js'
 Chart.register(...registerables)
 
 interface Props {
-  positions: Array<{
+  data: Array<{
     symbol: string
-    netProfit: string
+    amount: number
   }>
 }
 
@@ -24,24 +24,9 @@ let chart: Chart | null = null
 const createChart = () => {
   if (!chartCanvas.value) return
 
-  // Process data for loss distribution (only negative profits)
-  const symbolData: { [key: string]: number } = {}
-  
-  props.positions.forEach(position => {
-    const symbol = position.symbol
-    const profit = parseFloat(position.netProfit || '0')
-    
-    // Only include negative profits (losses)
-    if (profit < 0) {
-      if (!symbolData[symbol]) {
-        symbolData[symbol] = 0
-      }
-      symbolData[symbol] += Math.abs(profit) // Use absolute value for display
-    }
-  })
-
-  const labels = Object.keys(symbolData)
-  const data = Object.values(symbolData)
+  const sortedData = props.data || []
+  const labels = sortedData.map(item => item.symbol)
+  const data = sortedData.map(item => item.amount)
   
   // Generate colors for losses (red tones)
   const colors = [
@@ -109,7 +94,7 @@ onMounted(() => {
   createChart()
 })
 
-watch(() => props.positions, () => {
+watch(() => props.data, () => {
   updateChart()
 }, { deep: true })
 </script>

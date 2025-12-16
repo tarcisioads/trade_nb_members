@@ -14,11 +14,9 @@ export class NotificationTradeService {
     this.notificationService = new NotificationService();
   }
 
-  async getNotifications(limit?: number): Promise<TradeNotification[]> {
-    const notifications = await this.tradeDatabase.getTradeNotifications();
-    if (limit) {
-      return notifications.slice(0, limit);
-    }
+  async getNotifications(limit: number = 50, page: number = 1): Promise<TradeNotification[]> {
+    const offset = (page - 1) * limit;
+    const notifications = await this.tradeDatabase.getTradeNotifications({}, limit, offset);
     return notifications;
   }
 

@@ -46,6 +46,7 @@
     "ws": "^8.18.2"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.18",
     "@types/jest": "^29.5.14",
     "@types/node-cron": "^3.0.11",
     "@types/node-telegram-bot-api": "^0.64.9",

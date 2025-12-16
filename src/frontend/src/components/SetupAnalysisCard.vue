@@ -6,7 +6,7 @@
         Setup Analysis
       </h5>
     </div>
-    <div class="overflow-x-auto flex-grow">
+    <div class="overflow-x-auto overflow-y-auto max-h-96 flex-grow">
       <table class="w-full text-sm text-left">
         <thead class="text-xs uppercase bg-white/5 text-gray-400">
           <tr>

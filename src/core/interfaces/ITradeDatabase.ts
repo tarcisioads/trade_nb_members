@@ -82,7 +82,9 @@ export interface ITradeDatabase {
             volume_adds_margin?: boolean;
             start_date?: string;
             end_date?: string;
-        }
+        },
+        limit?: number,
+        offset?: number
     ): Promise<TradeNotification[]>;
 
     getDistinctSymbols(): Promise<string[]>;

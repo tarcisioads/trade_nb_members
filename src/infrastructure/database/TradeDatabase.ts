@@ -562,7 +562,9 @@ export class TradeDatabase implements ITradeDatabase {
       volume_adds_margin?: boolean;
       start_date?: string;
       end_date?: string;
-    } = {}
+    } = {},
+    limit: number = 50,
+    offset: number = 0
   ): Promise<TradeNotification[]> {
     const conditions = [];
     const values = [];
@@ -601,10 +603,13 @@ export class TradeDatabase implements ITradeDatabase {
     }
 
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
-    const rows = (await this.db.all(
-      `SELECT notification_data FROM trade_notifications ${whereClause} ORDER BY timestamp DESC`,
-      values
-    )) as { notification_data: string }[];
+    
+    // Adiciona LIMIT e OFFSET
+    const query = `SELECT notification_data FROM trade_notifications ${whereClause} ORDER BY timestamp DESC LIMIT ? OFFSET ?`;
+    values.push(limit);
+    values.push(offset);
+
+    const rows = (await this.db.all(query, values)) as { notification_data: string }[];
 
     return rows.map(row => JSON.parse(row.notification_data));
   }

@@ -33,9 +33,4 @@ onMounted(() => {
 })
 </script>
 
-<style>
-/* Global styles can be added here if needed, but sticking to utility classes is preferred */
-body {
-  @apply bg-gray-900 text-white;
-}
-</style> 
+ 

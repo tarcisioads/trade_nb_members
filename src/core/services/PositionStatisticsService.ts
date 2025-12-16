@@ -24,6 +24,10 @@ export class PositionStatisticsService {
         let currentDrawdown = 0;
         let maxDrawdown = 0;
 
+        // Gross profit/loss by symbol (for Top 10 charts)
+        const grossProfitBySymbol: { [key: string]: number } = {};
+        const grossLossBySymbol: { [key: string]: number } = {};
+
         // Counters for sequences
         let currentConsecutiveWins = 0;
         let currentConsecutiveLosses = 0;
@@ -49,6 +53,9 @@ export class PositionStatisticsService {
             const netProfit = parseFloat(position.netProfit);
             if (netProfit > 0) {
                 profits.push(netProfit);
+                grossProfitBySymbol[position.symbol] = (grossProfitBySymbol[position.symbol] || 0) + netProfit;
+            } else if (netProfit < 0) {
+                grossLossBySymbol[position.symbol] = (grossLossBySymbol[position.symbol] || 0) + Math.abs(netProfit);
             }
 
             results.push(netProfit);
@@ -204,6 +211,16 @@ export class PositionStatisticsService {
         const mostProfitableSide = Object.keys(sideProfits).reduce((a, b) =>
             sideProfits[a] > sideProfits[b] ? a : b, Object.keys(sideProfits)[0] || '');
 
+        const topProfitableSymbols = Object.entries(grossProfitBySymbol)
+            .map(([symbol, amount]) => ({ symbol, amount }))
+            .sort((a, b) => b.amount - a.amount)
+            .slice(0, 10);
+
+        const topLosingSymbols = Object.entries(grossLossBySymbol)
+            .map(([symbol, amount]) => ({ symbol, amount }))
+            .sort((a, b) => b.amount - a.amount)
+            .slice(0, 10);
+
         return {
             totalPositions,
             totalProfit,
@@ -216,6 +233,8 @@ export class PositionStatisticsService {
             maxLoss: Math.round(maxLoss * 100) / 100,
             profitBySymbol,
             profitBySide,
+            topProfitableSymbols,
+            topLosingSymbols,
 
             // New risk stats
             riskMetrics: {

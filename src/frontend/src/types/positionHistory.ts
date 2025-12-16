@@ -54,6 +54,8 @@ export interface PositionStats {
   maxLoss: number
   profitBySymbol: { [key: string]: number }
   profitBySide: { [key: string]: number }
+  topProfitableSymbols?: { symbol: string; amount: number }[]
+  topLosingSymbols?: { symbol: string; amount: number }[]
   riskMetrics?: {
     totalRisk: number
     avgRiskPerTrade: number
