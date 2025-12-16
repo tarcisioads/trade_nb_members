@@ -34,7 +34,7 @@ const alertSound = ref<HTMLAudioElement | null>(null)
 
 const connectWebSocket = () => {
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-  const wsUrl = `${protocol}//localhost:3000`
+  const wsUrl = `${protocol}//${window.location.host}`
   
   ws = new WebSocket(wsUrl)
 
