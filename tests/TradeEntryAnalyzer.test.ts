@@ -1,9 +1,10 @@
-import { TradeEntryAnalyzer, TradeType } from '../src/TradeEntryAnalyzer';
-import { DataServiceManager } from '../src/DataServiceManager';
+import { TradeEntryAnalyzer } from '../src/core/services/TradeEntryAnalyzer';
+import { TradeType } from '../src/utils/types';
+import { DataServiceManager } from '../src/core/services/DataServiceManager';
 import { KlineData } from '../src/utils/types';
 
 // Mock DataServiceManager
-jest.mock('../src/DataServiceManager');
+jest.mock('../src/core/services/DataServiceManager');
 
 describe('TradeEntryAnalyzer', () => {
   let analyzer: TradeEntryAnalyzer;
@@ -12,10 +13,10 @@ describe('TradeEntryAnalyzer', () => {
   beforeEach(() => {
     // Clear all mocks before each test
     jest.clearAllMocks();
-    
+
     // Create a new instance of the analyzer
     analyzer = new TradeEntryAnalyzer();
-    
+
     // Get the mocked instance
     mockDataServiceManager = (DataServiceManager as jest.MockedClass<typeof DataServiceManager>).mock.instances[0] as jest.Mocked<DataServiceManager>;
   });
@@ -61,34 +62,62 @@ describe('TradeEntryAnalyzer', () => {
   describe('analyzeEntry', () => {
     it('should return correct analysis for LONG entry', async () => {
       const mockKlineData: KlineData[] = [
-        { close: '105', closeTime: 3, high: '106', low: '104', open: '104', openTime: 2, volume: '1000', quoteAssetVolume: '1000', numberOfTrades: 100, takerBuyBaseAssetVolume: '500', takerBuyQuoteAssetVolume: '500' },
-        { close: '102', closeTime: 2, high: '103', low: '100', open: '100', openTime: 1, volume: '1000', quoteAssetVolume: '1000', numberOfTrades: 100, takerBuyBaseAssetVolume: '500', takerBuyQuoteAssetVolume: '500' },
+        { close: '101', closeTime: 3, high: '103', low: '100', open: '100', openTime: 2, volume: '1000', quoteAssetVolume: '1000', numberOfTrades: 100, takerBuyBaseAssetVolume: '500', takerBuyQuoteAssetVolume: '500' },
+        { close: '100', closeTime: 2, high: '103', low: '99', open: '99', openTime: 1, volume: '1000', quoteAssetVolume: '1000', numberOfTrades: 100, takerBuyBaseAssetVolume: '500', takerBuyQuoteAssetVolume: '500' },
         { close: '99', closeTime: 1, high: '100', low: '98', open: '98', openTime: 0, volume: '1000', quoteAssetVolume: '1000', numberOfTrades: 100, takerBuyBaseAssetVolume: '500', takerBuyQuoteAssetVolume: '500' },
       ];
 
       mockDataServiceManager.getKlineData.mockResolvedValue({ data: mockKlineData, source: 'binance' });
 
-      const result = await analyzer.analyzeEntry('BTCUSDT', 'LONG', 100, 95);
+      const result = await analyzer.analyzeEntry({
+        symbol: 'BTCUSDT',
+        type: 'LONG',
+        entry: 100,
+        stop: 95,
+        tp1: 110,
+        tp2: null,
+        tp3: null,
+        tp4: null,
+        tp5: null,
+        tp6: null,
+        volume_adds_margin: false,
+        setup_description: '',
+        volume_required: false
+      } as any);
 
       expect(result.canEnter).toBe(true);
-      expect(result.currentClose).toBe(102);
+      expect(result.currentClose).toBe(101);
       expect(result.hasClosePriceBeforeEntry).toBe(true);
       expect(result.message).toContain('Entry condition met');
     });
 
     it('should return correct analysis for SHORT entry', async () => {
       const mockKlineData: KlineData[] = [
-        { close: '95', closeTime: 3, high: '96', low: '94', open: '94', openTime: 2, volume: '1000', quoteAssetVolume: '1000', numberOfTrades: 100, takerBuyBaseAssetVolume: '500', takerBuyQuoteAssetVolume: '500' },
-        { close: '98', closeTime: 2, high: '100', low: '97', open: '97', openTime: 1, volume: '1000', quoteAssetVolume: '1000', numberOfTrades: 100, takerBuyBaseAssetVolume: '500', takerBuyQuoteAssetVolume: '500' },
+        { close: '99', closeTime: 3, high: '100', low: '97', open: '100', openTime: 2, volume: '1000', quoteAssetVolume: '1000', numberOfTrades: 100, takerBuyBaseAssetVolume: '500', takerBuyQuoteAssetVolume: '500' },
+        { close: '100', closeTime: 2, high: '101', low: '99', open: '99', openTime: 1, volume: '1000', quoteAssetVolume: '1000', numberOfTrades: 100, takerBuyBaseAssetVolume: '500', takerBuyQuoteAssetVolume: '500' },
         { close: '101', closeTime: 1, high: '102', low: '100', open: '100', openTime: 0, volume: '1000', quoteAssetVolume: '1000', numberOfTrades: 100, takerBuyBaseAssetVolume: '500', takerBuyQuoteAssetVolume: '500' },
       ];
 
       mockDataServiceManager.getKlineData.mockResolvedValue({ data: mockKlineData, source: 'binance' });
 
-      const result = await analyzer.analyzeEntry('BTCUSDT', 'SHORT', 100, 105);
+      const result = await analyzer.analyzeEntry({
+        symbol: 'BTCUSDT',
+        type: 'SHORT',
+        entry: 100,
+        stop: 105,
+        tp1: 90,
+        tp2: null,
+        tp3: null,
+        tp4: null,
+        tp5: null,
+        tp6: null,
+        volume_adds_margin: false,
+        setup_description: '',
+        volume_required: false
+      } as any);
 
       expect(result.canEnter).toBe(true);
-      expect(result.currentClose).toBe(98);
+      expect(result.currentClose).toBe(99);
       expect(result.hasClosePriceBeforeEntry).toBe(true);
       expect(result.message).toContain('Entry condition met');
     });

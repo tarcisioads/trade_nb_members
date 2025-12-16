@@ -4,99 +4,25 @@
 
 @layer base {
   body {
-    @apply bg-white dark:bg-gray-900 text-gray-900 dark:text-white;
+    @apply bg-gray-900 text-white min-h-screen;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
   }
 }
 
-/* Estilos globais para o tema dark */
-:root {
-  --bs-body-bg: #1a1a2e;
-  --bs-body-color: #ffffff;
-}
+@layer utilities {
+  .glass-panel {
+    @apply bg-white/5 backdrop-blur-md border border-white/10;
+  }
 
-body {
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-  min-height: 100vh;
-  color: #ffffff;
-}
+  .glass-card {
+    @apply bg-white/5 backdrop-blur-sm border border-white/10 shadow-lg rounded-xl;
+  }
 
-/* Melhorias para inputs no dark mode */
-.form-control, .form-select {
-  background-color: rgba(255, 255, 255, 0.1) !important;
-  border-color: rgba(255, 255, 255, 0.2) !important;
-  color: #ffffff !important;
-}
+  .form-input {
+    @apply bg-white/10 border-white/20 text-white placeholder-white/50 focus:ring-2 focus:ring-blue-500 focus:border-transparent rounded-lg;
+  }
 
-.form-control:focus, .form-select:focus {
-  background-color: rgba(255, 255, 255, 0.15) !important;
-  border-color: #0d6efd !important;
-  color: #ffffff !important;
-  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25) !important;
+  .btn-primary {
+    @apply bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200;
+  }
 }
-
-.form-control::placeholder {
-  color: rgba(255, 255, 255, 0.6) !important;
-}
-
-/* Melhorias para cards */
-.card {
-  background-color: rgba(255, 255, 255, 0.05) !important;
-  border-color: rgba(255, 255, 255, 0.1) !important;
-}
-
-/* Melhorias para tabelas */
-.table {
-  color: #ffffff !important;
-}
-
-.table-dark {
-  background-color: rgba(0, 0, 0, 0.3) !important;
-}
-
-.table-hover tbody tr:hover {
-  background-color: rgba(255, 255, 255, 0.05) !important;
-}
-
-/* Melhorias para paginação */
-.page-link {
-  background-color: rgba(255, 255, 255, 0.1) !important;
-  border-color: rgba(255, 255, 255, 0.2) !important;
-  color: #ffffff !important;
-}
-
-.page-link:hover {
-  background-color: rgba(255, 255, 255, 0.2) !important;
-  border-color: rgba(255, 255, 255, 0.3) !important;
-  color: #ffffff !important;
-}
-
-.page-item.disabled .page-link {
-  background-color: rgba(255, 255, 255, 0.05) !important;
-  border-color: rgba(255, 255, 255, 0.1) !important;
-  color: rgba(255, 255, 255, 0.4) !important;
-}
-
-/* Scrollbar customizada */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.3);
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.5);
-}
-
-/* Animações suaves */
-* {
-  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
-} 

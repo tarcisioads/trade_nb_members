@@ -1,4 +1,4 @@
-import { BingXApiClient } from '../services/BingXApiClient';
+import { BingXApiClient } from '../infrastructure/bingx/BingXApiClient';
 
 /**
  * Normalizes a trading symbol to BingX format
@@ -8,7 +8,7 @@ import { BingXApiClient } from '../services/BingXApiClient';
 export function normalizeSymbolBingX(symbol: string): string {
     const upperSymbol = symbol.toUpperCase();
     if (upperSymbol == 'ALL') {
-        return upperSymbol;    
+        return upperSymbol;
     }
     if (!upperSymbol.endsWith('-USDT')) {
         return upperSymbol.replace('USDT', '') + '-USDT';

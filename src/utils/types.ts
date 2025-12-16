@@ -1,4 +1,4 @@
-import { BingXWebSocket } from '../BingXWebSocket';
+import { BingXWebSocket } from '../infrastructure/bingx/BingXWebSocket';
 
 export interface KlineData {
   openTime: number;
@@ -248,25 +248,7 @@ export interface TradeNotification {
 
 }
 
-export interface PositionHistory {
-  symbol: string;
-  positionId: string;
-  positionSide: string;
-  isolated: boolean;
-  closeAllPositions: boolean;
-  positionAmt: string;
-  closePositionAmt: string;
-  realisedProfit: string;
-  netProfit: string;
-  avgClosePrice: number;
-  avgPrice: string;
-  leverage: number;
-  positionCommission: string;
-  totalFunding: string;
-  openTime: number;
-  updateTime: number;
-  closeTime: number;
-}
+
 
 export interface PositionHistory {
   symbol: string;

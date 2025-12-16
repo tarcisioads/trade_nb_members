@@ -1,9 +1,9 @@
 <template>
-  <div class="notifications-history">
-    <button class="back-button" @click="goBack">
-      <span>← Back</span>
+  <div class="container mx-auto px-4 py-8">
+    <button class="mb-6 flex items-center text-gray-400 hover:text-white transition-colors" @click="goBack">
+      <span class="mr-2">←</span> Back
     </button>
-    <h1>Notifications History</h1>
+    <h1 class="text-2xl font-bold text-white mb-6">Notifications History</h1>
     <TradeListNotifications :trades="notifications" :key="notifications.length" />
   </div>
 </template>
@@ -60,30 +60,6 @@ export default defineComponent({
 })
 </script>
 
-<style scoped>
-.notifications-history {
-  padding: 20px;
-}
-
-.back-button {
-  background: none;
-  border: none;
-  color: #2c3e50;
-  font-size: 16px;
-  cursor: pointer;
-  padding: 8px 0;
-  margin-bottom: 16px;
-  display: inline-flex;
-  align-items: center;
-  transition: color 0.2s;
-}
-
-.back-button:hover {
-  color: #42b983;
-}
-
-h1 {
-  margin-bottom: 20px;
-  color: #2c3e50;
-}
+<style>
+/* Global styles or minimal overrides if needed */
 </style> 

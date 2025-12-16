@@ -1,9 +1,9 @@
 <template>
-  <div class="card">
-    <div class="card-header">
-      <h5 class="card-title mb-0">{{ title }}</h5>
+  <div class="glass-card h-full flex flex-col">
+    <div class="p-4 border-b border-white/10">
+      <h5 class="text-lg font-semibold text-white mb-0">{{ title }}</h5>
     </div>
-    <div class="card-body">
+    <div class="p-4 flex-grow" style="min-height: 300px;">
       <canvas ref="chartCanvas" :height="height"></canvas>
     </div>
   </div>
@@ -79,8 +79,5 @@ watch(() => props.data, updateChart, { deep: true })
 </script>
 
 <style scoped>
-.card {
-  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-  border: 1px solid rgba(0, 0, 0, 0.125);
-}
+/* Scoped styles removed */
 </style> 

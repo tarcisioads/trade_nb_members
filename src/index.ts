@@ -1,46 +1,109 @@
-import { TradeCronJob } from './TradeCronJob';
-import { PositionMonitorCronJob } from './PositionMonitorCronJob';
-import { PositionHistoryCronJob } from './PositionHistoryCronJob';
+import * as dotenv from 'dotenv';
+import { TradeCronJob } from './application/jobs/TradeCronJob';
+import { PositionMonitorCronJob } from './application/jobs/PositionMonitorCronJob';
+import { PositionHistoryCronJob } from './application/jobs/PositionHistoryCronJob';
+import { FileTradeRepository } from './infrastructure/database/FileTradeRepository';
+import { TradeDatabase } from './infrastructure/database/TradeDatabase';
+import { TelegramService } from './infrastructure/telegram/TelegramService';
+import { NotificationService } from './infrastructure/telegram/NotificationService';
+import { TradeValidator } from './core/services/TradeValidator';
+import { TradeExecutor } from './application/services/TradeExecutor';
+import { PositionValidator } from './core/services/PositionValidator';
+import { OrderMonitor } from './application/services/OrderMonitor';
+import { BingXOrderExecutor } from './infrastructure/bingx/BingXOrderExecutor';
+import { BingXDataService } from './infrastructure/bingx/BingXDataService';
+import { OrderStatusChecker } from './application/services/OrderStatusChecker';
+import { TradeOrderProcessor } from './application/services/TradeOrderProcessor';
+import { PositionMonitor } from './application/services/PositionMonitor';
+import { PositionHistory } from './application/services/PositionHistory';
 
-// Start trade cron job
-const tradeCronJob = new TradeCronJob();
-tradeCronJob.execute();
+// Load environment variables
+dotenv.config();
 
-// Check for required environment variables
-const bingxApiKey = process.env.BINGX_API_KEY;
-const bingxApiSecret = process.env.BINGX_API_SECRET;
+// Check if BingX API credentials are set
+if (!process.env.BINGX_API_KEY || !process.env.BINGX_API_SECRET) {
+    console.error('Error: BINGX_API_KEY and BINGX_API_SECRET must be set in .env file');
+    process.exit(1);
+}
 
-// Start position monitor cron job only if API credentials are available
-if (bingxApiKey && bingxApiSecret) {
-    // Start position history cron job
-    
-    const positionHistoryCron = new PositionHistoryCronJob();
-    positionHistoryCron.start().catch((error: Error) => {
-        console.error('Error starting PositionHistoryCronJob:', error);
-        process.exit(1);
-    });
+// --- Composition Root ---
 
-    const positionMonitorCron = new PositionMonitorCronJob();
-    positionMonitorCron.start().catch((error: Error) => {
-        console.error('Error starting PositionMonitorCronJob:', error);
-        process.exit(1);
-    });
+// 1. Infrastructure & Core Services
+const tradeRepository = new FileTradeRepository();
+const tradeDatabase = new TradeDatabase();
+const telegramService = TelegramService.getInstance();
+const notificationService = new NotificationService(undefined, tradeDatabase, telegramService);
+const bingXDataService = new BingXDataService();
+const bingXOrderExecutor = new BingXOrderExecutor(tradeDatabase);
 
+// 2. Domain Services
+const tradeValidator = new TradeValidator();
+const positionValidator = new PositionValidator();
 
-    // Handle process termination
-    process.on('SIGINT', () => {
-        console.log('\nGracefully shutting down...');
-        positionMonitorCron.stop();
-        positionHistoryCron.stop();
-        process.exit(0);
-    });
+// 3. Application Services
+const tradeExecutor = new TradeExecutor(tradeDatabase);
+const orderMonitor = new OrderMonitor();
+const orderStatusChecker = new OrderStatusChecker();
 
-    process.on('SIGTERM', () => {
-        console.log('\nGracefully shutting down...');
-        positionMonitorCron.stop();
-        positionHistoryCron.stop();
-        process.exit(0);
-    });
-} else {
-    console.log('Skipping PositionMonitorCronJob and PositionHistoryCronJob: BingX API credentials not found in environment variables');
-} 
+const tradeOrderProcessor = new TradeOrderProcessor(
+    tradeDatabase,
+    orderStatusChecker,
+    bingXOrderExecutor,
+    bingXDataService,
+    notificationService,
+    positionValidator
+);
+
+const positionMonitor = new PositionMonitor(
+    undefined, // onPriceUpdate callback (handled inside PositionMonitorCronJob if needed, or passed here)
+    positionValidator,
+    tradeDatabase,
+    orderMonitor,
+    bingXOrderExecutor,
+    notificationService
+);
+
+const positionHistory = new PositionHistory(); // Needs refactoring to accept dependencies if we want full DI, but for now it instantiates them internally or we can update it.
+
+// 4. Jobs
+const tradeCronJob = new TradeCronJob(
+    tradeRepository,
+    tradeValidator,
+    notificationService,
+    tradeExecutor
+);
+
+const positionMonitorCronJob = new PositionMonitorCronJob(
+    positionMonitor,
+    tradeOrderProcessor
+);
+
+const positionHistoryCronJob = new PositionHistoryCronJob(
+    positionHistory,
+    tradeDatabase
+);
+
+// Start the application
+console.log('Starting Trade Automation System...');
+
+// Start Cron Jobs
+tradeCronJob.start();
+positionMonitorCronJob.start();
+positionHistoryCronJob.start();
+
+// Handle graceful shutdown
+process.on('SIGINT', () => {
+    console.log('Stopping Trade Automation System...');
+    tradeCronJob.stop();
+    positionMonitorCronJob.stop();
+    positionHistoryCronJob.stop();
+    process.exit(0);
+});
+
+process.on('SIGTERM', () => {
+    console.log('Stopping Trade Automation System...');
+    tradeCronJob.stop();
+    positionMonitorCronJob.stop();
+    positionHistoryCronJob.stop();
+    process.exit(0);
+});

@@ -1,18 +1,46 @@
-import { TradeOrderProcessor } from '../src/TradeOrderProcessor';
+import { TradeOrderProcessor } from '../src/application/services/TradeOrderProcessor';
+import { TradeDatabase } from '../src/infrastructure/database/TradeDatabase';
+import { OrderStatusChecker } from '../src/application/services/OrderStatusChecker';
+import { BingXOrderExecutor } from '../src/infrastructure/bingx/BingXOrderExecutor';
+import { BingXDataService } from '../src/infrastructure/bingx/BingXDataService';
+import { NotificationService } from '../src/infrastructure/telegram/NotificationService';
+import { PositionValidator } from '../src/core/services/PositionValidator';
 
 // Mocks das dependências
-jest.mock('../src/TradeDatabase', () => ({
-  TradeDatabase: jest.fn().mockImplementation(() => ({
-    hasOrderDetails: jest.fn().mockResolvedValue(false),
-    saveOrderDetails: jest.fn().mockResolvedValue(undefined),
-    updateTradeStatus: jest.fn().mockResolvedValue(undefined)
-  }))
-}));
+jest.mock('../src/infrastructure/database/TradeDatabase');
+jest.mock('../src/application/services/OrderStatusChecker');
+jest.mock('../src/infrastructure/bingx/BingXOrderExecutor');
+jest.mock('../src/infrastructure/bingx/BingXDataService');
+jest.mock('../src/infrastructure/telegram/NotificationService');
+jest.mock('../src/core/services/PositionValidator');
 
-jest.mock('../src/OrderStatusChecker', () => ({
-  OrderStatusChecker: jest.fn().mockImplementation(() => ({
-    getOrderStatus: jest.fn().mockResolvedValue({ status: 'FILLED', type: 'LIMIT' }),
-    getOrderStatusWithDetails: jest.fn().mockResolvedValue({
+describe('TradeOrderProcessor', () => {
+  let processor: TradeOrderProcessor;
+  let mockTradeDatabase: jest.Mocked<TradeDatabase>;
+  let mockOrderStatusChecker: jest.Mocked<OrderStatusChecker>;
+  let mockOrderExecutor: jest.Mocked<BingXOrderExecutor>;
+  let mockDataService: jest.Mocked<BingXDataService>;
+  let mockNotificationService: jest.Mocked<NotificationService>;
+  let mockPositionValidator: jest.Mocked<PositionValidator>;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+
+    mockTradeDatabase = new TradeDatabase() as jest.Mocked<TradeDatabase>;
+    mockOrderStatusChecker = new OrderStatusChecker() as jest.Mocked<OrderStatusChecker>;
+    mockOrderExecutor = new BingXOrderExecutor(mockTradeDatabase) as jest.Mocked<BingXOrderExecutor>;
+    mockDataService = new BingXDataService() as jest.Mocked<BingXDataService>;
+    mockNotificationService = new NotificationService() as jest.Mocked<NotificationService>;
+    mockPositionValidator = new PositionValidator() as jest.Mocked<PositionValidator>;
+
+    // Setup default mock implementations
+    mockTradeDatabase.hasOrderDetails.mockResolvedValue(false);
+    mockTradeDatabase.saveOrderDetails.mockResolvedValue(undefined);
+    mockTradeDatabase.updateTradeStatus.mockResolvedValue(undefined);
+    mockTradeDatabase.getOpenTrades.mockResolvedValue([]);
+
+    mockOrderStatusChecker.getOrderStatus.mockResolvedValue({ status: 'FILLED', type: 'LIMIT' } as any);
+    mockOrderStatusChecker.getOrderStatusWithDetails.mockResolvedValue({
       status: { status: 'FILLED', type: 'LIMIT' },
       executionDetails: {
         executedQuantity: 1,
@@ -23,16 +51,16 @@ jest.mock('../src/OrderStatusChecker', () => ({
       isFilled: true,
       isCanceled: false,
       isOpen: false
-    })
-  }))
-}));
+    } as any);
 
-describe('TradeOrderProcessor', () => {
-  let processor: TradeOrderProcessor;
-
-  beforeEach(() => {
-    jest.clearAllMocks();
-    processor = new TradeOrderProcessor();
+    processor = new TradeOrderProcessor(
+      mockTradeDatabase,
+      mockOrderStatusChecker,
+      mockOrderExecutor,
+      mockDataService,
+      mockNotificationService,
+      mockPositionValidator
+    );
   });
 
   it('should instantiate without errors', () => {
@@ -43,8 +71,8 @@ describe('TradeOrderProcessor', () => {
     const trade = {
       id: 1,
       symbol: 'BTC/USDT',
-      entryOrderId: 'order1',
-      stopOrderId: 'order2',
+      entryOrderId: '1234567890123456',
+      stopOrderId: '1234567890123457',
       tp1OrderId: null,
       tp2OrderId: null,
       tp3OrderId: null,
@@ -69,26 +97,22 @@ describe('TradeOrderProcessor', () => {
       volume_required: false
     };
 
-    const db = require('../src/TradeDatabase').TradeDatabase.mock.instances[0];
-    const checker = require('../src/OrderStatusChecker').OrderStatusChecker.mock.instances[0];
+    await processor['processTrade'](trade as any);
 
-    await processor['processTrade'](trade);
-
-    expect(checker.getOrderStatus).toHaveBeenCalled();
-    expect(checker.getOrderStatusWithDetails).toHaveBeenCalled();
-    expect(db.saveOrderDetails).toHaveBeenCalled();
-    expect(db.updateTradeStatus).toHaveBeenCalled();
+    expect(mockOrderStatusChecker.getOrderStatus).toHaveBeenCalled();
+    expect(mockOrderStatusChecker.getOrderStatusWithDetails).toHaveBeenCalled();
+    expect(mockTradeDatabase.saveOrderDetails).toHaveBeenCalled();
+    expect(mockTradeDatabase.updateTradeStatus).toHaveBeenCalled();
   });
 
   it('should skip orders with status NEW', async () => {
-    const checker = require('../src/OrderStatusChecker').OrderStatusChecker.mock.instances[0];
-    checker.getOrderStatus.mockResolvedValue({ status: 'NEW', type: 'LIMIT' });
+    mockOrderStatusChecker.getOrderStatus.mockResolvedValue({ status: 'NEW', type: 'LIMIT' } as any);
 
     const trade = {
       id: 2,
       symbol: 'BTC/USDT',
-      entryOrderId: 'order1',
-      stopOrderId: 'order2',
+      entryOrderId: '1234567890123456',
+      stopOrderId: '1234567890123457',
       tp1OrderId: null,
       tp2OrderId: null,
       tp3OrderId: null,
@@ -114,10 +138,9 @@ describe('TradeOrderProcessor', () => {
     };
 
     // Não deve chamar getOrderStatusWithDetails nem saveOrderDetails
-    const db = require('../src/TradeDatabase').TradeDatabase.mock.instances[0];
-    await processor['processTrade'](trade);
+    await processor['processTrade'](trade as any);
 
-    expect(checker.getOrderStatusWithDetails).not.toHaveBeenCalled();
-    expect(db.saveOrderDetails).not.toHaveBeenCalled();
+    expect(mockOrderStatusChecker.getOrderStatusWithDetails).not.toHaveBeenCalled();
+    expect(mockTradeDatabase.saveOrderDetails).not.toHaveBeenCalled();
   });
-}); 
+});

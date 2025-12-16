@@ -1,40 +1,38 @@
 <template>
-  <div class="card border-0 shadow h-100">
-    <div class="card-header bg-info text-white">
-      <h5 class="card-title mb-0 fw-semibold">
-        <i class="bi bi-table me-2"></i>
+  <div class="glass-card h-full flex flex-col">
+    <div class="p-4 border-b border-white/10 bg-blue-500/10">
+      <h5 class="flex items-center text-lg font-semibold text-blue-400">
+        <i class="bi bi-table mr-2"></i>
         {{ title }}
       </h5>
     </div>
-    <div class="card-body p-0">
-      <div class="table-responsive">
-        <table class="table table-hover mb-0">
-          <thead class="table-dark">
-            <tr>
-              <th>{{ columnTitle }}</th>
-              <th class="text-end">Trades</th>
-              <th class="text-end">Profit</th>
-              <th class="text-end">Loss</th>
-              <th class="text-end">Avg Risk</th>
-              <th class="text-end">Avg R:R</th>
-              <th class="text-end">Avg Leverage</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="(analysis, key) in data" :key="key">
-              <td>
-                <span class="badge bg-secondary">{{ key }}</span>
-              </td>
-              <td class="text-end">{{ analysis.totalTrades }}</td>
-              <td class="text-end text-success">${{ formatNumber(analysis.totalProfit) }}</td>
-              <td class="text-end text-danger">${{ formatNumber(analysis.totalLoss) }}</td>
-              <td class="text-end text-warning">{{ formatNumber(analysis.avgRisk) }}</td>
-              <td class="text-end text-info">{{ formatNumber(analysis.avgRR) }}</td>
-              <td class="text-end text-primary">{{ formatNumber(analysis.avgLeverage) }}x</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+    <div class="overflow-x-auto flex-grow">
+      <table class="w-full text-sm text-left">
+        <thead class="text-xs uppercase bg-white/5 text-gray-400">
+          <tr>
+            <th class="px-4 py-3">{{ columnTitle }}</th>
+            <th class="px-4 py-3 text-right">Trades</th>
+            <th class="px-4 py-3 text-right">Profit</th>
+            <th class="px-4 py-3 text-right">Loss</th>
+            <th class="px-4 py-3 text-right">Avg Risk</th>
+            <th class="px-4 py-3 text-right">Avg R:R</th>
+            <th class="px-4 py-3 text-right">Avg Leverage</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-white/5">
+          <tr v-for="(analysis, key) in data" :key="key" class="hover:bg-white/5 transition-colors">
+            <td class="px-4 py-3 font-medium">
+              <span class="px-2 py-1 bg-gray-700 rounded text-xs">{{ key }}</span>
+            </td>
+            <td class="px-4 py-3 text-right">{{ analysis.totalTrades }}</td>
+            <td class="px-4 py-3 text-right text-green-400">${{ formatNumber(analysis.totalProfit) }}</td>
+            <td class="px-4 py-3 text-right text-red-400">${{ formatNumber(analysis.totalLoss) }}</td>
+            <td class="px-4 py-3 text-right text-yellow-400">{{ formatNumber(analysis.avgRisk) }}</td>
+            <td class="px-4 py-3 text-right text-blue-400">{{ formatNumber(analysis.avgRR) }}</td>
+            <td class="px-4 py-3 text-right text-purple-400">{{ formatNumber(analysis.avgLeverage) }}x</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </div>
 </template>
@@ -71,38 +69,5 @@ const formatNumber = (value: number | undefined | null): string => {
 </script>
 
 <style scoped>
-.card {
-  backdrop-filter: blur(10px);
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  transition: all 0.3s ease;
-}
-
-.card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-}
-
-.card-header {
-  backdrop-filter: blur(10px);
-  background: linear-gradient(135deg, #0dcaf0 0%, #0aa2c0 100%) !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.table {
-  color: inherit;
-}
-
-.table-dark {
-  background: rgba(0, 0, 0, 0.3);
-}
-
-.table-hover tbody tr:hover {
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.badge {
-  font-weight: 600;
-  letter-spacing: 0.5px;
-}
+/* Scoped styles removed */
 </style> 

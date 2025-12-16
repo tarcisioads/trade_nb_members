@@ -1,80 +1,71 @@
 <template>
-  <div class="dashboard bg-dark text-light min-vh-100">
+  <div class="dashboard min-h-screen">
     <!-- Header -->
-    <div class="container-fluid py-4">
-      <div class="row">
-        <div class="col-12 text-center mb-4">
-          <h1 class="display-4 fw-bold text-primary mb-2">Trading Dashboard</h1>
-          <p class="lead text-muted">Complete analysis of position history</p>
-        </div>
+    <div class="w-full px-4 py-8">
+      <div class="text-center mb-8">
+        <h1 class="text-4xl font-bold text-blue-400 mb-2">Trading Dashboard</h1>
+        <p class="text-xl text-gray-400">Complete analysis of position history</p>
       </div>
 
       <!-- Loading -->
-      <div v-if="loading" class="row">
-        <div class="col-12 text-center py-5">
-          <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
-            <span class="visually-hidden">Loading...</span>
-          </div>
-          <p class="mt-3 text-muted">Loading dashboard data...</p>
+      <div v-if="loading" class="flex justify-center py-12">
+        <div class="text-center">
+          <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+          <p class="mt-4 text-gray-400">Loading dashboard data...</p>
         </div>
       </div>
 
       <div v-else>
         <!-- Filters -->
-        <div class="row mb-4">
-          <div class="col-12">
-            <div class="card border-0 shadow">
-              <div class="card-body">
-                <div class="row g-3 align-items-end">
-                  <div class="col-md-2">
-                    <label for="symbolFilter" class="form-label fw-semibold">Symbol</label>
-                    <select v-model="filters.symbol" @change="loadData" class="form-select" id="symbolFilter">
-                      <option value="ALL">All Symbols</option>
-                      <option v-for="symbol in availableSymbols" :key="symbol" :value="symbol">
-                        {{ symbol }}
-                      </option>
-                    </select>
-                  </div>
-                  <div class="col-md-2">
-                    <label for="setupFilter" class="form-label fw-semibold">Setup</label>
-                    <select v-model="filters.setupDescription" @change="loadData" class="form-select" id="setupFilter">
-                      <option value="ALL">All Setups</option>
-                      <option v-for="setup in availableSetupDescriptions" :key="setup" :value="setup">
-                        {{ setup }}
-                      </option>
-                    </select>
-                  </div>
-                  <div class="col-md-2">
-                    <label for="startDate" class="form-label fw-semibold">Start Date</label>
-                    <input type="date" v-model="filters.startDate" @change="loadData" class="form-control"
-                      id="startDate">
-                  </div>
-                  <div class="col-md-2">
-                    <label for="endDate" class="form-label fw-semibold">End Date</label>
-                    <input type="date" v-model="filters.endDate" @change="loadData" class="form-control" id="endDate">
-                  </div>
-                  <div class="col-md-2">
-                    <label for="minResult" class="form-label fw-semibold">
-                      Min Result ($)
-                      <span class="form-text small text-muted">
-                        Shows trades with absolute result ≥ this amount
-                      </span>
-                    </label>
-                    <input type="number" v-model="filters.minResult" @change="loadData" class="form-control"
-                      id="minResult" placeholder="0.00" step="0.01">
-                  </div>
-                  <div class="col-md-2">
-                    <div class="d-flex gap-2">
-                      <button @click="loadData" class="btn btn-primary">
-                        <i class="bi bi-arrow-clockwise me-2"></i>
-                        Refresh
-                      </button>
-                      <button @click="resetFilters" class="btn btn-outline-secondary">
-                        <i class="bi bi-x-circle me-2"></i>
-                        Clear
-                      </button>
-                    </div>
-                  </div>
+        <div class="mb-8">
+          <div class="glass-card p-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 items-end">
+              <div>
+                <label for="symbolFilter" class="block text-sm font-semibold mb-2">Symbol</label>
+                <select v-model="filters.symbol" @change="loadData" class="form-input w-full" id="symbolFilter">
+                  <option value="ALL">All Symbols</option>
+                  <option v-for="symbol in availableSymbols" :key="symbol" :value="symbol">
+                    {{ symbol }}
+                  </option>
+                </select>
+              </div>
+              <div>
+                <label for="setupFilter" class="block text-sm font-semibold mb-2">Setup</label>
+                <select v-model="filters.setupDescription" @change="loadData" class="form-input w-full" id="setupFilter">
+                  <option value="ALL">All Setups</option>
+                  <option v-for="setup in availableSetupDescriptions" :key="setup" :value="setup">
+                    {{ setup }}
+                  </option>
+                </select>
+              </div>
+              <div>
+                <label for="startDate" class="block text-sm font-semibold mb-2">Start Date</label>
+                <input type="date" v-model="filters.startDate" @change="loadData" class="form-input w-full"
+                  id="startDate">
+              </div>
+              <div>
+                <label for="endDate" class="block text-sm font-semibold mb-2">End Date</label>
+                <input type="date" v-model="filters.endDate" @change="loadData" class="form-input w-full" id="endDate">
+              </div>
+              <div>
+                <label for="minResult" class="block text-sm font-semibold mb-2">
+                  Min Result ($)
+                  <span class="block text-xs text-gray-400 font-normal">
+                    Abs result ≥ amount
+                  </span>
+                </label>
+                <input type="number" v-model="filters.minResult" @change="loadData" class="form-input w-full"
+                  id="minResult" placeholder="0.00" step="0.01">
+              </div>
+              <div>
+                <div class="flex gap-2">
+                  <button @click="loadData" class="btn-primary flex-1 flex items-center justify-center">
+                    <i class="bi bi-arrow-clockwise mr-2"></i>
+                    Refresh
+                  </button>
+                  <button @click="resetFilters" class="px-4 py-2 border border-gray-600 rounded-lg hover:bg-gray-800 transition-colors">
+                    <i class="bi bi-x-circle"></i>
+                  </button>
                 </div>
               </div>
             </div>
@@ -82,139 +73,104 @@
         </div>
 
         <!-- Statistics Cards -->
-        <div class="row mb-4">
-          <div class="col-lg-2 col-md-6 mb-3">
-            <div class="card border-0 shadow h-100">
-              <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                  <div>
-                    <h6 class="card-subtitle mb-2 text-muted text-uppercase fw-semibold">Total Positions</h6>
-                    <h3 class="card-title mb-0 text-primary">{{ stats.totalPositions }}</h3>
-                  </div>
-                  <div class="text-primary fs-1">📈</div>
-                </div>
-              </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 mb-8">
+          <div class="glass-card p-4 h-full flex flex-col justify-center relative overflow-hidden group">
+            <div class="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+               <span class="text-4xl">📈</span>
             </div>
+            <h6 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Total Positions</h6>
+            <h3 class="text-2xl font-bold text-blue-400">{{ stats.totalPositions }}</h3>
           </div>
-          <div class="col-lg-2 col-md-6 mb-3">
-            <div class="card border-0 shadow h-100">
-              <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                  <div>
-                    <h6 class="card-subtitle mb-2 text-muted text-uppercase fw-semibold">Total Profit</h6>
-                    <h3 class="card-title mb-0 text-success">${{ formatNumber(stats.totalProfit) }}</h3>
-                  </div>
-                  <div class="text-success fs-1">💰</div>
-                </div>
-              </div>
+          
+          <div class="glass-card p-4 h-full flex flex-col justify-center relative overflow-hidden group">
+            <div class="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+               <span class="text-4xl">💰</span>
             </div>
+            <h6 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Total Profit</h6>
+            <h3 class="text-2xl font-bold text-green-400">${{ formatNumber(stats.totalProfit) }}</h3>
           </div>
-          <div class="col-lg-2 col-md-6 mb-3">
-            <div class="card border-0 shadow h-100">
-              <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                  <div>
-                    <h6 class="card-subtitle mb-2 text-muted text-uppercase fw-semibold">Total Loss</h6>
-                    <h3 class="card-title mb-0 text-danger">${{ formatNumber(stats.totalLoss) }}</h3>
-                  </div>
-                  <div class="text-danger fs-1">📉</div>
-                </div>
-              </div>
+
+          <div class="glass-card p-4 h-full flex flex-col justify-center relative overflow-hidden group">
+            <div class="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+               <span class="text-4xl">📉</span>
             </div>
+            <h6 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Total Loss</h6>
+            <h3 class="text-2xl font-bold text-red-400">${{ formatNumber(stats.totalLoss) }}</h3>
           </div>
-          <div class="col-lg-2 col-md-6 mb-3">
-            <div class="card border-0 shadow h-100">
-              <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                  <div>
-                    <h6 class="card-subtitle mb-2 text-muted text-uppercase fw-semibold">Net Result</h6>
-                    <h3 class="card-title mb-0" :class="stats.netProfit >= 0 ? 'text-success' : 'text-danger'">
-                      ${{ formatNumber(stats.netProfit) }}
-                    </h3>
-                  </div>
-                  <div class="fs-1" :class="stats.netProfit >= 0 ? 'text-success' : 'text-danger'">🧮</div>
-                </div>
-              </div>
+
+          <div class="glass-card p-4 h-full flex flex-col justify-center relative overflow-hidden group">
+             <div class="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+               <span class="text-4xl">🧮</span>
             </div>
+            <h6 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Net Result</h6>
+            <h3 class="text-2xl font-bold" :class="stats.netProfit >= 0 ? 'text-green-400' : 'text-red-400'">
+              ${{ formatNumber(stats.netProfit) }}
+            </h3>
           </div>
-          <div class="col-lg-2 col-md-6 mb-3">
-            <div class="card border-0 shadow h-100">
-              <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                  <div>
-                    <h6 class="card-subtitle mb-2 text-muted text-uppercase fw-semibold">Win Rate</h6>
-                    <h3 class="card-title mb-0 text-info">{{ stats.winRate }}%</h3>
-                  </div>
-                  <div class="text-info fs-1">🎯</div>
-                </div>
-              </div>
+
+          <div class="glass-card p-4 h-full flex flex-col justify-center relative overflow-hidden group">
+            <div class="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+               <span class="text-4xl">🎯</span>
             </div>
+            <h6 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Win Rate</h6>
+            <h3 class="text-2xl font-bold text-cyan-400">{{ stats.winRate }}%</h3>
           </div>
-          <div class="col-lg-2 col-md-6 mb-3">
-            <div class="card border-0 shadow h-100">
-              <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                  <div>
-                    <h6 class="card-subtitle mb-2 text-muted text-uppercase fw-semibold">Sharpe Ratio</h6>
-                    <h3 class="card-title mb-0 text-warning">{{
-                        formatNumber(detailedStats?.performanceMetrics?.sharpeRatio || 0)
-                    }}</h3>
-                  </div>
-                  <div class="text-warning fs-1">📊</div>
-                </div>
-              </div>
+
+          <div class="glass-card p-4 h-full flex flex-col justify-center relative overflow-hidden group">
+            <div class="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+               <span class="text-4xl">📊</span>
             </div>
+            <h6 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Sharpe Ratio</h6>
+            <h3 class="text-2xl font-bold text-yellow-400">{{ formatNumber(detailedStats?.performanceMetrics?.sharpeRatio || 0) }}</h3>
           </div>
         </div>
 
         <!-- Risk and Performance Analysis -->
-        <div class="row mb-4">
-          <div class="col-lg-4 mb-3">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          <div>
             <RiskStatsCard :stats="riskStats" />
           </div>
-          <div class="col-lg-4 mb-3">
+          <div>
             <PerformanceMetricsCard :stats="performanceStats" />
           </div>
-          <div class="col-lg-4 mb-3">
-            <div class="card border-0 shadow h-100">
-              <div class="card-header bg-warning text-dark">
-                <h5 class="card-title mb-0 fw-semibold">
-                  <i class="bi bi-gear me-2"></i>
+          <div>
+            <div class="glass-card h-full flex flex-col">
+              <div class="p-4 border-b border-white/10 bg-yellow-400/10">
+                <h5 class="flex items-center text-lg font-semibold text-yellow-400">
+                  <i class="bi bi-gear mr-2"></i>
                   Trade Metrics
                 </h5>
               </div>
-              <div class="card-body">
-                <div class="row g-3">
-                  <div class="col-6">
-                    <div class="text-center">
-                      <div class="h4 text-primary fw-bold">{{ formatNumber(stats.tradeMetrics?.avgLeverage || 0) }}x
+              <div class="p-4 flex-grow">
+                <div class="grid grid-cols-2 gap-4">
+                  <div class="col-span-1">
+                    <div class="text-center p-3 rounded-lg bg-white/5">
+                      <div class="text-2xl font-bold text-blue-400">{{ formatNumber(stats.tradeMetrics?.avgLeverage || 0) }}x
                       </div>
-                      <div class="text-muted small">Avg Leverage</div>
+                      <div class="text-xs text-gray-400 mt-1">Avg Leverage</div>
                     </div>
                   </div>
                   <!-- Removidos avgEntryPrice, avgStopPrice, avgTakeProfit1 -->
                 </div>
 
                 <!-- Best/Worst Trades -->
-                <div class="row mt-3">
-                  <div class="col-12">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                      <span class="text-muted small">Best Trade</span>
-                      <span class="badge bg-success">${{ formatNumber(stats.tradeMetrics?.bestProfit || 0) }}</span>
+                <div class="mt-4 space-y-3">
+                    <div class="flex justify-between items-center bg-white/5 p-2 rounded">
+                      <span class="text-gray-400 text-sm">Best Trade</span>
+                      <span class="px-2 py-1 text-xs font-bold text-green-900 bg-green-400 rounded">${{ formatNumber(stats.tradeMetrics?.bestProfit || 0) }}</span>
                     </div>
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                      <span class="text-muted small">Worst Trade</span>
-                      <span class="badge bg-danger">${{ formatNumber(stats.tradeMetrics?.worstProfit || 0) }}</span>
+                    <div class="flex justify-between items-center bg-white/5 p-2 rounded">
+                      <span class="text-gray-400 text-sm">Worst Trade</span>
+                      <span class="px-2 py-1 text-xs font-bold text-red-900 bg-red-400 rounded">${{ formatNumber(stats.tradeMetrics?.worstProfit || 0) }}</span>
                     </div>
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                      <span class="text-muted small">Most Profitable Symbol</span>
-                      <span class="badge bg-primary">{{ stats.tradeMetrics?.mostProfitableSymbol || 'N/A' }}</span>
+                    <div class="flex justify-between items-center bg-white/5 p-2 rounded">
+                      <span class="text-gray-400 text-sm">Most Profitable Symbol</span>
+                      <span class="px-2 py-1 text-xs font-bold text-blue-900 bg-blue-400 rounded">{{ stats.tradeMetrics?.mostProfitableSymbol || 'N/A' }}</span>
                     </div>
-                    <div class="d-flex justify-content-between align-items-center">
-                      <span class="text-muted small">Most Profitable Side</span>
-                      <span class="badge bg-secondary">{{ stats.tradeMetrics?.mostProfitableSide || 'N/A' }}</span>
+                    <div class="flex justify-between items-center bg-white/5 p-2 rounded">
+                      <span class="text-gray-400 text-sm">Most Profitable Side</span>
+                      <span class="px-2 py-1 text-xs font-bold text-gray-900 bg-gray-400 rounded">{{ stats.tradeMetrics?.mostProfitableSide || 'N/A' }}</span>
                     </div>
-                  </div>
                 </div>
               </div>
             </div>
@@ -222,60 +178,48 @@
         </div>
 
         <!-- Detailed Statistics -->
-        <div class="row mb-4">
-          <div class="col-lg-6 mb-3">
-            <div class="card border-0 shadow h-100">
-              <div class="card-header bg-primary text-white">
-                <h5 class="card-title mb-0 fw-semibold">Performance Statistics</h5>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <div>
+            <div class="glass-card h-full flex flex-col">
+              <div class="p-4 border-b border-white/10 bg-blue-500/10">
+                <h5 class="text-lg font-semibold text-blue-400">Performance Statistics</h5>
               </div>
-              <div class="card-body">
-                <div class="row g-3">
-                  <div class="col-6">
-                    <div class="text-center">
-                      <div class="h3 text-success fw-bold">{{ stats.winRate }}%</div>
-                      <div class="text-muted small">Win Rate</div>
-                    </div>
+              <div class="p-4 flex-grow">
+                <div class="grid grid-cols-2 gap-4">
+                  <div class="text-center p-3 rounded-lg bg-white/5">
+                    <div class="text-2xl font-bold text-green-400">{{ stats.winRate }}%</div>
+                    <div class="text-xs text-gray-400 mt-1">Win Rate</div>
                   </div>
-                  <div class="col-6">
-                    <div class="text-center">
-                      <div class="h3 text-primary fw-bold">{{ stats.totalPositions }}</div>
-                      <div class="text-muted small">Total Trades</div>
-                    </div>
+                  <div class="text-center p-3 rounded-lg bg-white/5">
+                    <div class="text-2xl font-bold text-blue-400">{{ stats.totalPositions }}</div>
+                    <div class="text-xs text-gray-400 mt-1">Total Trades</div>
                   </div>
-                  <div class="col-6">
-                    <div class="text-center">
-                      <div class="h3 text-success fw-bold">${{ formatNumber(stats.avgProfit) }}</div>
-                      <div class="text-muted small">Average Profit</div>
-                    </div>
+                  <div class="text-center p-3 rounded-lg bg-white/5">
+                    <div class="text-2xl font-bold text-green-400">${{ formatNumber(stats.avgProfit) }}</div>
+                    <div class="text-xs text-gray-400 mt-1">Average Profit</div>
                   </div>
-                  <div class="col-6">
-                    <div class="text-center">
-                      <div class="h3 text-danger fw-bold">${{ formatNumber(stats.avgLoss) }}</div>
-                      <div class="text-muted small">Average Loss</div>
-                    </div>
+                  <div class="text-center p-3 rounded-lg bg-white/5">
+                    <div class="text-2xl font-bold text-red-400">${{ formatNumber(stats.avgLoss) }}</div>
+                    <div class="text-xs text-gray-400 mt-1">Average Loss</div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-          <div class="col-lg-6 mb-3">
-            <div class="card border-0 shadow h-100">
-              <div class="card-header bg-primary text-white">
-                <h5 class="card-title mb-0 fw-semibold">Extremes</h5>
+          <div>
+            <div class="glass-card h-full flex flex-col">
+              <div class="p-4 border-b border-white/10 bg-blue-500/10">
+                <h5 class="text-lg font-semibold text-blue-400">Extremes</h5>
               </div>
-              <div class="card-body">
-                <div class="row g-3">
-                  <div class="col-6">
-                    <div class="text-center">
-                      <div class="h3 text-success fw-bold">${{ formatNumber(stats.maxProfit) }}</div>
-                      <div class="text-muted small">Highest Profit</div>
-                    </div>
+              <div class="p-4 flex-grow">
+                <div class="grid grid-cols-2 gap-4">
+                  <div class="text-center p-3 rounded-lg bg-white/5">
+                    <div class="text-2xl font-bold text-green-400">${{ formatNumber(stats.maxProfit) }}</div>
+                    <div class="text-xs text-gray-400 mt-1">Highest Profit</div>
                   </div>
-                  <div class="col-6">
-                    <div class="text-center">
-                      <div class="h3 text-danger fw-bold">${{ formatNumber(stats.maxLoss) }}</div>
-                      <div class="text-muted small">Highest Loss</div>
-                    </div>
+                  <div class="text-center p-3 rounded-lg bg-white/5">
+                    <div class="text-2xl font-bold text-red-400">${{ formatNumber(stats.maxLoss) }}</div>
+                    <div class="text-xs text-gray-400 mt-1">Highest Loss</div>
                   </div>
                 </div>
               </div>
@@ -284,42 +228,42 @@
         </div>
 
         <!-- Analysis Tables -->
-        <div class="row mb-4">
-          <div class="col-lg-4 mb-3">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          <div>
             <AnalysisTable title="Symbol Analysis" columnTitle="Symbol" :data="detailedStats?.symbolAnalysis || {}" />
           </div>
-          <div class="col-lg-4 mb-3">
+          <div>
             <AnalysisTable title="Side Analysis" columnTitle="Side" :data="detailedStats?.sideAnalysis || {}" />
           </div>
-          <div class="col-lg-4 mb-3">
+          <div>
             <SetupAnalysisCard :positions="positions" />
           </div>
         </div>
 
         <!-- Performance Charts -->
-        <div class="row mb-4">
-          <div class="col-lg-8 mb-3">
-            <div class="card border-0 shadow h-100">
-              <div class="card-header bg-success text-white">
-                <h5 class="card-title mb-0 fw-semibold">
-                  <i class="bi bi-graph-up me-2"></i>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          <div class="lg:col-span-2">
+            <div class="glass-card h-full flex flex-col">
+              <div class="p-4 border-b border-white/10 bg-green-500/10">
+                <h5 class="flex items-center text-lg font-semibold text-green-400">
+                  <i class="bi bi-graph-up mr-2"></i>
                   Cumulative Profit Over Time
                 </h5>
               </div>
-              <div class="card-body">
+              <div class="p-4 flex-grow">
                 <PerformanceChart :positions="positions" />
               </div>
             </div>
           </div>
-          <div class="col-lg-4 mb-3">
-            <div class="card border-0 shadow h-100">
-              <div class="card-header bg-success text-white">
-                <h5 class="card-title mb-0 fw-semibold">
-                  <i class="bi bi-pie-chart me-2"></i>
+          <div>
+            <div class="glass-card h-full flex flex-col">
+              <div class="p-4 border-b border-white/10 bg-green-500/10">
+                <h5 class="flex items-center text-lg font-semibold text-green-400">
+                  <i class="bi bi-pie-chart mr-2"></i>
                   Profit by Symbol
                 </h5>
               </div>
-              <div class="card-body">
+              <div class="p-4 flex-grow">
                 <ProfitBySymbolChart :positions="positions" />
               </div>
             </div>
@@ -327,16 +271,16 @@
         </div>
 
         <!-- Loss by Symbol Chart -->
-        <div class="row mb-4">
-          <div class="col-lg-4 mb-3">
-            <div class="card border-0 shadow h-100">
-              <div class="card-header bg-danger text-white">
-                <h5 class="card-title mb-0 fw-semibold">
-                  <i class="bi bi-pie-chart me-2"></i>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          <div>
+            <div class="glass-card h-full flex flex-col">
+              <div class="p-4 border-b border-white/10 bg-red-500/10">
+                <h5 class="flex items-center text-lg font-semibold text-red-400">
+                  <i class="bi bi-pie-chart mr-2"></i>
                   Loss by Symbol
                 </h5>
               </div>
-              <div class="card-body">
+              <div class="p-4 flex-grow">
                 <LossBySymbolChart :positions="positions" />
               </div>
             </div>
@@ -344,209 +288,83 @@
         </div>
 
         <!-- Monthly Performance Chart -->
-        <div class="row mb-4">
-          <div class="col-12">
-            <div class="card border-0 shadow">
-              <div class="card-header bg-warning text-dark">
-                <h5 class="card-title mb-0 fw-semibold">
-                  <i class="bi bi-bar-chart me-2"></i>
-                  Monthly Performance
-                </h5>
-              </div>
-              <div class="card-body">
-                <MonthlyPerformanceChart :positions="positions" />
-              </div>
+        <div class="mb-8">
+          <div class="glass-card">
+            <div class="p-4 border-b border-white/10 bg-yellow-500/10">
+              <h5 class="flex items-center text-lg font-semibold text-yellow-400">
+                <i class="bi bi-bar-chart mr-2"></i>
+                Monthly Performance
+              </h5>
+            </div>
+            <div class="p-4">
+              <MonthlyPerformanceChart :positions="positions" />
             </div>
           </div>
         </div>
 
         <!-- Costs Panel -->
-        <div class="row mb-4">
-          <div class="col-12">
-            <div class="card border-0 shadow">
-              <div class="card-header bg-warning text-dark">
-                <h5 class="card-title mb-0 fw-semibold">
-                  <i class="bi bi-calculator me-2"></i>
-                  Trading Costs Analysis
-                </h5>
-              </div>
-              <div class="card-body">
-                <div class="row g-4">
-                  <!-- Commission Summary -->
-                  <div class="col-lg-4">
-                    <div class="text-center p-3 border-end border-secondary">
-                      <div class="h2 text-warning fw-bold mb-2">${{ formatNumber(totalCommission) }}</div>
-                      <div class="text-muted mb-2">Total Commission</div>
-                      <div class="small text-muted">
-                        Avg: ${{ formatNumber(averageCommission) }} per trade
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Funding Summary -->
-                  <div class="col-lg-4">
-                    <div class="text-center p-3 border-end border-secondary">
-                      <div class="h2 text-info fw-bold mb-2">${{ formatNumber(totalFunding) }}</div>
-                      <div class="text-muted mb-2">Total Funding</div>
-                      <div class="small text-muted">
-                        Avg: ${{ formatNumber(averageFunding) }} per trade
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Total Costs -->
-                  <div class="col-lg-4">
-                    <div class="text-center p-3">
-                      <div class="h2 text-danger fw-bold mb-2">${{ formatNumber(totalCosts) }}</div>
-                      <div class="text-muted mb-2">Total Trading Costs</div>
-                      <div class="small text-muted">
-                        {{ ((totalCosts / stats.netProfit) * 100).toFixed(1) }}% of net profit
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Detailed Breakdown -->
-                <div class="row mt-4">
-                  <div class="col-12">
-                    <h6 class="text-muted mb-3">Cost Breakdown by Symbol</h6>
-                    <div class="table-responsive">
-                      <table class="table table-sm table-borderless">
-                        <thead class="table-dark">
-                          <tr>
-                            <th>Symbol</th>
-                            <th class="text-end">Commission</th>
-                            <th class="text-end">Funding</th>
-                            <th class="text-end">Total Costs</th>
-                            <th class="text-end">% of Net Profit</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          <tr v-for="(costs, symbol) in costsBySymbol" :key="symbol">
-                            <td>
-                              <span class="badge bg-secondary">{{ symbol }}</span>
-                            </td>
-                            <td class="text-end text-warning">${{ formatNumber(costs.commission) }}</td>
-                            <td class="text-end text-info">${{ formatNumber(costs.funding) }}</td>
-                            <td class="text-end text-danger fw-bold">${{ formatNumber(costs.total) }}</td>
-                            <td class="text-end text-muted small">
-                              {{ costs.percentageOfProfit }}%
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                </div>
-              </div>
+        <div class="mb-8">
+          <div class="glass-card">
+            <div class="p-4 border-b border-white/10 bg-yellow-500/10">
+              <h5 class="flex items-center text-lg font-semibold text-yellow-400">
+                <i class="bi bi-calculator mr-2"></i>
+                Trading Costs Analysis
+              </h5>
             </div>
-          </div>
-        </div>
+            <div class="p-6">
+              <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Commission Summary -->
+                <div class="text-center p-4 lg:border-r border-white/10">
+                  <div class="text-3xl font-bold text-yellow-400 mb-2">${{ formatNumber(totalCommission) }}</div>
+                  <div class="text-gray-400 mb-2">Total Commission</div>
+                  <div class="text-sm text-gray-500">
+                    Avg: ${{ formatNumber(averageCommission) }} per trade
+                  </div>
+                </div>
 
-        <!-- Positions Table -->
-        <div class="row">
-          <div class="col-12">
-            <div class="card border-0 shadow">
-              <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                <h5 class="card-title mb-0 fw-semibold">Position History</h5>
-                <div class="d-flex align-items-center gap-2">
-                  <span class="text-white-50 small">Showing {{ positions.length }} positions</span>
-                  <router-link to="/position-history/new" class="btn btn-success btn-sm ms-2">
-                    <i class="bi bi-plus-lg"></i> Add
-                  </router-link>
+                <!-- Funding Summary -->
+                <div class="text-center p-4 lg:border-r border-white/10">
+                  <div class="text-3xl font-bold text-blue-400 mb-2">${{ formatNumber(totalFunding) }}</div>
+                  <div class="text-gray-400 mb-2">Total Funding</div>
+                  <div class="text-sm text-gray-500">
+                    Avg: ${{ formatNumber(averageFunding) }} per trade
+                  </div>
+                </div>
+
+                <!-- Total Costs -->
+                <div class="text-center p-4">
+                  <div class="text-3xl font-bold text-red-400 mb-2">${{ formatNumber(totalCosts) }}</div>
+                  <div class="text-gray-400 mb-2">Total Trading Costs</div>
+                  <div class="text-sm text-gray-500">
+                    {{ ((totalCosts / stats.netProfit) * 100).toFixed(1) }}% of net profit
+                  </div>
                 </div>
               </div>
-              <div class="card-body p-0">
-                <div class="table-responsive">
-                  <table class="table table-hover mb-0">
-                    <thead class="table-dark">
+
+              <!-- Detailed Breakdown -->
+              <div class="mt-8">
+                <h6 class="text-gray-400 mb-4 font-semibold">Cost Breakdown by Symbol</h6>
+                <div class="overflow-x-auto">
+                  <table class="w-full text-sm text-left">
+                    <thead class="text-xs uppercase bg-white/5 text-gray-400">
                       <tr>
-                        <th>Symbol</th>
-                        <th>Type</th>
-                        <th>Quantity</th>
-                        <th>Average Price</th>
-                        <th>Close Price</th>
-                        <th>Leverage</th>
-                        <th>R:R</th>
-                        <th>Result</th>
-                        <th>Costs</th>
-                        <th>Volume/Sentiment</th>
-                        <th>Trade Info</th>
-                        <th>Open Date</th>
-                        <th>Close Date</th>
-                        <th>Edit</th>
+                        <th class="px-4 py-3 rounded-l-lg">Symbol</th>
+                        <th class="px-4 py-3 text-right">Commission</th>
+                        <th class="px-4 py-3 text-right">Funding</th>
+                        <th class="px-4 py-3 text-right">Total Costs</th>
+                        <th class="px-4 py-3 rounded-r-lg text-right">% of Net Profit</th>
                       </tr>
                     </thead>
-                    <tbody>
-                      <tr v-for="position in positions" :key="position.positionId">
-                        <td>
-                          <div>
-                            <span class="badge bg-primary">{{ position.symbol }}</span>
-                            <div class="small text-muted mt-1">ID: {{ position.positionId }}</div>
-                            <div class="small text-muted mt-1">
-                              <div v-if="position.tradeInfo?.found && position.tradeInfo.trade?.setup_description"
-                                class="small">
-                                <span class="badge bg-info">{{ position.tradeInfo.trade.setup_description }}</span>
-                              </div>
-                              <div v-else class="text-muted small">-</div>
-                            </div>
-                          </div>
+                    <tbody class="divide-y divide-white/5">
+                      <tr v-for="(costs, symbol) in costsBySymbol" :key="symbol" class="hover:bg-white/5 transition-colors">
+                        <td class="px-4 py-3 font-medium">
+                          <span class="px-2 py-1 bg-gray-700 rounded text-xs">{{ symbol }}</span>
                         </td>
-                        <td>
-                          <span class="badge" :class="position.positionSide === 'LONG' ? 'bg-success' : 'bg-danger'">
-                            {{ position.positionSide }}
-                          </span>
-                        </td>
-                        <td>{{ position.closePositionAmt }}</td>
-                        <td>${{ formatNumber(parseFloat(position.avgPrice), 5) }}</td>
-                        <td>${{ formatNumber(position.avgClosePrice, 5) }}</td>
-                        <td>{{ position.leverage }}x</td>
-                        <td>
-                          <span class="fw-semibold">{{ calculateFinancialRR(position) }}</span>
-                          <div class="small text-muted mt-1">
-                            Risk: ${{ formatNumber(calculateRiskAmount(position)) }}
-                          </div>
-                        </td>
-                        <td>
-                          <span class="fw-bold"
-                            :class="parseFloat(position.netProfit) >= 0 ? 'text-success' : 'text-danger'">
-                            ${{ formatNumber(parseFloat(position.netProfit)) }}
-                          </span>
-                        </td>
-                        <td>
-                          <div class="small">
-                            <div class="text-warning">${{ formatNumber(parseFloat(position.positionCommission)) }}</div>
-                            <div class="text-info">${{ formatNumber(parseFloat(position.totalFunding)) }}</div>
-                          </div>
-                        </td>
-                        <td>
-
-                          <div v-if="position.tradeInfo?.found" class="small">
-                            <div class="text-muted">Volume: {{ position.tradeInfo.trade?.volume }}
-                            </div>
-                            <div class="text-muted">Sentiment: {{ position.tradeInfo.trade?.sentiment }}
-                            </div>
-                          </div>
-                          <div v-else class="text-muted small">No trade info</div>
-
-                        </td>
-                        <td>
-                          <div v-if="position.tradeInfo?.found" class="small">
-                            <div class="text-success">Trade #{{ position.tradeInfo.trade?.id }}</div>
-                            <div class="text-muted">Entry: ${{ formatNumber(parseFloat(position.avgPrice) || 0, 5) }}
-                            </div>
-                            <div class="text-muted">Stop: ${{ formatNumber(position.tradeInfo.trade?.stop || 0, 5) }}
-                            </div>
-                          </div>
-                          <div v-else class="text-muted small">No trade info</div>
-                        </td>
-                        <td>{{ formatDate(position.openTime) }}</td>
-                        <td>{{ formatDate(getEffectiveCloseTime(position)) }}</td>
-                        <td>
-                          <router-link :to="`/position-history/edit/${position.positionId}`"
-                            class="btn btn-sm btn-outline-primary" title="Edit Position">
-                            <i class="bi bi-pencil"></i>
-                          </router-link>
+                        <td class="px-4 py-3 text-right text-yellow-400">${{ formatNumber(costs.commission) }}</td>
+                        <td class="px-4 py-3 text-right text-blue-400">${{ formatNumber(costs.funding) }}</td>
+                        <td class="px-4 py-3 text-right text-red-400 font-bold">${{ formatNumber(costs.total) }}</td>
+                        <td class="px-4 py-3 text-right text-gray-500 text-xs">
+                          {{ costs.percentageOfProfit }}%
                         </td>
                       </tr>
                     </tbody>
@@ -554,6 +372,107 @@
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+
+        <!-- Positions Table -->
+        <div class="glass-card overflow-hidden">
+          <div class="p-4 border-b border-white/10 bg-blue-600/20 flex justify-between items-center">
+            <h5 class="text-lg font-semibold text-white">Position History</h5>
+            <div class="flex items-center gap-2">
+              <span class="text-gray-400 text-sm">Showing {{ positions.length }} positions</span>
+              <router-link to="/position-history/new" class="btn-primary flex items-center gap-1 text-sm">
+                <i class="bi bi-plus-lg"></i> Add
+              </router-link>
+            </div>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm text-left">
+              <thead class="text-xs uppercase bg-gray-800 text-gray-400">
+                <tr>
+                  <th class="px-4 py-3">Symbol</th>
+                  <th class="px-4 py-3">Type</th>
+                  <th class="px-4 py-3">Quantity</th>
+                  <th class="px-4 py-3">Avg Price</th>
+                  <th class="px-4 py-3">Close Price</th>
+                  <th class="px-4 py-3">Leverage</th>
+                  <th class="px-4 py-3">R:R</th>
+                  <th class="px-4 py-3">Result</th>
+                  <th class="px-4 py-3">Costs</th>
+                  <th class="px-4 py-3">Volume/Sentiment</th>
+                  <th class="px-4 py-3">Trade Info</th>
+                  <th class="px-4 py-3">Open Date</th>
+                  <th class="px-4 py-3">Close Date</th>
+                  <th class="px-4 py-3">Edit</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-white/5">
+                <tr v-for="position in positions" :key="position.positionId" class="hover:bg-white/5 transition-colors">
+                  <td class="px-4 py-3">
+                    <div>
+                      <span class="px-2 py-1 bg-blue-600 rounded text-xs font-bold">{{ position.symbol }}</span>
+                      <div class="text-xs text-gray-500 mt-1">ID: {{ position.positionId }}</div>
+                      <div class="mt-1">
+                        <div v-if="position.tradeInfo?.found && position.tradeInfo.trade?.setup_description">
+                          <span class="px-2 py-0.5 bg-blue-400/20 text-blue-300 rounded text-xs">{{ position.tradeInfo.trade.setup_description }}</span>
+                        </div>
+                        <div v-else class="text-gray-500 text-xs">-</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-4 py-3">
+                    <span class="px-2 py-1 rounded text-xs font-bold" :class="position.positionSide === 'LONG' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'">
+                      {{ position.positionSide }}
+                    </span>
+                  </td>
+                  <td class="px-4 py-3 font-mono">{{ position.closePositionAmt }}</td>
+                  <td class="px-4 py-3 font-mono">${{ formatNumber(parseFloat(position.avgPrice), 5) }}</td>
+                  <td class="px-4 py-3 font-mono">${{ formatNumber(position.avgClosePrice, 5) }}</td>
+                  <td class="px-4 py-3">{{ position.leverage }}x</td>
+                  <td class="px-4 py-3">
+                    <span class="font-semibold">{{ calculateFinancialRR(position) }}</span>
+                    <div class="text-xs text-gray-500 mt-1">
+                      Risk: ${{ formatNumber(calculateRiskAmount(position)) }}
+                    </div>
+                  </td>
+                  <td class="px-4 py-3">
+                    <span class="font-bold"
+                      :class="parseFloat(position.netProfit) >= 0 ? 'text-green-400' : 'text-red-400'">
+                      ${{ formatNumber(parseFloat(position.netProfit)) }}
+                    </span>
+                  </td>
+                  <td class="px-4 py-3">
+                    <div class="text-xs">
+                      <div class="text-yellow-400">${{ formatNumber(parseFloat(position.positionCommission)) }}</div>
+                      <div class="text-blue-400">${{ formatNumber(parseFloat(position.totalFunding)) }}</div>
+                    </div>
+                  </td>
+                  <td class="px-4 py-3">
+                    <div v-if="position.tradeInfo?.found" class="text-xs">
+                      <div class="text-gray-400">Vol: {{ position.tradeInfo.trade?.volume }}</div>
+                      <div class="text-gray-400">Sent: {{ position.tradeInfo.trade?.sentiment }}</div>
+                    </div>
+                    <div v-else class="text-gray-500 text-xs">No info</div>
+                  </td>
+                  <td class="px-4 py-3">
+                    <div v-if="position.tradeInfo?.found" class="text-xs">
+                      <div class="text-green-400">#{{ position.tradeInfo.trade?.id }}</div>
+                      <div class="text-gray-400">Entry: ${{ formatNumber(parseFloat(position.avgPrice) || 0, 5) }}</div>
+                      <div class="text-gray-400">Stop: ${{ formatNumber(position.tradeInfo.trade?.stop || 0, 5) }}</div>
+                    </div>
+                    <div v-else class="text-gray-500 text-xs">No info</div>
+                  </td>
+                  <td class="px-4 py-3 text-xs text-gray-400">{{ formatDate(position.openTime) }}</td>
+                  <td class="px-4 py-3 text-xs text-gray-400">{{ formatDate(getEffectiveCloseTime(position)) }}</td>
+                  <td class="px-4 py-3">
+                    <router-link :to="`/position-history/edit/${position.positionId}`"
+                      class="px-2 py-1 border border-blue-500 text-blue-400 rounded hover:bg-blue-500/10 transition-colors text-sm" title="Edit Position">
+                      <i class="bi bi-pencil"></i>
+                    </router-link>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>

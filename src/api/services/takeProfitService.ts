@@ -1,4 +1,4 @@
-import { ZoneAnalysisService } from '../../services/ZoneAnalysisService';
+import { ZoneAnalysisService } from '../../core/services/ZoneAnalysisService';
 import { TradeType, AllowedInterval } from '../../utils/types';
 
 export class TakeProfitService {

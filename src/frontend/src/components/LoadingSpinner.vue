@@ -1,9 +1,7 @@
 <template>
-  <div class="loading-spinner" v-if="loading">
-    <div class="spinner-border text-primary" role="status">
-      <span class="visually-hidden">Carregando...</span>
-    </div>
-    <p class="mt-2 text-muted">{{ message }}</p>
+  <div class="flex flex-col items-center justify-center p-8" v-if="loading">
+    <div class="animate-spin rounded-full h-10 w-10 border-4 border-blue-500/30 border-t-blue-500 hover:border-t-blue-400 transition-colors"></div>
+    <p class="mt-4 text-gray-400 font-medium animate-pulse">{{ message }}</p>
   </div>
 </template>
 
@@ -19,11 +17,5 @@ withDefaults(defineProps<Props>(), {
 </script>
 
 <style scoped>
-.loading-spinner {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem;
-}
+/* Scoped styles removed */
 </style> 

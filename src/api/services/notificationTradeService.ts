@@ -1,7 +1,7 @@
-import { TradeDatabase } from '../../TradeDatabase';
+import { TradeDatabase } from '../../infrastructure/database/TradeDatabase';
 import { TradeNotification, Trade } from '../../utils/types';
-import { TradeExecutor } from '../../TradeExecutor';
-import { NotificationService } from '../../NotificationService';
+import { TradeExecutor } from '../../application/services/TradeExecutor';
+import { NotificationService } from '../../infrastructure/telegram/NotificationService';
 
 export class NotificationTradeService {
   private tradeDatabase: TradeDatabase;

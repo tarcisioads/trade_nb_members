@@ -1,17 +1,17 @@
 <template>
-  <div class="container mt-4">
+  <div class="container mx-auto mt-4 px-4">
     <audio ref="alertSound" src="/api/alert" preload="auto"></audio>
-    <div class="card">
-      <div class="card-header d-flex justify-content-between align-items-center">
-        <div class="d-flex align-items-center gap-2">
-          <h5 class="mb-0">Trade Notifications</h5>
-          <router-link to="/notifications" class="btn btn-sm btn-outline-primary">
+    <div class="glass-card">
+      <div class="p-4 border-b border-white/10 flex justify-between items-center bg-blue-600/10">
+        <div class="flex items-center gap-3">
+          <h5 class="text-xl font-semibold text-white mb-0">Trade Notifications</h5>
+          <router-link to="/notifications" class="px-3 py-1.5 border border-blue-500 text-blue-400 rounded hover:bg-blue-500/10 transition-colors text-sm flex items-center gap-2">
             <i class="bi bi-clock-history"></i> History
           </router-link>
         </div>
-        <span class="badge" :class="connectionStatusClass">{{ connectionStatus }}</span>
+        <span class="px-3 py-1 rounded text-sm font-bold" :class="connectionStatusClass">{{ connectionStatus }}</span>
       </div>
-      <div class="card-body">
+      <div class="p-4">
         <TradeListNotifications :trades="trades" :key="trades.length" />
       </div>
     </div>
@@ -27,7 +27,7 @@ import { TradeNotification } from '../../../utils/types'
 const router = useRouter()
 const trades = ref<TradeNotification[]>([])
 const connectionStatus = ref('Connecting...')
-const connectionStatusClass = ref('bg-warning')
+const connectionStatusClass = ref('bg-yellow-500/20 text-yellow-500')
 let ws: WebSocket | null = null
 
 const alertSound = ref<HTMLAudioElement | null>(null)
@@ -40,12 +40,12 @@ const connectWebSocket = () => {
 
   ws.onopen = () => {
     connectionStatus.value = 'Connected'
-    connectionStatusClass.value = 'bg-success'
+    connectionStatusClass.value = 'bg-green-500/20 text-green-400'
   }
 
   ws.onclose = () => {
     connectionStatus.value = 'Disconnected'
-    connectionStatusClass.value = 'bg-danger'
+    connectionStatusClass.value = 'bg-red-500/20 text-red-400'
     // Try to reconnect after 30 seconds
     setTimeout(connectWebSocket, 30000)
   }
@@ -53,7 +53,7 @@ const connectWebSocket = () => {
   ws.onerror = (error) => {
     console.error('WebSocket error:', error)
     connectionStatus.value = 'Error'
-    connectionStatusClass.value = 'bg-danger'
+    connectionStatusClass.value = 'bg-red-500/20 text-red-400'
   }
 
   ws.onmessage = (event) => {
@@ -107,87 +107,5 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.list-group-item {
-  background-color: var(--bs-body-bg);
-  border-color: var(--bs-border-color);
-}
-
-[data-bs-theme="dark"] .list-group-item {
-  background-color: #343a40;
-  border-color: #495057;
-}
-
-/* Execution Results Styles */
-.card.bg-light {
-  background-color: rgba(var(--bs-light-rgb), 0.1) !important;
-  border: 1px solid rgba(var(--bs-border-color-rgb), 0.2);
-}
-
-[data-bs-theme="dark"] .card.bg-light {
-  background-color: rgba(255, 255, 255, 0.05) !important;
-  border-color: rgba(255, 255, 255, 0.1);
-}
-
-.card-title {
-  font-size: 0.9rem;
-  color: var(--bs-secondary);
-  margin-bottom: 0.5rem;
-}
-
-.text-truncate {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.alert-danger {
-  background-color: rgba(var(--bs-danger-rgb), 0.1);
-  border-color: rgba(var(--bs-danger-rgb), 0.2);
-}
-
-[data-bs-theme="dark"] .alert-danger {
-  background-color: rgba(220, 53, 69, 0.2);
-  border-color: rgba(220, 53, 69, 0.3);
-}
-
-.bi-exclamation-triangle-fill {
-  color: var(--bs-danger);
-}
-
-/* Volume color styles */
-.text-danger {
-  color: var(--bs-danger) !important;
-}
-
-.text-warning {
-  color: var(--bs-warning) !important;
-}
-
-.text-info {
-  color: var(--bs-info) !important;
-}
-
-.text-secondary {
-  color: var(--bs-secondary) !important;
-}
-
-.text-primary {
-  color: var(--bs-primary) !important;
-}
-
-/* Setup description card styles */
-.card.bg-light .card-title {
-  font-size: 0.9rem;
-  color: var(--bs-secondary);
-  margin-bottom: 0.5rem;
-}
-
-[data-bs-theme="dark"] .card.bg-light {
-  background-color: rgba(255, 255, 255, 0.05) !important;
-  border-color: rgba(255, 255, 255, 0.1);
-}
-
-[data-bs-theme="dark"] .card.bg-light .card-title {
-  color: var(--bs-light);
-}
+/* Scoped styles removed */
 </style> 

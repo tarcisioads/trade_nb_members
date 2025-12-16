@@ -1,42 +1,40 @@
 <template>
-  <div class="card border-0 shadow h-100">
-    <div class="card-header bg-purple text-white">
-      <h5 class="card-title mb-0 fw-semibold">
-        <i class="bi bi-tags me-2"></i>
+  <div class="glass-card h-full flex flex-col">
+    <div class="p-4 border-b border-white/10 bg-purple-500/10">
+      <h5 class="flex items-center text-lg font-semibold text-purple-400">
+        <i class="bi bi-tags mr-2"></i>
         Setup Analysis
       </h5>
     </div>
-    <div class="card-body p-0">
-      <div class="table-responsive">
-        <table class="table table-hover mb-0">
-          <thead class="table-dark">
-            <tr>
-              <th>Setup</th>
-              <th class="text-end">Trades</th>
-              <th class="text-end">Win Rate</th>
-              <th class="text-end">Profit</th>
-              <th class="text-end">Avg R:R</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="(analysis, setup) in setupAnalysis" :key="setup">
-              <td>
-                <span class="badge bg-purple">{{ setup }}</span>
-              </td>
-              <td class="text-end">{{ analysis.totalTrades }}</td>
-              <td class="text-end">
-                <span :class="analysis.winRate >= 50 ? 'text-success' : 'text-danger'">
-                  {{ analysis.winRate }}%
-                </span>
-              </td>
-              <td class="text-end" :class="analysis.totalProfit >= 0 ? 'text-success' : 'text-danger'">
-                ${{ formatNumber(analysis.totalProfit) }}
-              </td>
-              <td class="text-end text-info">{{ formatNumber(analysis.avgRR) }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+    <div class="overflow-x-auto flex-grow">
+      <table class="w-full text-sm text-left">
+        <thead class="text-xs uppercase bg-white/5 text-gray-400">
+          <tr>
+            <th class="px-4 py-3">Setup</th>
+            <th class="px-4 py-3 text-right">Trades</th>
+            <th class="px-4 py-3 text-right">Win Rate</th>
+            <th class="px-4 py-3 text-right">Profit</th>
+            <th class="px-4 py-3 text-right">Avg R:R</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-white/5">
+          <tr v-for="(analysis, setup) in setupAnalysis" :key="setup" class="hover:bg-white/5 transition-colors">
+            <td class="px-4 py-3">
+              <span class="px-2 py-1 bg-purple-500/20 text-purple-300 rounded text-xs font-bold">{{ setup }}</span>
+            </td>
+            <td class="px-4 py-3 text-right">{{ analysis.totalTrades }}</td>
+            <td class="px-4 py-3 text-right">
+              <span :class="analysis.winRate >= 50 ? 'text-green-400' : 'text-red-400'">
+                {{ analysis.winRate.toFixed(1) }}%
+              </span>
+            </td>
+            <td class="px-4 py-3 text-right" :class="analysis.totalProfit >= 0 ? 'text-green-400' : 'text-red-400'">
+              ${{ formatNumber(analysis.totalProfit) }}
+            </td>
+            <td class="px-4 py-3 text-right text-blue-400">{{ formatNumber(analysis.avgRR) }}</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </div>
 </template>
@@ -123,42 +121,5 @@ const formatNumber = (value: number | undefined | null): string => {
 </script>
 
 <style scoped>
-.card {
-  backdrop-filter: blur(10px);
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  transition: all 0.3s ease;
-}
-
-.card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-}
-
-.card-header {
-  backdrop-filter: blur(10px);
-  background: linear-gradient(135deg, #6f42c1 0%, #5a32a3 100%) !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.table {
-  color: inherit;
-}
-
-.table-dark {
-  background: rgba(0, 0, 0, 0.3);
-}
-
-.table-hover tbody tr:hover {
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.badge {
-  font-weight: 600;
-  letter-spacing: 0.5px;
-}
-
-.bg-purple {
-  background-color: #6f42c1 !important;
-}
+/* Scoped styles removed */
 </style> 
