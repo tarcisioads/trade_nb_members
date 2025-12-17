@@ -1,5 +1,5 @@
 <template>
-  <div v-if="connectionStatus !== 'Disconnected' && connectionStatus !== 'Error'" class="container mx-auto mt-4 px-4">
+  <div class="container mx-auto mt-4 px-4">
     <audio ref="alertSound" src="/api/alert" preload="auto"></audio>
     <div class="glass-card">
       <div class="p-4 border-b border-white/10 flex justify-between items-center bg-blue-600/10">
@@ -11,7 +11,7 @@
         </div>
         <span class="px-3 py-1 rounded text-sm font-bold" :class="connectionStatusClass">{{ connectionStatus }}</span>
       </div>
-      <div class="p-4">
+      <div class="p-4" v-if="connectionStatus === 'Connected'">
         <TradeListNotifications :trades="trades" :key="trades.length" />
       </div>
     </div>
