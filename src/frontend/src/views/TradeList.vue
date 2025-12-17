@@ -15,29 +15,29 @@
         </button>
       </div>
     </div>
-    <div class="sticky top-16 z-40 glass-card p-3 mb-6 flex justify-between items-center backdrop-blur-md">
-      <div class="flex gap-3">
-        <router-link to="/trade/new" class="btn-primary">
+    <div class="sticky top-0 md:top-16 z-40 glass-card p-3 mb-6 flex flex-col lg:flex-row gap-4 justify-between items-center backdrop-blur-md">
+      <div class="flex flex-wrap justify-center gap-3 w-full lg:w-auto">
+        <router-link to="/trade/new" class="btn-primary flex-1 md:flex-none text-center text-sm md:text-base">
           Add New Trade
         </router-link>
         <button @click="showStats = !showStats" 
-          class="px-4 py-2 rounded-lg border border-gray-600 text-gray-300 hover:bg-white/5 transition-colors flex items-center gap-2"
+          class="px-4 py-2 rounded-lg border border-gray-600 text-gray-300 hover:bg-white/5 transition-colors flex items-center justify-center gap-2 flex-1 md:flex-none text-sm md:text-base"
           :title="showStats ? 'Hide Statistics' : 'Show Statistics'">
           <i class="bi" :class="showStats ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
           Statistics
         </button>
         <button @click="showMarketButtons = !showMarketButtons" 
-          class="px-4 py-2 rounded-lg border border-blue-500/50 text-blue-400 hover:bg-blue-500/10 transition-colors flex items-center gap-2"
+          class="px-4 py-2 rounded-lg border border-blue-500/50 text-blue-400 hover:bg-blue-500/10 transition-colors flex items-center justify-center gap-2 flex-1 md:flex-none text-sm md:text-base"
           :title="showMarketButtons ? 'Hide Market Buttons' : 'Show Market Buttons'">
           <i class="bi" :class="showMarketButtons ? 'bi-eye-slash' : 'bi-eye'"></i>
-          {{ showMarketButtons ? 'Hide Market Buttons' : 'Show Market Buttons' }}
+          {{ showMarketButtons ? 'Hide' : 'Show Market Buttons' }}
         </button>
       </div>
-      <div class="flex gap-2">
-        <span class="px-3 py-1 rounded bg-gray-700 text-gray-200 text-sm font-medium">{{ trades.length }} {{ trades.length === 1 ? 'Trade' : 'Trades' }}</span>
-        <span class="px-3 py-1 rounded bg-blue-900/50 text-blue-200 text-sm font-medium">{{ uniquePairs.length }} {{ uniquePairs.length === 1 ? 'Pair' : 'Pairs' }}</span>
-        <span class="px-3 py-1 rounded bg-green-900/50 text-green-200 text-sm font-medium">{{ longCount }} LONG</span>
-        <span class="px-3 py-1 rounded bg-red-900/50 text-red-200 text-sm font-medium">{{ shortCount }} SHORT</span>
+      <div class="flex flex-wrap justify-center gap-2 w-full lg:w-auto">
+        <span class="px-3 py-1 rounded bg-gray-700 text-gray-200 text-xs md:text-sm font-medium">{{ trades.length }} {{ trades.length === 1 ? 'Trade' : 'Trades' }}</span>
+        <span class="px-3 py-1 rounded bg-blue-900/50 text-blue-200 text-xs md:text-sm font-medium">{{ uniquePairs.length }} {{ uniquePairs.length === 1 ? 'Pair' : 'Pairs' }}</span>
+        <span class="px-3 py-1 rounded bg-green-900/50 text-green-200 text-xs md:text-sm font-medium">{{ longCount }} LONG</span>
+        <span class="px-3 py-1 rounded bg-red-900/50 text-red-200 text-xs md:text-sm font-medium">{{ shortCount }} SHORT</span>
       </div>
     </div>
 
