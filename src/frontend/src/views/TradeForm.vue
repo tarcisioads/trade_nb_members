@@ -234,6 +234,40 @@ const sanitizeTradeData = (data: Record<string, any>) => {
 const saveTrade = async () => {
   try {
     errorMessage.value = ''
+
+    // Validate duplicate TPs
+    const tps = [
+      tradeData.value.tp1,
+      tradeData.value.tp2,
+      tradeData.value.tp3,
+      tradeData.value.tp4,
+      tradeData.value.tp5,
+      tradeData.value.tp6
+    ].filter(tp => tp !== null && tp !== undefined && tp !== 0 && (tp as any) !== '')
+
+    const uniqueTps = new Set(tps)
+    if (uniqueTps.size !== tps.length) {
+      errorMessage.value = 'Duplicate Take Profit values are not allowed.'
+      return
+    }
+
+    // Validate TP ordering
+    for (let i = 0; i < tps.length - 1; i++) {
+      const current = Number(tps[i])
+      const next = Number(tps[i + 1])
+
+      if (tradeData.value.type === 'LONG') {
+        if (current > next) {
+          errorMessage.value = 'For LONG trades, Take Profit values must be increasing.'
+          return
+        }
+      } else {
+        if (current < next) {
+          errorMessage.value = 'For SHORT trades, Take Profit values must be decreasing.'
+          return
+        }
+      }
+    }
     const url = isEditing.value ? `/api/trades/${route.params.id}` : '/api/trades'
     const method = isEditing.value ? 'PUT' : 'POST'
 
