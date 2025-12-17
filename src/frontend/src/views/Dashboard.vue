@@ -801,7 +801,12 @@ const loadAvailableSetupDescriptions = async () => {
   }
 }
 
+const DASHBOARD_FILTERS_KEY = 'dashboard_filters'
+
 const loadData = async () => {
+  // Save filters to localStorage whenever data is loaded (which happens on filter change)
+  localStorage.setItem(DASHBOARD_FILTERS_KEY, JSON.stringify(filters.value))
+  
   loading.value = true
   try {
     // Load available symbols if not loaded yet
@@ -949,6 +954,18 @@ const formatDate = (timestamp: number): string => {
 
 // Lifecycle
 onMounted(() => {
+  // Try to load filters from localStorage
+  const savedFilters = localStorage.getItem(DASHBOARD_FILTERS_KEY)
+  if (savedFilters) {
+    try {
+      const parsed = JSON.parse(savedFilters)
+      // Merge saved filters with default structure to ensure backward compatibility
+      filters.value = { ...filters.value, ...parsed }
+    } catch (e) {
+      console.error('Error parsing saved filters:', e)
+    }
+  }
+  
   loadData()
 })
 </script>

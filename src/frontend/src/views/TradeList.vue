@@ -15,7 +15,7 @@
         </button>
       </div>
     </div>
-    <div class="sticky top-0 z-40 glass-card p-3 mb-6 flex justify-between items-center backdrop-blur-md">
+    <div class="sticky top-16 z-40 glass-card p-3 mb-6 flex justify-between items-center backdrop-blur-md">
       <div class="flex gap-3">
         <router-link to="/trade/new" class="btn-primary">
           Add New Trade
