@@ -47,7 +47,6 @@ export class PositionUpdateWebSocket {
             this.ws = new WebSocket(this.baseUrl);
 
             this.ws.on('open', () => {
-                console.log('PositionUpdateWebSocket connected');
                 this.reconnectAttempts = 0;
                 this.lastPongTime = Date.now();
                 this.startPingInterval();
@@ -59,7 +58,7 @@ export class PositionUpdateWebSocket {
                     let decodedMsg: string;
 
                     decodedMsg = buffer.toString('utf-8');
-                    
+
                     if (decodedMsg === 'Ping') {
                         this.ws?.send('Pong');
                         this.lastPongTime = Date.now();
@@ -104,7 +103,6 @@ export class PositionUpdateWebSocket {
             });
 
             this.ws.on('close', (code: number, reason: Buffer) => {
-                console.log(`PositionUpdateWebSocket connection closed. Code: ${code}, Reason: ${reason.toString()}`);
                 this.handleConnectionLoss();
             });
 
@@ -125,7 +123,6 @@ export class PositionUpdateWebSocket {
 
                 const timeSinceLastPong = Date.now() - this.lastPongTime;
                 if (timeSinceLastPong > this.PING_INTERVAL * 2) {
-                    console.log(`No pong received for ${timeSinceLastPong}ms, reconnecting...`);
                     this.handleConnectionLoss();
                 }
             }
@@ -144,8 +141,7 @@ export class PositionUpdateWebSocket {
 
         if (this.reconnectAttempts < this.maxReconnectAttempts) {
             this.reconnectAttempts++;
-            console.log(`Connection lost. Attempting to reconnect in 1 minute... (Attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
-            
+
             this.reconnectTimeout = setTimeout(() => {
                 this.connect();
             }, this.RECONNECT_DELAY);
@@ -165,12 +161,6 @@ export class PositionUpdateWebSocket {
                 if (this.onPositionUpdate) {
                     this.onPositionUpdate(message as PositionUpdateEvent);
                 }
-            } else if (message.e) {
-                console.log(`Received unhandled event type: ${message.e}`);
-            } else if (message.code === 0) {
-                console.log('Received success message:', message);
-            } else {
-                console.log('Received unhandled message:', message);
             }
         } catch (error) {
             console.error('Error processing message:', error);
