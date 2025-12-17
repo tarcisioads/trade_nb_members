@@ -48,7 +48,7 @@ export class BinanceFuturesOpenInterestService {
 
 
   private async initializeDatabase() {
-    const dbPath = path.join(__dirname, '../db/binance_futures_oi_cache.db');
+    const dbPath = path.join(process.cwd(), 'db/binance_futures_oi_cache.db');
     this.db = await open({
       filename: dbPath,
       driver: sqlite3.Database

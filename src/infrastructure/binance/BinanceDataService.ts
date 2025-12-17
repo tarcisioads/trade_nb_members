@@ -36,7 +36,7 @@ export class BinanceDataService implements IDataProvider {
 
 
   private async initializeDatabase() {
-    const dbPath = path.join(__dirname, '../db/binance_cache.db');
+    const dbPath = path.join(process.cwd(), 'db/binance_cache.db');
     this.db = await open({
       filename: dbPath,
       driver: sqlite3.Database

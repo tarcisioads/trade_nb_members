@@ -44,7 +44,7 @@ export class BingXDataService implements IDataProvider {
 
 
   private async initializeDatabase() {
-    const dbPath = path.join(__dirname, '../db/bingx_cache.db');
+    const dbPath = path.join(process.cwd(), 'db/bingx_cache.db');
     this.db = await open({
       filename: dbPath,
       driver: sqlite3.Database

@@ -17,7 +17,7 @@ export class TradeDatabase implements ITradeDatabase {
   }
 
   private async initializeDatabase() {
-    const dbPath = path.join(__dirname, '../db/trades.db');
+    const dbPath = path.join(process.cwd(), 'db/trades.db');
     this.db = await open({
       filename: dbPath,
       driver: sqlite3.Database

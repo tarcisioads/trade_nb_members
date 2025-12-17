@@ -12,7 +12,7 @@ export class DatabasePositionHistoryService {
 
 
     public async initializeDatabase() {
-        const dbPath = path.join(__dirname, '../../db/position_history.db');
+        const dbPath = path.join(process.cwd(), 'db/position_history.db');
         this.db = await open({
             filename: dbPath,
             driver: sqlite3.Database
