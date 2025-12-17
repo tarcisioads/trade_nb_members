@@ -49,12 +49,7 @@ export class VolumeAnalyzer {
       const stdBar = this.calculateStdBar(currentVolume, mean, std);
       const color = this.getVolumeColor(stdBar);
 
-      console.log(`Volume analysis for ${symbol} using ${source}:`);
-      console.log(`Current Volume: ${currentVolume}`);
-      console.log(`Mean: ${mean}`);
-      console.log(`Std: ${std}`);
-      console.log(`StdBar: ${stdBar}`);
-      console.log(`Color: ${color}`);
+
 
       return {
         color,
