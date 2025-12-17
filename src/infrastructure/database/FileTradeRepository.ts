@@ -16,7 +16,6 @@ export class FileTradeRepository implements ITradeRepository {
             return JSON.parse(data);
         } catch (error) {
             if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-                await this.writeTrades([]);
                 return [];
             }
             throw error;
