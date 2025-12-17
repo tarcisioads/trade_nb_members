@@ -1,5 +1,5 @@
 <template>
-  <main class="container py-4">
+  <main class="container mx-auto py-4">
     <!-- Custom Toast -->
     <div v-if="toast.show" class="fixed bottom-4 right-4 z-50">
       <div class="glass-card p-4 flex items-center gap-3 border-l-4 border-green-500 animate-slide-up">
