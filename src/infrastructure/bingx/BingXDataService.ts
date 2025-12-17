@@ -38,12 +38,13 @@ export class BingXDataService implements IDataProvider {
 
   public static async create(): Promise<BingXDataService> {
     const instance = new BingXDataService();
-    await instance.initializeDatabase(); // <-- Chama e espera a inicialização
+    await instance.ensureDatabaseInitialized();
     return instance;
   }
 
 
-  private async initializeDatabase() {
+  private async ensureDatabaseInitialized() {
+    if (this.db) return;
     const dbPath = path.join(process.cwd(), 'db/bingx_cache.db');
     this.db = await open({
       filename: dbPath,
@@ -110,6 +111,7 @@ export class BingXDataService implements IDataProvider {
   }
 
   private async getCachedData(symbol: string, timeComponents: CacheKey): Promise<KlineData[] | null> {
+    await this.ensureDatabaseInitialized();
     const result = await this.withRetry(() => this.db.get(
       'SELECT data FROM kline_cache WHERE symbol = ? AND interval = ? AND hour = ? AND day = ? AND month = ? AND year = ? AND minute = ?',
       [symbol, timeComponents.interval, timeComponents.hour, timeComponents.day, timeComponents.month, timeComponents.year, timeComponents.minute]
@@ -122,6 +124,7 @@ export class BingXDataService implements IDataProvider {
   }
 
   private async cacheData(symbol: string, timeComponents: CacheKey, data: KlineData[]): Promise<void> {
+    await this.ensureDatabaseInitialized();
     await this.withRetry(() => this.db.run(
       'INSERT OR REPLACE INTO kline_cache (symbol, interval, hour, day, month, year, minute, data, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
       [symbol, timeComponents.interval, timeComponents.hour, timeComponents.day, timeComponents.month, timeComponents.year, timeComponents.minute, JSON.stringify(data), Date.now()]
@@ -146,6 +149,7 @@ export class BingXDataService implements IDataProvider {
   }
 
   public async getKlineData(symbol: string, interval: AllowedInterval = '1h', limit: number = 56, noCache: boolean = false): Promise<KlineData[]> {
+    await this.ensureDatabaseInitialized();
     const normalizedSymbol = normalizeSymbolBingX(symbol);
     const timeComponents = this.getCurrentTimeComponents(interval);
 

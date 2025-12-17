@@ -10,8 +10,28 @@ export class DataServiceManager {
   private volumeProviders: IDataProvider[];
 
   constructor(klineProviders: IDataProvider[] = [], volumeProviders: IDataProvider[] = []) {
-    this.klineProviders = klineProviders;
-    this.volumeProviders = volumeProviders;
+    if (klineProviders.length === 0) {
+      const bingX = new BingXDataService();
+      const binanceFutures = new BinanceFuturesDataService();
+      const binanceSpot = new BinanceDataService();
+      // Default order for kline: BingX -> Futures -> Spot
+      this.klineProviders = [bingX, binanceFutures, binanceSpot];
+    } else {
+      this.klineProviders = klineProviders;
+    }
+
+    if (volumeProviders.length === 0) {
+       // Re-instantiate or reuse? Ideally reuse if they are the same type, but new instances is safer for now to avoid complexity without dependency injection container.
+       // Actually, let's reuse if we created them above, but logic is split.
+       // To keep it simple and safe given the context:
+       const bingX = new BingXDataService();
+       const binanceFutures = new BinanceFuturesDataService();
+       const binanceSpot = new BinanceDataService();
+       // Default order for volume: Futures -> BingX -> Spot
+       this.volumeProviders = [binanceFutures, bingX, binanceSpot];
+    } else {
+      this.volumeProviders = volumeProviders;
+    }
   }
 
   public static async create(): Promise<DataServiceManager> {

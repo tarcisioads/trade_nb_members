@@ -29,11 +29,12 @@ export class BinanceFuturesDataService implements IDataProvider {
 
   public static async create(): Promise<BinanceFuturesDataService> {
     const instance = new BinanceFuturesDataService();
-    await instance.initializeDatabase(); // <-- Chama e espera a inicialização
+    await instance.ensureDatabaseInitialized();
     return instance;
   }
 
-  private async initializeDatabase() {
+  private async ensureDatabaseInitialized() {
+    if (this.db) return;
     const dbPath = path.join(process.cwd(), 'db/binance_futures_cache.db');
     this.db = await open({
       filename: dbPath,
@@ -100,6 +101,7 @@ export class BinanceFuturesDataService implements IDataProvider {
   }
 
   private async getCachedData(symbol: string, timeComponents: CacheKey): Promise<KlineData[] | null> {
+    await this.ensureDatabaseInitialized();
     const result = await this.withRetry(() =>
       this.db.get(
         'SELECT data FROM futures_kline_cache WHERE symbol = ? AND interval = ? AND hour = ? AND minutes = ? AND day = ? AND month = ? AND year = ?',
@@ -114,6 +116,7 @@ export class BinanceFuturesDataService implements IDataProvider {
   }
 
   private async cacheData(symbol: string, timeComponents: CacheKey, data: KlineData[]): Promise<void> {
+    await this.ensureDatabaseInitialized();
     await this.withRetry(() =>
       this.db.run(
         'INSERT OR REPLACE INTO futures_kline_cache (symbol, interval, hour, minutes, day, month, year, data, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
@@ -139,7 +142,7 @@ export class BinanceFuturesDataService implements IDataProvider {
   }
 
   public async getKlineData(symbol: string, interval: AllowedInterval = '1h', limit: number = 56, noCache: boolean = false): Promise<KlineData[]> {
-
+    await this.ensureDatabaseInitialized();
     const timeComponents = this.getCurrentTimeComponents(interval);
     timeComponents.symbol = symbol;
 
