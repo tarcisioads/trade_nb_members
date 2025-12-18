@@ -1,5 +1,21 @@
 <template>
   <div class="container mx-auto px-4 py-8">
+    <!-- Custom Toast -->
+    <div v-if="toast.show" class="fixed bottom-4 right-4 z-50">
+      <div class="glass-card p-4 flex items-center gap-3 border-l-4 border-green-500 animate-slide-up">
+        <div class="text-green-400">
+          <i class="bi bi-check-circle-fill text-xl"></i>
+        </div>
+        <div>
+          <h6 class="font-bold text-white">Success</h6>
+          <p class="text-sm text-gray-300">{{ toast.message }}</p>
+        </div>
+        <button @click="toast.show = false" class="ml-4 text-gray-400 hover:text-white">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+    </div>
+
     <div v-if="errorMessage" class="bg-red-500/10 border border-red-500/50 text-red-200 px-4 py-3 rounded mb-6 flex justify-between items-center animate-fade-in" role="alert">
       <span>{{ errorMessage }}</span>
       <button type="button" class="text-red-400 hover:text-white transition-colors" @click="errorMessage = ''" aria-label="Close">
@@ -19,7 +35,7 @@
               <label class="block text-sm font-medium text-gray-400 mb-2">Pair</label>
               <input v-model="pairUpperCase" type="text" 
                 class="w-full bg-gray-900/50 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all outline-none" 
-                required placeholder="BTCUSDT" />
+                required placeholder="BTCUSDT" @blur="handleSymbolBlur" />
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-400 mb-2">Type</label>
@@ -154,7 +170,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed, watch } from 'vue'
+import { ref, onMounted, computed, reactive } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Trade } from '../../../utils/types';
 
@@ -198,12 +214,25 @@ const errorMessage = ref('')
 const loadingSuggest = ref(false)
 const suggestError = ref('')
 
+// Toast state
+const toast = reactive({
+  show: false,
+  message: ''
+})
+
+const showToast = (message: string) => {
+  toast.message = message
+  toast.show = true
+  setTimeout(() => {
+    toast.show = false
+  }, 3000)
+}
+
 const suggestButtonLabel = computed(() => {
   if (loadingSuggest.value) return 'Suggesting...';
   return 'Suggest TakeProfit';
 });
 
-// Load trade data if editing
 // Load trade data if editing
 const allTrades = ref<Trade[]>([])
 const loadingTrades = ref(false)
@@ -238,11 +267,12 @@ onMounted(async () => {
   }
 })
 
-// Watch for symbol changes to autofill data
-watch(() => tradeData.value.symbol, (newSymbol) => {
+// Handle symbol blur for autofill
+const handleSymbolBlur = () => {
+  const newSymbol = tradeData.value.symbol
   if (!newSymbol || isEditing.value) return
 
-  const existingTrade = allTrades.value.find(t => t.symbol.toLowerCase() === newSymbol.toLowerCase() && t.id !== undefined) // Find last trade (assuming API returns sorted or we just take first match if array is desc)
+  const existingTrade = allTrades.value.find(t => t.symbol.toLowerCase() === newSymbol.toLowerCase() && t.id !== undefined)
   
   if (existingTrade) {
     // Flip type
@@ -264,8 +294,10 @@ watch(() => tradeData.value.symbol, (newSymbol) => {
     if (existingTrade.url_analysis) {
       tradeData.value.url_analysis = existingTrade.url_analysis
     }
+
+    showToast('Data autofilled from last trade')
   }
-})
+}
 
 const sanitizeTradeData = (data: Record<string, any>) => {
   const sanitized: Record<string, any> = { ...data };
