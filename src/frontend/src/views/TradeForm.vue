@@ -242,7 +242,7 @@ onMounted(async () => {
 watch(() => tradeData.value.symbol, (newSymbol) => {
   if (!newSymbol || isEditing.value) return
 
-  const existingTrade = allTrades.value.find(t => t.symbol === newSymbol && t.id !== undefined) // Find last trade (assuming API returns sorted or we just take first match if array is desc)
+  const existingTrade = allTrades.value.find(t => t.symbol.toLowerCase() === newSymbol.toLowerCase() && t.id !== undefined) // Find last trade (assuming API returns sorted or we just take first match if array is desc)
   
   if (existingTrade) {
     // Flip type
