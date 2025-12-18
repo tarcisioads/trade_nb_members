@@ -1,6 +1,6 @@
 <template>
   <div class="min-h-screen">
-    <nav class="glass-header sticky top-0 z-50 mb-8">
+    <nav class="glass-header z-50 mb-8">
       <div class="container mx-auto px-4">
         <div class="flex flex-col md:flex-row justify-between items-center min-h-[4rem] py-2 md:py-0">
           <div class="flex flex-col md:flex-row items-center gap-4 md:gap-8 w-full md:w-auto">

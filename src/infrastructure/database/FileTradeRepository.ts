@@ -23,7 +23,17 @@ export class FileTradeRepository implements ITradeRepository {
     }
 
     async writeTrades(trades: Trade[]): Promise<void> {
-        await fs.writeFile(this.filePath, JSON.stringify(trades, null, 2));
+        const tempPath = `${this.filePath}.${Date.now()}-${Math.random().toString(36).substring(7)}.tmp`;
+        try {
+            await fs.writeFile(tempPath, JSON.stringify(trades, null, 2));
+            await fs.rename(tempPath, this.filePath);
+        } catch (error) {
+            // Attempt to clean up temp file if something fails
+            try {
+                await fs.unlink(tempPath);
+            } catch (ignore) { }
+            throw error;
+        }
     }
 
     async addTrade(trade: Trade): Promise<Trade> {
