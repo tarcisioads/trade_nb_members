@@ -270,10 +270,13 @@ onMounted(async () => {
 // Handle symbol blur for autofill
 const handleSymbolBlur = () => {
   const newSymbol = tradeData.value.symbol
+  console.log(newSymbol)
+  console.log(isEditing.value)
   if (!newSymbol || isEditing.value) return
 
   const existingTrade = allTrades.value.find(t => t.symbol.toLowerCase() === newSymbol.toLowerCase())
-  
+  console.log(existingTrade)
+
   if (existingTrade) {
     // Flip type
     tradeData.value.type = existingTrade.type === 'LONG' ? 'SHORT' : 'LONG'
