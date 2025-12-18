@@ -15,7 +15,7 @@
         </button>
       </div>
     </div>
-    <div class="sticky top-0 md:top-16 z-40 glass-card p-3 mb-6 flex flex-col lg:flex-row gap-4 justify-between items-center backdrop-blur-md">
+    <div class="sticky top-0 z-40 glass-card p-3 mb-6 flex flex-col lg:flex-row gap-4 justify-between items-center backdrop-blur-md">
       <div class="flex flex-wrap justify-center gap-3 w-full lg:w-auto">
         <router-link to="/trade/new" class="btn-primary flex-1 md:flex-none text-center text-sm md:text-base flex items-center justify-center" title="Add New Trade">
           <i class="bi bi-plus-lg text-xl"></i>
