@@ -272,7 +272,7 @@ const handleSymbolBlur = () => {
   const newSymbol = tradeData.value.symbol
   if (!newSymbol || isEditing.value) return
 
-  const existingTrade = allTrades.value.find(t => t.symbol.toLowerCase() === newSymbol.toLowerCase() && t.id !== undefined)
+  const existingTrade = allTrades.value.find(t => t.symbol.toLowerCase() === newSymbol.toLowerCase())
   
   if (existingTrade) {
     // Flip type
