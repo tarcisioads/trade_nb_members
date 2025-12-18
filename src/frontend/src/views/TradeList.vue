@@ -17,8 +17,8 @@
     </div>
     <div class="sticky top-0 md:top-16 z-40 glass-card p-3 mb-6 flex flex-col lg:flex-row gap-4 justify-between items-center backdrop-blur-md">
       <div class="flex flex-wrap justify-center gap-3 w-full lg:w-auto">
-        <router-link to="/trade/new" class="btn-primary flex-1 md:flex-none text-center text-sm md:text-base">
-          Add New Trade
+        <router-link to="/trade/new" class="btn-primary flex-1 md:flex-none text-center text-sm md:text-base flex items-center justify-center" title="Add New Trade">
+          <i class="bi bi-plus-lg text-xl"></i>
         </router-link>
         <button @click="showStats = !showStats" 
           class="px-4 py-2 rounded-lg border border-gray-600 text-gray-300 hover:bg-white/5 transition-colors flex items-center justify-center gap-2 flex-1 md:flex-none text-sm md:text-base"
@@ -30,7 +30,7 @@
           class="px-4 py-2 rounded-lg border border-blue-500/50 text-blue-400 hover:bg-blue-500/10 transition-colors flex items-center justify-center gap-2 flex-1 md:flex-none text-sm md:text-base"
           :title="showMarketButtons ? 'Hide Market Buttons' : 'Show Market Buttons'">
           <i class="bi" :class="showMarketButtons ? 'bi-eye-slash' : 'bi-eye'"></i>
-          {{ showMarketButtons ? 'Hide' : 'Show Market Buttons' }}
+          Market Buttons
         </button>
       </div>
       <div class="flex flex-wrap justify-center gap-2 w-full lg:w-auto">

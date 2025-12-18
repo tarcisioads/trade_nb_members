@@ -154,7 +154,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Trade } from '../../../utils/types';
 
@@ -204,7 +204,24 @@ const suggestButtonLabel = computed(() => {
 });
 
 // Load trade data if editing
+// Load trade data if editing
+const allTrades = ref<Trade[]>([])
+const loadingTrades = ref(false)
+
 onMounted(async () => {
+  // Load all trades for autofill functionality
+  try {
+    loadingTrades.value = true
+    const response = await fetch('/api/trades')
+    if (response.ok) {
+      allTrades.value = await response.json()
+    }
+  } catch (error) {
+    console.error('Failed to load trade history:', error)
+  } finally {
+    loadingTrades.value = false
+  }
+
   if (isEditing.value) {
     try {
       const response = await fetch(`/api/trades/${route.params.id}`)
@@ -217,6 +234,35 @@ onMounted(async () => {
     } catch (error) {
       console.error('Failed to load trade:', error)
       errorMessage.value = error instanceof Error ? error.message : 'Failed to load trade'
+    }
+  }
+})
+
+// Watch for symbol changes to autofill data
+watch(() => tradeData.value.symbol, (newSymbol) => {
+  if (!newSymbol || isEditing.value) return
+
+  const existingTrade = allTrades.value.find(t => t.symbol === newSymbol && t.id !== undefined) // Find last trade (assuming API returns sorted or we just take first match if array is desc)
+  
+  if (existingTrade) {
+    // Flip type
+    tradeData.value.type = existingTrade.type === 'LONG' ? 'SHORT' : 'LONG'
+    
+    // Copy other fields
+    tradeData.value.interval = existingTrade.interval
+    
+    // Checkboxes
+    tradeData.value.volume_required = existingTrade.volume_required
+    tradeData.value.volume_adds_margin = existingTrade.volume_adds_margin
+    tradeData.value.sentiment_required = existingTrade.sentiment_required
+    tradeData.value.sentiment_adds_margin = existingTrade.sentiment_adds_margin
+    
+    // Description and URL
+    if (existingTrade.setup_description) {
+      tradeData.value.setup_description = existingTrade.setup_description
+    }
+    if (existingTrade.url_analysis) {
+      tradeData.value.url_analysis = existingTrade.url_analysis
     }
   }
 })
