@@ -211,15 +211,27 @@ export class PositionStatisticsService {
         const mostProfitableSide = Object.keys(sideProfits).reduce((a, b) =>
             sideProfits[a] > sideProfits[b] ? a : b, Object.keys(sideProfits)[0] || '');
 
-        const topProfitableSymbols = Object.entries(grossProfitBySymbol)
+        const sortedProfitableSymbols = Object.entries(grossProfitBySymbol)
             .map(([symbol, amount]) => ({ symbol, amount }))
-            .sort((a, b) => b.amount - a.amount)
-            .slice(0, 10);
+            .sort((a, b) => b.amount - a.amount);
 
-        const topLosingSymbols = Object.entries(grossLossBySymbol)
+        const topProfitableSymbols = sortedProfitableSymbols.slice(0, 10);
+
+        if (sortedProfitableSymbols.length > 10) {
+            const othersAmount = sortedProfitableSymbols.slice(10).reduce((sum, item) => sum + item.amount, 0);
+            topProfitableSymbols.push({ symbol: 'Others', amount: othersAmount });
+        }
+
+        const sortedLosingSymbols = Object.entries(grossLossBySymbol)
             .map(([symbol, amount]) => ({ symbol, amount }))
-            .sort((a, b) => b.amount - a.amount)
-            .slice(0, 10);
+            .sort((a, b) => b.amount - a.amount);
+
+        const topLosingSymbols = sortedLosingSymbols.slice(0, 10);
+
+        if (sortedLosingSymbols.length > 10) {
+            const othersAmount = sortedLosingSymbols.slice(10).reduce((sum, item) => sum + item.amount, 0);
+            topLosingSymbols.push({ symbol: 'Others', amount: othersAmount });
+        }
 
         return {
             totalPositions,
