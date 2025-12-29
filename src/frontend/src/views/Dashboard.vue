@@ -300,6 +300,21 @@
           </div>
         </div>
 
+        <!-- Monthly Performance Chart (By Opening Date) -->
+        <div class="mb-8">
+          <div class="glass-card">
+            <div class="p-4 border-b border-white/10 bg-purple-500/10">
+              <h5 class="flex items-center text-lg font-semibold text-purple-400">
+                <i class="bi bi-calendar-event mr-2"></i>
+                Performance by Opening Date
+              </h5>
+            </div>
+            <div class="p-4">
+              <OpeningDatePerformanceChart :positions="positions" />
+            </div>
+          </div>
+        </div>
+
         <!-- Costs Panel -->
         <div class="mb-8">
           <div class="glass-card">
@@ -485,6 +500,7 @@ import PerformanceChart from '../components/PerformanceChart.vue'
 import ProfitBySymbolChart from '../components/ProfitBySymbolChart.vue'
 import LossBySymbolChart from '../components/LossBySymbolChart.vue'
 import MonthlyPerformanceChart from '../components/MonthlyPerformanceChart.vue'
+import OpeningDatePerformanceChart from '../components/OpeningDatePerformanceChart.vue'
 import RiskStatsCard from '../components/RiskStatsCard.vue'
 import PerformanceMetricsCard from '../components/PerformanceMetricsCard.vue'
 import AnalysisTable from '../components/AnalysisTable.vue'
