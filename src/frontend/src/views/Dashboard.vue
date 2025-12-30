@@ -394,6 +394,9 @@
             <h5 class="text-lg font-semibold text-white">Position History</h5>
             <div class="flex items-center gap-2">
               <span class="text-gray-400 text-sm">Showing {{ positions.length }} positions</span>
+              <button @click="exportToCSV" class="btn-primary flex items-center gap-1 text-sm bg-green-600 hover:bg-green-700 border-none ml-2">
+                <i class="bi bi-file-earmark-spreadsheet"></i> Export
+              </button>
               <router-link to="/position-history/new" class="btn-primary flex items-center gap-1 text-sm">
                 <i class="bi bi-plus-lg"></i> Add
               </router-link>
@@ -966,6 +969,108 @@ const formatNumber = (value: number, maximum: number = 2): string => {
 
 const formatDate = (timestamp: number): string => {
   return new Date(timestamp).toLocaleString('en-US')
+}
+
+const exportToCSV = () => {
+  if (positions.value.length === 0) {
+    alert('No data to export')
+    return
+  }
+
+  // Define headers for the CSV - ensuring no grouped information
+  const headers = [
+    'Position ID',
+    'Symbol',
+    'Side',
+    'Setup Description',
+    'Open Quantity',
+    'Closed Quantity',
+    'Avg Entry Price',
+    'Avg Close Price',
+    'Leverage',
+    'Net Profit',
+    'Realised Profit',
+    'Commission',
+    'Funding',
+    'Cost Percentage',
+    'Open Date',
+    'Close Date',
+    'Update Time',
+    'Trade Found',
+    'Trade ID',
+    'Trade Entry',
+    'Trade Stop',
+    'Trade TP1',
+    'Risk Amount',
+    'Financial RR'
+  ]
+
+  // Map data to rows
+  const rows = positions.value.map((pos: PositionHistory) => {
+    const trade = pos.tradeInfo?.trade
+    const openDate = pos.openTime ? new Date(pos.openTime).toISOString() : ''
+    const closeDate = pos.closeTime ? new Date(pos.closeTime).toISOString() : ''
+    const updateTime = pos.updateTime ? new Date(pos.updateTime).toISOString() : ''
+    
+    // Calculate cost percentage as seen in UI logic (roughly) if needed, 
+    // or just raw values. Let's strictly follow "separate info".
+    // I'll calculate percentage for convenience as a separate column.
+    const commission = parseFloat(pos.positionCommission || '0')
+    const funding = parseFloat(pos.totalFunding || '0')
+    const netProfit = parseFloat(pos.netProfit || '0')
+    const totalCost = commission + funding
+    let costPercentage = '0.0'
+    if (netProfit !== 0) {
+      costPercentage = ((Math.abs(totalCost) / Math.abs(netProfit)) * 100).toFixed(2)
+    }
+
+    const safeString = (val: any) => {
+      if (val === null || val === undefined) return ''
+      return String(val).replace(/"/g, '""')
+    }
+
+    return [
+      pos.positionId,
+      pos.symbol,
+      pos.positionSide,
+      trade?.setup_description || '',
+      pos.positionAmt,
+      pos.closePositionAmt,
+      pos.avgPrice,
+      pos.avgClosePrice,
+      pos.leverage,
+      pos.netProfit,
+      pos.realisedProfit,
+      pos.positionCommission,
+      pos.totalFunding,
+      costPercentage,
+      openDate,
+      closeDate,
+      updateTime,
+      pos.tradeInfo?.found ? 'Yes' : 'No',
+      trade?.id || '',
+      trade?.entry || '',
+      trade?.stop || '',
+      trade?.tp1 || '',
+      calculateRiskAmount(pos).toFixed(2),
+      calculateFinancialRR(pos)
+    ].map(field => `"${safeString(field)}"`).join(',')
+  })
+
+  // Combine headers and rows
+  const csvContent = [headers.join(','), ...rows].join('\n')
+  
+  // Create blob and download link
+  const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.setAttribute('href', url)
+  link.setAttribute('download', `position_history_export_${new Date().toISOString().slice(0, 10)}.csv`)
+  link.style.visibility = 'hidden'
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  URL.revokeObjectURL(url)
 }
 
 // Lifecycle
