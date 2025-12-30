@@ -1001,6 +1001,8 @@ const exportToCSV = () => {
     'Trade Entry',
     'Trade Stop',
     'Trade TP1',
+    'Trade Volume',
+    'Trade Sentiment',
     'Risk Amount',
     'Financial RR'
   ]
@@ -1052,6 +1054,8 @@ const exportToCSV = () => {
       trade?.entry || '',
       trade?.stop || '',
       trade?.tp1 || '',
+      trade?.volume || '',
+      trade?.sentiment || '',
       calculateRiskAmount(pos).toFixed(2),
       calculateFinancialRR(pos)
     ].map(field => `"${safeString(field)}"`).join(',')

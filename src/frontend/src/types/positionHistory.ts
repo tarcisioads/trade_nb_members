@@ -37,6 +37,8 @@ export interface PositionHistory {
       createdAt: string
       updatedAt: string
       timeDifference: number
+      volume?: string
+      sentiment?: string
     }
     message: string
   }
