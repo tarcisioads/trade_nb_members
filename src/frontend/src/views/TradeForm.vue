@@ -22,6 +22,17 @@
         <i class="bi bi-x-lg"></i>
       </button>
     </div>
+
+    <!-- Warning Message for Open Positions -->
+    <div v-if="warningMessage" class="bg-yellow-500/10 border border-yellow-500/50 text-yellow-200 px-4 py-3 rounded mb-6 flex justify-between items-center animate-fade-in" role="alert">
+      <div class="flex items-center gap-3">
+        <i class="bi bi-exclamation-triangle-fill text-yellow-400"></i>
+        <span>{{ warningMessage }}</span>
+      </div>
+      <button type="button" class="text-yellow-400 hover:text-white transition-colors" @click="warningMessage = ''" aria-label="Close">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
     
     <div class="max-w-2xl mx-auto glass-card animate-slide-up">
       <div class="p-6 border-b border-white/10">
@@ -170,7 +181,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed, reactive } from 'vue'
+import { ref, onMounted, computed, reactive, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Trade } from '../../../utils/types';
 
@@ -211,6 +222,7 @@ const pairUpperCase = computed({
 const isEditing = computed(() => route.params.id !== undefined)
 
 const errorMessage = ref('')
+const warningMessage = ref('')
 const loadingSuggest = ref(false)
 const suggestError = ref('')
 
@@ -267,10 +279,48 @@ onMounted(async () => {
   }
 })
 
+// Check for open positions
+const checkOpenPosition = async () => {
+  const { symbol, type } = tradeData.value
+  if (!symbol || !type) return
+
+  try {
+    const response = await fetch(`/api/trades/check-position?symbol=${symbol}&type=${type}`)
+    if (response.ok) {
+      const data = await response.json()
+      if (data.hasPosition) {
+        warningMessage.value = data.message || `Warning: Active ${type} position exists for ${symbol}`
+      } else {
+        warningMessage.value = ''
+      }
+    }
+  } catch (error) {
+    console.error('Failed to check open positions:', error)
+  }
+}
+
+// Watchers for position check
+watch(() => tradeData.value.symbol, () => {
+  if (tradeData.value.symbol && tradeData.value.symbol.length >= 3) {
+    checkOpenPosition()
+  } else {
+    warningMessage.value = ''
+  }
+})
+
+watch(() => tradeData.value.type, () => {
+  if (tradeData.value.symbol) {
+    checkOpenPosition()
+  }
+})
+
 // Handle symbol blur for autofill
 const handleSymbolBlur = () => {
   const newSymbol = tradeData.value.symbol
   if (!newSymbol || isEditing.value) return
+
+  // Trigger position check explicitly on blur as well
+  checkOpenPosition()
 
   const existingTrade = allTrades.value.find(t => t.symbol.toLowerCase() === newSymbol.toLowerCase())
 

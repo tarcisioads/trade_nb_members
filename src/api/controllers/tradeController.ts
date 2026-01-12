@@ -1,12 +1,50 @@
 import { Request, Response } from 'express';
 import { TradeService } from '../services/tradeService';
 import { Trade } from '../../utils/types';
+import { PositionValidator } from '../../core/services/PositionValidator';
 
 export class TradeController {
     private tradeService: TradeService;
+    private positionValidator: PositionValidator;
 
     constructor() {
         this.tradeService = new TradeService();
+        this.positionValidator = new PositionValidator();
+    }
+
+    async checkOpenPosition(req: Request, res: Response): Promise<void> {
+        try {
+            const { symbol, type } = req.query;
+
+            if (!symbol || typeof symbol !== 'string') {
+                res.status(400).json({ error: 'Symbol is required' });
+                return;
+            }
+
+            // If type is provided, check specific side, otherwise check both
+            if (type && (type === 'LONG' || type === 'SHORT')) {
+                const result = await this.positionValidator.hasOpenPosition(symbol, type);
+                res.json(result);
+            } else {
+                // Check both sides if type not specified
+                const longResult = await this.positionValidator.hasOpenPosition(symbol, 'LONG');
+                const shortResult = await this.positionValidator.hasOpenPosition(symbol, 'SHORT');
+                
+                res.json({
+                    hasPosition: longResult.hasPosition || shortResult.hasPosition,
+                    details: {
+                        long: longResult,
+                        short: shortResult
+                    },
+                    message: longResult.hasPosition || shortResult.hasPosition 
+                        ? `Open positions found for ${symbol}` 
+                        : `No open positions found for ${symbol}`
+                });
+            }
+        } catch (error) {
+            console.error('Error checking open position:', error);
+            res.status(500).json({ error: 'Failed to check open position' });
+        }
     }
 
     async listTrades(req: Request, res: Response): Promise<void> {

@@ -11,6 +11,7 @@ router.get('/alert', (req, res) => {
 });
 
 router.get('/trades', (req, res) => tradeController.listTrades(req, res));
+router.get('/trades/check-position', (req, res) => tradeController.checkOpenPosition(req, res));
 router.get('/trades/:index', (req, res) => tradeController.getTrade(req, res));
 router.post('/trades', (req, res) => tradeController.addTrade(req, res));
 router.put('/trades/:index', (req, res) => tradeController.updateTrade(req, res));
