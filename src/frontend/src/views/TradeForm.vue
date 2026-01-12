@@ -281,15 +281,15 @@ onMounted(async () => {
 
 // Check for open positions
 const checkOpenPosition = async () => {
-  const { symbol, type } = tradeData.value
-  if (!symbol || !type) return
+  const { symbol } = tradeData.value
+  if (!symbol) return
 
   try {
-    const response = await fetch(`/api/trades/check-position?symbol=${symbol}&type=${type}`)
+    const response = await fetch(`/api/trades/check-position?symbol=${symbol}`)
     if (response.ok) {
       const data = await response.json()
       if (data.hasPosition) {
-        warningMessage.value = data.message || `Warning: Active ${type} position exists for ${symbol}`
+        warningMessage.value = data.message || `Warning: Active position exists for ${symbol}`
       } else {
         warningMessage.value = ''
       }
@@ -305,12 +305,6 @@ watch(() => tradeData.value.symbol, () => {
     checkOpenPosition()
   } else {
     warningMessage.value = ''
-  }
-})
-
-watch(() => tradeData.value.type, () => {
-  if (tradeData.value.symbol) {
-    checkOpenPosition()
   }
 })
 
