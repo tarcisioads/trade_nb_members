@@ -2,15 +2,7 @@ import { PositionHistoryCronJob } from '../src/application/jobs/PositionHistoryC
 import { PositionHistory } from '../src/application/services/PositionHistory';
 import { TradeDatabase } from '../src/infrastructure/database/TradeDatabase';
 
-jest.mock('../src/application/services/PositionHistory');
-jest.mock('../src/infrastructure/database/TradeDatabase', () => {
-    return {
-        TradeDatabase: jest.fn().mockImplementation(() => ({
-            getDistinctSymbols: jest.fn().mockResolvedValue(['BTCUSDT', 'ETHUSDT']),
-            // Add other methods if needed
-        }))
-    };
-});
+// Remove jest.mock calls as we will inject manual mocks
 
 describe('PositionHistoryCronJob', () => {
     let positionHistoryCron: PositionHistoryCronJob;
@@ -18,8 +10,14 @@ describe('PositionHistoryCronJob', () => {
     let mockTradeDatabase: jest.Mocked<TradeDatabase>;
 
     beforeEach(() => {
-        mockPositionHistory = new PositionHistory() as jest.Mocked<PositionHistory>;
-        mockTradeDatabase = new TradeDatabase() as jest.Mocked<TradeDatabase>;
+        // Create manual mocks
+        mockPositionHistory = {
+            createOrUpdateCache: jest.fn().mockResolvedValue(undefined),
+        } as unknown as jest.Mocked<PositionHistory>;
+
+        mockTradeDatabase = {
+            getDistinctSymbols: jest.fn().mockResolvedValue(['BTCUSDT', 'ETHUSDT']),
+        } as unknown as jest.Mocked<TradeDatabase>;
 
         positionHistoryCron = new PositionHistoryCronJob(mockPositionHistory, mockTradeDatabase);
     });

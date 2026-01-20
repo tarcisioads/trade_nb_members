@@ -17,8 +17,24 @@ describe('TradeEntryAnalyzer', () => {
     // Create a new instance of the analyzer
     analyzer = new TradeEntryAnalyzer();
 
-    // Get the mocked instance
-    mockDataServiceManager = (DataServiceManager as jest.MockedClass<typeof DataServiceManager>).mock.instances[0] as jest.Mocked<DataServiceManager>;
+    // Get the mocked instance - access the mock from the class constructor
+    const MockDataServiceManager = DataServiceManager as jest.MockedClass<typeof DataServiceManager>;
+    // The constructor is called inside TradeEntryAnalyzer, so we need to access the instance that was created
+    mockDataServiceManager = MockDataServiceManager.mock.instances[0] as jest.Mocked<DataServiceManager>;
+    
+    // If instance is undefined (which shouldn't happen if constructor calls new DataServiceManager),
+    // we might need to verify the mock setup.
+    // For now, let's assume it works or handle the case where it doesn't.
+    if (!mockDataServiceManager) {
+        // Fallback or force creation if needed, though this indicates the mock didn't work as expected
+        console.warn('Mock DataServiceManager instance not found!');
+        // Manually assigning a mock object to the private property if possible (using any)
+        mockDataServiceManager = {
+            getKlineData: jest.fn(),
+            get24hrStats: jest.fn(),
+        } as unknown as jest.Mocked<DataServiceManager>;
+        (analyzer as any).dataServiceManager = mockDataServiceManager;
+    }
   });
 
   describe('hasClosePriceBeforeEntry', () => {

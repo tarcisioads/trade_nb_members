@@ -11,9 +11,21 @@ describe('LeverageCalculator', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    process.env = { ...OLD_ENV, BINGX_API_KEY: 'key', BINGX_API_SECRET: 'secret', BINGX_BASE_URL: 'http://mock' };
+    process.env = { 
+      ...OLD_ENV, 
+      BINGX_API_KEY: 'key', 
+      BINGX_API_SECRET: 'secret', 
+      BINGX_BASE_URL: 'http://mock',
+      LEVERAGE_SAFETY_FACTOR_PERCENT: '30',
+      LEVERAGE_SAFETY_FACTOR_PERCENT_1H: undefined,
+      LEVERAGE_SAFETY_FACTOR_PERCENT_15: undefined,
+      LEVERAGE_SAFETY_FACTOR_PERCENT_5: undefined
+    };
 
     mockApiClient = new BingXApiClient() as jest.Mocked<BingXApiClient>;
+    mockApiClient.get = jest.fn();
+    mockApiClient.post = jest.fn();
+    
     calc = new LeverageCalculator(mockApiClient);
   });
 

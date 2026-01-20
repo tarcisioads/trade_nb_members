@@ -26,11 +26,27 @@ describe('TradeOrderProcessor', () => {
   beforeEach(() => {
     jest.clearAllMocks();
 
+    // Create mock instances directly or use the auto-mocked class instances
+    // Since we are mocking the modules, we can just instantiate them and they should be mocks
+    // However, to be safe and explicit, let's cast them properly
+    
     mockTradeDatabase = new TradeDatabase() as jest.Mocked<TradeDatabase>;
+    // Ensure methods are mocks
+    mockTradeDatabase.hasOrderDetails = jest.fn();
+    mockTradeDatabase.saveOrderDetails = jest.fn();
+    mockTradeDatabase.updateTradeStatus = jest.fn();
+    mockTradeDatabase.getOpenTrades = jest.fn();
+
     mockOrderStatusChecker = new OrderStatusChecker() as jest.Mocked<OrderStatusChecker>;
+    mockOrderStatusChecker.getOrderStatus = jest.fn();
+    mockOrderStatusChecker.getOrderStatusWithDetails = jest.fn();
+
     mockOrderExecutor = new BingXOrderExecutor(mockTradeDatabase) as jest.Mocked<BingXOrderExecutor>;
+    
     mockDataService = new BingXDataService() as jest.Mocked<BingXDataService>;
+    
     mockNotificationService = new NotificationService() as jest.Mocked<NotificationService>;
+    
     mockPositionValidator = new PositionValidator() as jest.Mocked<PositionValidator>;
 
     // Setup default mock implementations
