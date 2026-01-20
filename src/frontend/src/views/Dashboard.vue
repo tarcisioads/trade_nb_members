@@ -57,6 +57,12 @@
                 <input type="number" v-model="filters.minResult" @change="loadData" class="w-full bg-gray-900/50 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all outline-none"
                   id="minResult" placeholder="0.00" step="0.01">
               </div>
+              <div class="flex items-center h-[72px]">
+                <div class="flex items-center gap-2">
+                  <input type="checkbox" v-model="filters.onlyWithTradeInfo" @change="loadData" id="onlyWithTradeInfo" class="w-5 h-5 rounded bg-gray-900/50 border-gray-700 text-blue-500 focus:ring-blue-500/50">
+                  <label for="onlyWithTradeInfo" class="text-sm font-semibold cursor-pointer">Only with Trade Info</label>
+                </div>
+              </div>
               <div>
                 <div class="flex gap-2">
                   <button @click="loadData" class="btn-primary flex-1 flex items-center justify-center">
@@ -650,7 +656,8 @@ const filters = ref({
   setupDescription: 'ALL',
   startDate: null,
   endDate: null,
-  minResult: 0
+  minResult: 0,
+  onlyWithTradeInfo: true
 });
 
 // Computed properties for risk stats
@@ -871,6 +878,7 @@ const loadPositions = async () => {
     }
 
     params.append('minResult', filters.value.minResult.toString())
+    params.append('onlyWithTradeInfo', filters.value.onlyWithTradeInfo.toString())
 
     const response = await fetch(`/api/position-history?${params}`)
     const result = await response.json()
@@ -904,6 +912,8 @@ const loadStats = async () => {
       params.append('minResult', filters.value.minResult.toString())
     }
 
+    params.append('onlyWithTradeInfo', filters.value.onlyWithTradeInfo.toString())
+
     const response = await fetch(`/api/position-history/stats?${params}`)
     const result = await response.json()
 
@@ -936,6 +946,8 @@ const loadDetailedRiskStats = async () => {
       params.append('minResult', filters.value.minResult.toString())
     }
 
+    params.append('onlyWithTradeInfo', filters.value.onlyWithTradeInfo.toString())
+
     const response = await fetch(`/api/position-history/risk-stats?${params}`)
     const result = await response.json()
 
@@ -955,7 +967,8 @@ const resetFilters = () => {
     setupDescription: 'ALL',
     startDate: twoMonthsAgo.toISOString().split('T')[0],
     endDate: new Date().toISOString().split('T')[0],
-    minResult: 0
+    minResult: 0,
+    onlyWithTradeInfo: true
   }
   loadData()
 }

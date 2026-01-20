@@ -5,7 +5,7 @@
   "scripts": {
     "test": "jest",
     "dev": "ts-node src/index.ts",
-    "build": "tsc",
+    "build": "rm -rf dist && tsc",
     "api": "ts-node src/api/index.ts",
     "frontend:dev": "vite",
     "frontend:build": "vite build",

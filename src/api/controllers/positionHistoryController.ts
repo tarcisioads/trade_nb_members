@@ -55,7 +55,8 @@ export class PositionHistoryController {
                 setupDescription,
                 startTs, 
                 endTs,
-                minResult
+                minResult,
+                onlyWithTradeInfo
             } = req.query;
 
             const positions = await this.positionHistoryService.getPositionHistory(
@@ -68,11 +69,14 @@ export class PositionHistoryController {
 
             let positionsWithTradeInfo = await this.positionHistoryService.enrichPositionsWithTradeInfo(positions);
 
+            if (onlyWithTradeInfo === 'true') {
+                positionsWithTradeInfo = positionsWithTradeInfo.filter(position => position.tradeInfo?.found);
+            }
+
             if (setupDescription && setupDescription !== 'ALL') {
                 positionsWithTradeInfo = positionsWithTradeInfo.filter(position => 
-                    (!position.tradeInfo?.found) ||( 
                     position.tradeInfo?.found && 
-                    position.tradeInfo.trade?.setup_description === setupDescription)
+                    position.tradeInfo.trade?.setup_description === setupDescription
                 );
             }
 
@@ -95,7 +99,7 @@ export class PositionHistoryController {
 
     public async getPositionStats(req: Request, res: Response): Promise<void> {
         try {
-            const { symbol = 'ALL', setupDescription, startTs, endTs, minResult } = req.query;
+            const { symbol = 'ALL', setupDescription, startTs, endTs, minResult, onlyWithTradeInfo } = req.query;
 
             const positions = await this.positionHistoryService.getPositionHistory(
                 symbol as string,
@@ -107,11 +111,14 @@ export class PositionHistoryController {
 
             let positionsWithTradeInfo = await this.positionHistoryService.enrichPositionsWithTradeInfo(positions);
 
+            if (onlyWithTradeInfo === 'true') {
+                positionsWithTradeInfo = positionsWithTradeInfo.filter(position => position.tradeInfo?.found);
+            }
+
             if (setupDescription && setupDescription !== 'ALL') {
                 positionsWithTradeInfo = positionsWithTradeInfo.filter(position => 
-                    (!position.tradeInfo?.found) ||( 
-                        position.tradeInfo?.found && 
-                        position.tradeInfo.trade?.setup_description === setupDescription)
+                    position.tradeInfo?.found && 
+                    position.tradeInfo.trade?.setup_description === setupDescription
                 );
             }
 
@@ -196,7 +203,7 @@ export class PositionHistoryController {
 
     public async getDetailedRiskStats(req: Request, res: Response): Promise<void> {
         try {
-            const { symbol = 'ALL', setupDescription, startTs, endTs, minResult } = req.query;
+            const { symbol = 'ALL', setupDescription, startTs, endTs, minResult, onlyWithTradeInfo } = req.query;
             const positions = await this.positionHistoryService.getPositionHistory(
                 symbol as string,
                 startTs ? parseInt(startTs as string) : undefined,
@@ -205,11 +212,15 @@ export class PositionHistoryController {
                 100000
             );
             let positionsWithTradeInfo = await this.positionHistoryService.enrichPositionsWithTradeInfo(positions);
+
+            if (onlyWithTradeInfo === 'true') {
+                positionsWithTradeInfo = positionsWithTradeInfo.filter(position => position.tradeInfo?.found);
+            }
+
             if (setupDescription && setupDescription !== 'ALL') {
                 positionsWithTradeInfo = positionsWithTradeInfo.filter(position => 
-                    (!position.tradeInfo?.found) ||( 
-                        position.tradeInfo?.found && 
-                        position.tradeInfo.trade?.setup_description === setupDescription)
+                    position.tradeInfo?.found && 
+                    position.tradeInfo.trade?.setup_description === setupDescription
                 );
             }
 
