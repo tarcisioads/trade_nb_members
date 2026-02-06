@@ -25,6 +25,7 @@ export class BingXOrderExecutor implements IOrderExecutor {
   private readonly sentimentMarginPercentage: number;
   private readonly activation_fator_below: number;
   private readonly activation_fator_above: number;
+  private readonly orderPrefix: string;
 
   constructor(tradeDatabase?: ITradeDatabase) {
     // Initialize API client
@@ -38,6 +39,7 @@ export class BingXOrderExecutor implements IOrderExecutor {
     this.tradeDatabase = tradeDatabase || new TradeDatabase();
     this.activation_fator_below = parseFloat(process.env.ACTIVATION_FACTOR_BELOW || '1');
     this.activation_fator_above = parseFloat(process.env.ACTIVATION_FACTOR_ABOVE || '1')
+    this.orderPrefix = process.env.BINGX_ORDER_PREFIX_CODE || 'DEF';
   }
 
 
@@ -95,6 +97,12 @@ export class BingXOrderExecutor implements IOrderExecutor {
     }
   }
 
+  private generateClientOrderId(tradeId?: number): string {
+    const timestamp = Date.now().toString();
+    const randomSuffix = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+    return `NBM_${this.orderPrefix}_${tradeId ? tradeId : '0'}_${timestamp}_${randomSuffix}`;
+  }
+
   public async placeOrder(
     pair: string,
     side: 'BUY' | 'SELL',
@@ -109,7 +117,6 @@ export class BingXOrderExecutor implements IOrderExecutor {
   ): Promise<BingXOrderResponse> {
     const normalizedPair = normalizeSymbolBingX(pair);
     const path = '/openApi/swap/v2/trade/order';
-    const timestamp = Date.now().toString();
     const params: any = {
       symbol: normalizedPair,
       side: side,
@@ -118,7 +125,7 @@ export class BingXOrderExecutor implements IOrderExecutor {
       price: price.toString(),
       stopPrice: stopPrice.toString(),
       quantity: quantity.toString(),
-      clientOrderId: `NBMEMBERS_${tradeId ? tradeId : '0'}_${timestamp}`
+      clientOrderId: this.generateClientOrderId(tradeId)
     };
 
     if (positionId) {
@@ -190,6 +197,9 @@ export class BingXOrderExecutor implements IOrderExecutor {
         params.activationPrice = price.toString();
       }
 
+      // Generate a new clientOrderId for retry
+      params.clientOrderId = this.generateClientOrderId(tradeId);
+
       try {
 
         const response = await this.apiClient.post<BingXOrderResponse>(path, params);
@@ -220,7 +230,6 @@ export class BingXOrderExecutor implements IOrderExecutor {
   ): Promise<BingXOrderResponse> {
     const normalizedPair = normalizeSymbolBingX(pair);
     const path = '/openApi/swap/v2/trade/order';
-    const timestamp = Date.now().toString();
 
     const params: any = {
       symbol: normalizedPair,
@@ -230,7 +239,7 @@ export class BingXOrderExecutor implements IOrderExecutor {
       quantity: quantity.toString(),
       price: price.toString(),
       activationPrice: activationPrice.toString(),
-      clientOrderId: `NBMEMBERS_${tradeId}_${timestamp}`,
+      clientOrderId: this.generateClientOrderId(tradeId),
       positionId: positionId
     };
 
@@ -688,7 +697,8 @@ export class BingXOrderExecutor implements IOrderExecutor {
       type: type,
       price: price.toString(),
       stopPrice: stopPrice.toString(),
-      quantity: quantity.toString()
+      quantity: quantity.toString(),
+      clientOrderId: this.generateClientOrderId(tradeId)
     };
 
     if (type === 'STOP') {
@@ -742,6 +752,7 @@ export class BingXOrderExecutor implements IOrderExecutor {
 
       params.price = price.toString()
       params.stopPrice = stopPrice.toString()
+      params.clientOrderId = this.generateClientOrderId(tradeId)
       try {
         const response = await this.apiClient.post<BingXOrderResponse>(path, params);
 
