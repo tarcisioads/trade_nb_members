@@ -86,7 +86,7 @@ export class TradeController {
 
     async updateTrade(req: Request, res: Response): Promise<void> {
         try {
-            const index = parseInt(req.params.index);
+            const index = parseInt(req.params.index as string);
             const tradeUpdate = req.body as Partial<Trade>;
             
             const updatedTrade = await this.tradeService.updateTrade(index, tradeUpdate);
@@ -102,7 +102,7 @@ export class TradeController {
 
     async deleteTrade(req: Request, res: Response): Promise<void> {
         try {
-            const index = parseInt(req.params.index);
+            const index = parseInt(req.params.index as string);
             const deletedTrade = await this.tradeService.deleteTrade(index);
             res.json(deletedTrade);
         } catch (error) {
@@ -116,7 +116,7 @@ export class TradeController {
 
     async getTrade(req: Request, res: Response): Promise<void> {
         try {
-            const index = parseInt(req.params.index);
+            const index = parseInt(req.params.index as string);
             const trade = await this.tradeService.getTrade(index);
             res.json(trade);
         } catch (error) {
