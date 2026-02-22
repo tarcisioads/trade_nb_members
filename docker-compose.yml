@@ -1,0 +1,37 @@
+services:
+  trade-api:
+    build:
+      context: .
+      target: backend-runtime
+    container_name: trade-api
+    command: node dist/api/index.js
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./db:/app/db
+      - ./logs:/app/logs
+    env_file: .env
+
+  trade-bot:
+    build:
+      context: .
+      target: backend-runtime
+    container_name: trade-bot
+    command: node dist/index.js
+    restart: unless-stopped
+    volumes:
+      - ./db:/app/db
+      - ./logs:/app/logs
+    env_file: .env
+
+  trade-frontend:
+    build:
+      context: .
+      target: frontend-runtime
+    container_name: trade-frontend
+    ports:
+      - "5173:80"
+    restart: unless-stopped
+    depends_on:
+      - trade-api
