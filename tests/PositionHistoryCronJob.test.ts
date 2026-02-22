@@ -17,6 +17,9 @@ describe('PositionHistoryCronJob', () => {
 
         mockTradeDatabase = {
             getDistinctSymbols: jest.fn().mockResolvedValue(['BTCUSDT', 'ETHUSDT']),
+            syncMonitoredSymbols: jest.fn().mockResolvedValue(undefined),
+            getOpenTradesSymbols: jest.fn().mockResolvedValue(['BTCUSDT']),
+            getActiveSymbols: jest.fn().mockResolvedValue(['BTCUSDT', 'ETHUSDT']),
         } as unknown as jest.Mocked<TradeDatabase>;
 
         positionHistoryCron = new PositionHistoryCronJob(mockPositionHistory, mockTradeDatabase);

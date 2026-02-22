@@ -7,7 +7,8 @@ export class PositionHistoryCronJob {
   private positionHistory: PositionHistory;
   private tradeDatabase: ITradeDatabase;
   private isRunning: boolean = false;
-  private symbols: string[] = [];
+  private highPrioritySymbols: string[] = [];
+  private normalPrioritySymbols: string[] = [];
 
   constructor(
     positionHistory?: PositionHistory,
@@ -19,33 +20,59 @@ export class PositionHistoryCronJob {
 
   private async loadSymbolsFromDatabase(): Promise<void> {
     try {
-      this.symbols = await this.tradeDatabase.getDistinctSymbols();
-      console.log(`[${new Date().toLocaleString()}] Loaded ${this.symbols.length} symbols from database: ${this.symbols.join(', ')}`);
+      // 1. Sync new symbols to monitored_symbols table
+      await this.tradeDatabase.syncMonitoredSymbols();
+
+      // 2. Load open trade symbols (High Priority)
+      this.highPrioritySymbols = await this.tradeDatabase.getOpenTradesSymbols();
+
+      // 3. Load other active symbols (Normal Priority)
+      const allActiveSymbols = await this.tradeDatabase.getActiveSymbols();
+      this.normalPrioritySymbols = allActiveSymbols.filter(s => !this.highPrioritySymbols.includes(s));
+
+      console.log(`[${new Date().toLocaleString()}] Loaded symbols:`);
+      console.log(` - High Priority (Open Trades): ${this.highPrioritySymbols.length}`);
+      console.log(` - Normal Priority (Other Active): ${this.normalPrioritySymbols.length}`);
     } catch (error) {
       console.error(`[${new Date().toLocaleString()}] Error loading symbols from database:`, error);
-      // Fallback to default symbols if database fails
-      this.symbols = ['ALL'];
     }
   }
 
-  private async updatePositionHistory(): Promise<void> {
+  private async updateHighPriorityPositions(): Promise<void> {
     try {
-      console.log(`\n[${new Date().toLocaleString()}] Starting position history cache update...`);
-
-      // Reload symbols from database before updating cache
+      console.log(`\n[${new Date().toLocaleString()}] Starting HIGH PRIORITY position history update...`);
       await this.loadSymbolsFromDatabase();
 
-      // Update cache for all symbols from database
-      await this.positionHistory.createOrUpdateCache(this.symbols);
-
-      console.log(`[${new Date().toLocaleString()}] Position history cache update completed successfully`);
+      if (this.highPrioritySymbols.length > 0) {
+        await this.positionHistory.createOrUpdateCache(this.highPrioritySymbols);
+      } else {
+        console.log('No high priority symbols to update.');
+      }
+      console.log(`[${new Date().toLocaleString()}] High priority update completed.`);
     } catch (error) {
-      console.error(`[${new Date().toLocaleString()}] Error updating position history cache:`, error);
+      console.error(`[${new Date().toLocaleString()}] Error in high priority update:`, error);
+    }
+  }
+
+  private async updateNormalPriorityPositions(): Promise<void> {
+    try {
+      console.log(`\n[${new Date().toLocaleString()}] Starting NORMAL PRIORITY position history update...`);
+      await this.loadSymbolsFromDatabase();
+
+      if (this.normalPrioritySymbols.length > 0) {
+        await this.positionHistory.createOrUpdateCache(this.normalPrioritySymbols);
+      } else {
+        console.log('No normal priority symbols to update.');
+      }
+      console.log(`[${new Date().toLocaleString()}] Normal priority update completed.`);
+    } catch (error) {
+      console.error(`[${new Date().toLocaleString()}] Error in normal priority update:`, error);
     }
   }
 
   private initialUpdateTimeout: NodeJS.Timeout | null = null;
-  private cronTask: cron.ScheduledTask | null = null;
+  private highPriorityCronTask: cron.ScheduledTask | null = null;
+  private normalPriorityCronTask: cron.ScheduledTask | null = null;
 
   public async start(): Promise<void> {
     if (this.isRunning) {
@@ -53,65 +80,56 @@ export class PositionHistoryCronJob {
       return;
     }
 
-    // Initial execution after 1 second
+    // Initial execution
     this.initialUpdateTimeout = setTimeout(async () => {
-      console.log(`\n[${new Date().toLocaleString()}] Running initial position history update...`);
+      console.log(`\n[${new Date().toLocaleString()}] Running initial update for all active symbols...`);
       try {
-        await this.updatePositionHistory();
+        await this.updateHighPriorityPositions();
+        await this.updateNormalPriorityPositions();
       } catch (error) {
-        console.error('Error updating positions history:', error);
+        console.error('Error during initial update:', error);
       }
       this.initialUpdateTimeout = null;
     }, 1000);
 
-    // Schedule the job to run every 30 minutes
-    this.cronTask = cron.schedule('*/30 * * * *', async () => {
-      try {
-        await this.updatePositionHistory();
-      } catch (error) {
-        console.error('Error updating positions history:', error);
-      }
+    // Schedule HIGH priority run every 30 minutes
+    this.highPriorityCronTask = cron.schedule('*/30 * * * *', async () => {
+      await this.updateHighPriorityPositions();
+    });
+
+    // Schedule NORMAL priority run every 12 hours
+    this.normalPriorityCronTask = cron.schedule('0 */12 * * *', async () => {
+      await this.updateNormalPriorityPositions();
     });
 
     this.isRunning = true;
-    console.log('PositionHistoryCronJob started. Will run every 30 minutes.');
-    console.log('Symbols will be dynamically loaded from database on each run.');
+    console.log('PositionHistoryCronJob started.');
+    console.log(' - High Priority: every 30 mins');
+    console.log(' - Normal Priority: every 12 hours');
   }
 
   public stop(): void {
-    if (!this.isRunning) {
-      console.log('PositionHistoryCronJob is not running');
-      return;
-    }
+    if (!this.isRunning) return;
 
-    if (this.initialUpdateTimeout) {
-      clearTimeout(this.initialUpdateTimeout);
-      this.initialUpdateTimeout = null;
-    }
-
-    if (this.cronTask) {
-      this.cronTask.stop();
-      this.cronTask = null;
-    }
+    if (this.initialUpdateTimeout) clearTimeout(this.initialUpdateTimeout);
+    if (this.highPriorityCronTask) this.highPriorityCronTask.stop();
+    if (this.normalPriorityCronTask) this.normalPriorityCronTask.stop();
 
     this.isRunning = false;
     console.log('PositionHistoryCronJob stopped');
   }
 
-  /**
-   * Get the current symbols being monitored (from database)
-   * @returns Array of symbols
-   */
   public getSymbols(): string[] {
-    return [...this.symbols];
+    return [...this.highPrioritySymbols, ...this.normalPrioritySymbols];
   }
 
   /**
-   * Manually trigger a position history update
+   * Manually trigger a full position history update
    */
   public async manualUpdate(): Promise<void> {
-    console.log(`\n[${new Date().toLocaleString()}] Manual position history update triggered...`);
-    await this.updatePositionHistory();
+    console.log(`\n[${new Date().toLocaleString()}] Manual full position history update triggered...`);
+    await this.updateHighPriorityPositions();
+    await this.updateNormalPriorityPositions();
   }
 
   /**

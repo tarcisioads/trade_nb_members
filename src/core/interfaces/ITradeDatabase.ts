@@ -14,6 +14,7 @@ export interface ITradeDatabase {
 
     getTradeById(id: number): Promise<TradeRecord>;
     getOpenTrades(): Promise<TradeRecord[]>;
+    getOpenTradesSymbols(): Promise<string[]>;
     getClosedTrades(): Promise<TradeRecord[]>;
     getAllTrades(): Promise<TradeRecord[]>;
     updateTradeStatus(id: number, status: 'OPEN' | 'CLOSED'): Promise<void>;
@@ -89,6 +90,10 @@ export interface ITradeDatabase {
 
     getDistinctSymbols(): Promise<string[]>;
     updatePositionId(id: number, positionId: string): Promise<void>;
+
+    upsertMonitoredSymbol(symbol: string, status: 'ACTIVE' | 'INVALID' | 'INACTIVE'): Promise<void>;
+    getActiveSymbols(): Promise<string[]>;
+    syncMonitoredSymbols(): Promise<void>;
 
     updateTradeSentiment(id: number, sentimentData: {
         sentiment: string;

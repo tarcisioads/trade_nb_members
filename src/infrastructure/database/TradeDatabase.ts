@@ -178,6 +178,14 @@ export class TradeDatabase implements ITradeDatabase {
                 createdAt TEXT NOT NULL
             )
         `);
+
+    await this.db.exec(`
+            CREATE TABLE IF NOT EXISTS monitored_symbols (
+                symbol TEXT PRIMARY KEY,
+                status TEXT NOT NULL,
+                lastUpdated TEXT NOT NULL
+            )
+        `);
   }
 
   public async saveTrade(
@@ -279,6 +287,11 @@ export class TradeDatabase implements ITradeDatabase {
 
   public async getOpenTrades(): Promise<TradeRecord[]> {
     return await this.db.all('SELECT * FROM trades WHERE status = ?', ['OPEN']);
+  }
+
+  public async getOpenTradesSymbols(): Promise<string[]> {
+    const result = await this.db.all('SELECT DISTINCT symbol FROM trades WHERE status = ?', ['OPEN']);
+    return result.map((row: { symbol: string }) => row.symbol);
   }
 
   public async getClosedTrades(): Promise<TradeRecord[]> {
@@ -624,6 +637,43 @@ export class TradeDatabase implements ITradeDatabase {
         `);
 
     return result.map((row: { symbol: string }) => row.symbol);
+  }
+
+  public async upsertMonitoredSymbol(symbol: string, status: 'ACTIVE' | 'INVALID' | 'INACTIVE'): Promise<void> {
+    const now = new Date().toISOString();
+    await this.db.run(`
+            INSERT INTO monitored_symbols (symbol, status, lastUpdated)
+            VALUES (?, ?, ?)
+            ON CONFLICT(symbol) DO UPDATE SET
+                status = excluded.status,
+                lastUpdated = excluded.lastUpdated
+        `, [symbol, status, now]);
+  }
+
+  public async getActiveSymbols(): Promise<string[]> {
+    const result = await this.db.all(`
+            SELECT symbol FROM monitored_symbols
+            WHERE status = 'ACTIVE'
+            ORDER BY symbol
+        `);
+
+    return result.map((row: { symbol: string }) => row.symbol);
+  }
+
+  public async syncMonitoredSymbols(): Promise<void> {
+    const symbols = await this.getDistinctSymbols();
+    const now = new Date().toISOString();
+
+    for (const symbol of symbols) {
+      // Check if symbol already exists to avoid overwriting INVALID/INACTIVE status
+      const existing = await this.db.get('SELECT status FROM monitored_symbols WHERE symbol = ?', [symbol]);
+      if (!existing) {
+        await this.db.run(`
+                    INSERT INTO monitored_symbols (symbol, status, lastUpdated)
+                    VALUES (?, ?, ?)
+                `, [symbol, 'ACTIVE', now]);
+      }
+    }
   }
 
   public async updatePositionId(id: number, positionId: string): Promise<void> {

@@ -1,5 +1,6 @@
 import { BingXApiClient } from '../../infrastructure/bingx/BingXApiClient';
 import { DatabasePositionHistoryService } from '../../infrastructure/database/DatabasePositionHistoryService';
+import { TradeDatabase } from '../../infrastructure/database/TradeDatabase';
 import { normalizeSymbolBingX } from '../../utils/bingxUtils';
 import { PositionHistory as PositionHistoryType, BingXPositionHistoryResponse } from '../../utils/types';
 import * as dotenv from 'dotenv';
@@ -19,10 +20,12 @@ export interface PositionHistoryParams {
 export class PositionHistory {
     private readonly apiClient: BingXApiClient;
     private readonly dbService: DatabasePositionHistoryService;
+    private readonly tradeDb: TradeDatabase;
 
     constructor() {
         this.apiClient = new BingXApiClient();
         this.dbService = new DatabasePositionHistoryService();
+        this.tradeDb = new TradeDatabase();
     }
 
 
@@ -118,6 +121,11 @@ export class PositionHistory {
                     positionCount: response.data?.positionHistory?.length || 0
                 });
 
+                if (response.code === 109425) {
+                    console.warn(`Symbol ${requestParams.symbol} not found on BingX during incremental update. Marking as INVALID.`);
+                    await this.tradeDb.upsertMonitoredSymbol(requestParams.symbol, 'INVALID');
+                }
+
                 if (response.code === 0 && response.data && response.data.positionHistory && response.data.positionHistory.length > 0) {
                     console.log(`Found ${response.data.positionHistory.length} new positions from API`);
 
@@ -155,6 +163,10 @@ export class PositionHistory {
                 });
 
                 if (response.code !== 0 || !response.data || !response.data.positionHistory) {
+                    if (response.code === 109425) {
+                        console.warn(`Symbol ${requestParams.symbol} not found on BingX (Error 109425). Marking as INVALID.`);
+                        await this.tradeDb.upsertMonitoredSymbol(requestParams.symbol, 'INVALID');
+                    }
                     console.warn(`API returned non-zero code: ${response.code}, message: ${response.msg}`);
                     console.log('=== getPositionHistory END (no data) ===');
                     return [];
@@ -262,9 +274,9 @@ export class PositionHistory {
                 });
                 console.log(`Successfully updated cache for symbol: ${symbol}`);
 
-                // Add random delay between symbols (1-3 seconds) except for the last symbol
+                // Add small random delay between symbols (200-500ms) except for the last symbol
                 if (i < symbols.length - 1) {
-                    const delay = Math.floor(Math.random() * 2000) + 1000; // Random delay between 1-3 seconds
+                    const delay = Math.floor(Math.random() * 300) + 200; // Small delay
                     console.log(`Waiting ${delay}ms before processing next symbol...`);
                     await new Promise(resolve => setTimeout(resolve, delay));
                 }

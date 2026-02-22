@@ -20,6 +20,12 @@ export class BingXApiClient {
     private readonly apiSecret: string;
     private readonly useAuth: boolean;
 
+    // Global state for rate limiting across all instances
+    private static pauseRequestsUntil: number = 0;
+    private static activeRequests: number = 0;
+    private static readonly MAX_CONCURRENT_REQUESTS: number = 5;
+    private static readonly REQUEST_QUEUE: (() => void)[] = [];
+
     constructor(config?: Partial<BingXApiConfig>) {
         // Always use environment variables by default
         this.baseUrl = process.env.BINGX_BASE_URL || 'https://open-api.bingx.com';
@@ -144,164 +150,155 @@ export class BingXApiClient {
     ): Promise<T> {
         let lastError: Error | null = null;
 
-        for (let attempt = 1; attempt <= maxRetries; attempt++) {
-            try {
-                const requestId = crypto.randomUUID();
-                const timestamp = Date.now().toString();
+        // Simple Semaphore/Queue system
+        if (BingXApiClient.activeRequests >= BingXApiClient.MAX_CONCURRENT_REQUESTS) {
+            await new Promise<void>(resolve => BingXApiClient.REQUEST_QUEUE.push(resolve));
+        }
+        BingXApiClient.activeRequests++;
 
-                // Add timestamp to params
-                const requestParams = this.getParameters(params, timestamp, false);
-                const encodedParams = this.getParameters(params, timestamp, true);
-                const signature = this.generateSignature(requestParams);
-                const url = `${this.baseUrl}${path}?${encodedParams}&signature=${signature}`;
+        try {
+            for (let attempt = 1; attempt <= maxRetries; attempt++) {
+                // Check if we are globally paused due to rate limit
+                const now = Date.now();
+                if (BingXApiClient.pauseRequestsUntil > now) {
+                    const waitTime = BingXApiClient.pauseRequestsUntil - now;
+                    logger.warn(`Requests are globally paused due to rate limit. Waiting ${waitTime}ms...`, { path });
+                    await this.sleep(waitTime);
+                }
 
-                logger.info(`Making ${method} request (attempt ${attempt}/${maxRetries})`, {
-                    requestId,
-                    path,
-                    params: { requestParams },
-                    headers: this.getHeaders(),
-                    body: data
-                });
+                try {
+                    const requestId = crypto.randomUUID();
+                    const timestamp = Date.now().toString();
 
-                const config: AxiosRequestConfig = {
-                    method,
-                    url,
-                    headers: this.getHeaders(),
-                    data,
-                    transformResponse: [(data) => this.handleBigIntResponse(data)]
-                };
+                    // Add timestamp to params
+                    const requestParams = this.getParameters(params, timestamp, false);
+                    const encodedParams = this.getParameters(params, timestamp, true);
+                    const signature = this.generateSignature(requestParams);
+                    const url = `${this.baseUrl}${path}?${encodedParams}&signature=${signature}`;
 
-                const startTime = Date.now();
-                const response: AxiosResponse<T> = await axios(config);
-                const duration = Date.now() - startTime;
+                    logger.info(`Making ${method} request (attempt ${attempt}/${maxRetries})`, {
+                        requestId,
+                        path,
+                        params: { requestParams },
+                        headers: this.getHeaders(),
+                        body: data
+                    });
 
-                // Check for busy system response
-                if (response.status === 200 &&
-                    response.data &&
-                    typeof response.data === 'object' &&
-                    'code' in response.data) {
-                    if (response.data.code === 80012) {
-                        // Generate random delay between 1 and 30 seconds
-                        const delay = Math.floor(Math.random() * 30000) + 1000;
-                        logger.warn(`System busy response received, retrying after ${delay}ms`, {
-                            requestId,
-                            path,
-                            attempt,
-                            maxRetries,
-                            responseData: response.data
-                        });
-                        await this.sleep(delay);
-                        continue;
-                    } else if (response.data.code === 100410) {
-                        // Handle frequency limit: wait until the unblock timestamp
-                        const msg = (response.data as any).msg;
-                        const unblockMatch = /unblocked after (\d{13,})/.exec(msg);
-                        if (unblockMatch) {
-                            const unblockTimestamp = parseInt(unblockMatch[1], 10);
-                            const now = Date.now();
-                            const waitTime = unblockTimestamp - now;
-                            if (waitTime > 0) {
-                                logger.warn(`Frequency limit hit (100410). Waiting ${waitTime}ms until ${unblockTimestamp}`, {
-                                    requestId,
-                                    path,
-                                    attempt,
-                                    maxRetries,
-                                    unblockTimestamp,
-                                    now
-                                });
-                                await this.sleep(waitTime);
+                    const config: AxiosRequestConfig = {
+                        method,
+                        url,
+                        headers: this.getHeaders(),
+                        data,
+                        transformResponse: [(data) => this.handleBigIntResponse(data)]
+                    };
+
+                    const startTime = Date.now();
+                    const response: AxiosResponse<T> = await axios(config);
+                    const duration = Date.now() - startTime;
+
+                    // Check for busy system response or frequency limit
+                    if (response.status === 200 &&
+                        response.data &&
+                        typeof response.data === 'object' &&
+                        'code' in response.data) {
+                        if (response.data.code === 80012) {
+                            // Generate random delay between 1 and 30 seconds
+                            const delay = Math.floor(Math.random() * 30000) + 1000;
+                            logger.warn(`System busy response received (80012), retrying after ${delay}ms`, {
+                                requestId,
+                                path,
+                                attempt,
+                                maxRetries,
+                                responseData: response.data
+                            });
+                            await this.sleep(delay);
+                            continue;
+                        } else if (response.data.code === 100410) {
+                            // Handle frequency limit: wait until the unblock timestamp
+                            const msg = (response.data as any).msg;
+                            const unblockMatch = /unblocked after (\d{13,})/.exec(msg);
+                            if (unblockMatch) {
+                                const unblockTimestamp = parseInt(unblockMatch[1], 10);
+                                const currentNow = Date.now();
+                                const waitTime = unblockTimestamp - currentNow;
+
+                                if (waitTime > 0) {
+                                    // Update global pause
+                                    BingXApiClient.pauseRequestsUntil = Math.max(BingXApiClient.pauseRequestsUntil, unblockTimestamp + 1000);
+
+                                    logger.warn(`Frequency limit hit (100410). Globally pausing until ${new Date(BingXApiClient.pauseRequestsUntil).toISOString()}`, {
+                                        requestId,
+                                        path,
+                                        attempt,
+                                        maxRetries,
+                                        unblockTimestamp
+                                    });
+                                    await this.sleep(waitTime + 1000);
+                                    continue;
+                                }
+                            } else {
+                                // Default back-off if no timestamp is present
+                                BingXApiClient.pauseRequestsUntil = Date.now() + 60000; // 1 minute
+                                logger.warn('Frequency limit hit (100410) with no unblock info. Globally pausing for 60s.', { path });
+                                await this.sleep(60000);
                                 continue;
                             }
                         }
                     }
-                }
 
-                logger.info(`${method} request successful`, {
-                    requestId,
-                    path,
-                    duration,
-                    statusCode: response.status,
-                    responseHeaders: response.headers,
-                    responseData: response.data
-                });
-
-                return response.data;
-            } catch (error) {
-                lastError = error instanceof Error ? error : new Error('Unknown error');
-
-                if (axios.isAxiosError(error) &&
-                    error.response?.status === 200 &&
-                    error.response?.data?.code === 80012) {
-
-                    // Generate random delay between 1 and 30 seconds
-                    const delay = Math.floor(Math.random() * 30000) + 1000;
-                    logger.warn(`System busy response received, retrying after ${delay}ms`, {
+                    logger.info(`${method} request successful`, {
+                        requestId,
                         path,
-                        attempt,
-                        maxRetries,
-                        responseData: error.response.data
+                        duration,
+                        statusCode: response.status,
+                        responseData: response.data
                     });
 
-                    await this.sleep(delay);
-                    continue;
-                }
+                    return response.data;
+                } catch (error) {
+                    lastError = error instanceof Error ? error : new Error('Unknown error');
 
-                // Handle frequency limit error (100410) in error response
-                if (axios.isAxiosError(error) &&
-                    error.response?.status === 200 &&
-                    error.response?.data?.code === 100410) {
-                    const msg = error.response.data.msg;
-                    const unblockMatch = /unblocked after (\d{13,})/.exec(msg);
-                    if (unblockMatch) {
-                        const unblockTimestamp = parseInt(unblockMatch[1], 10);
-                        const now = Date.now();
-                        const waitTime = unblockTimestamp - now;
-                        if (waitTime > 0) {
-                            logger.warn(`Frequency limit hit (100410). Waiting ${waitTime}ms until ${unblockTimestamp}`, {
-                                path,
-                                attempt,
-                                maxRetries,
-                                unblockTimestamp,
-                                now
-                            });
-                            await this.sleep(waitTime);
-                            continue;
-                        }
-                    }
-                }
+                    if (axios.isAxiosError(error) && error.response?.data?.code === 100410) {
+                        const msg = error.response.data.msg;
+                        const unblockMatch = /unblocked after (\d{13,})/.exec(msg);
+                        const unblockTimestamp = unblockMatch ? parseInt(unblockMatch[1], 10) : Date.now() + 60000;
 
-                if (attempt === maxRetries) {
-                    if (axios.isAxiosError(error)) {
-                        const errorData = {
+                        BingXApiClient.pauseRequestsUntil = Math.max(BingXApiClient.pauseRequestsUntil, unblockTimestamp + 1000);
+
+                        logger.warn(`Frequency limit hit (100410) in error. Globally pausing until ${new Date(BingXApiClient.pauseRequestsUntil).toISOString()}`, {
                             path,
-                            statusCode: error.response?.status,
-                            errorMessage: error.response?.data?.msg || error.message,
-                            responseData: error.response?.data,
-                            responseHeaders: error.response?.headers
-                        };
-                        logger.error(`${method} request failed after ${maxRetries} attempts`, errorData);
-                        throw new Error(`BingX API Error: ${error.response?.data?.msg || error.message}`);
+                            unblockTimestamp
+                        });
+
+                        await this.sleep(BingXApiClient.pauseRequestsUntil - Date.now());
+                        continue;
                     }
-                    logger.error(`Unexpected error in ${method} request after ${maxRetries} attempts`, {
-                        path,
-                        error: lastError.message
-                    });
-                    throw lastError;
+
+                    if (attempt === maxRetries) {
+                        if (axios.isAxiosError(error)) {
+                            const errorData = {
+                                path,
+                                statusCode: error.response?.status,
+                                errorMessage: error.response?.data?.msg || error.message,
+                                responseCode: error.response?.data?.code,
+                                responseData: error.response?.data
+                            };
+                            logger.error(`${method} request failed after ${maxRetries} attempts`, errorData);
+                            throw new Error(`BingX API Error: ${error.response?.data?.msg || error.message}`);
+                        }
+                        throw lastError;
+                    }
+
+                    const delay = Math.floor(Math.random() * 5000) + 1000;
+                    await this.sleep(delay);
                 }
-
-                // For other errors, wait a bit before retrying
-                const delay = Math.floor(Math.random() * 5000) + 1000;
-                logger.warn(`Request failed, retrying after ${delay}ms`, {
-                    path,
-                    attempt,
-                    maxRetries,
-                    error: lastError.message
-                });
-                await this.sleep(delay);
             }
+            throw lastError || new Error('Request failed after all retries');
+        } finally {
+            BingXApiClient.activeRequests--;
+            const next = BingXApiClient.REQUEST_QUEUE.shift();
+            if (next) next();
         }
-
-        throw lastError || new Error('Request failed after all retries');
     }
 
     private async makeRequest<T = any>(
