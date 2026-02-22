@@ -662,16 +662,22 @@ export class TradeDatabase implements ITradeDatabase {
 
   public async syncMonitoredSymbols(): Promise<void> {
     const symbols = await this.getDistinctSymbols();
+    const openTradesSymbols = await this.getOpenTradesSymbols();
     const now = new Date().toISOString();
 
     for (const symbol of symbols) {
-      // Check if symbol already exists to avoid overwriting INVALID/INACTIVE status
+      // Check if symbol already exists
       const existing = await this.db.get('SELECT status FROM monitored_symbols WHERE symbol = ?', [symbol]);
+      
       if (!existing) {
+        // New symbol, add as ACTIVE
         await this.db.run(`
                     INSERT INTO monitored_symbols (symbol, status, lastUpdated)
                     VALUES (?, ?, ?)
                 `, [symbol, 'ACTIVE', now]);
+      } else if (existing.status === 'INVALID' && openTradesSymbols.includes(symbol)) {
+        // Re-activate if it has an open trade in our database
+        await this.upsertMonitoredSymbol(symbol, 'ACTIVE');
       }
     }
   }

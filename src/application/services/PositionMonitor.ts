@@ -443,6 +443,8 @@ export class PositionMonitor {
       // Update or add new positions
       for (const position of positions) {
         if (parseFloat(position.positionAmt) !== 0) {
+          // If we found an open position, ensure the symbol is marked as ACTIVE in the database
+          await this.tradeDatabase.upsertMonitoredSymbol(position.symbol, 'ACTIVE');
           await this.updateMonitoredPosition(position);
         }
       }
