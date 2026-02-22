@@ -10,6 +10,7 @@ services:
       - "3000:3000"
     volumes:
       - ./db:/app/db
+      - ./data:/app/data
       - ./logs:/app/logs
     env_file: .env
 
@@ -22,6 +23,7 @@ services:
     restart: unless-stopped
     volumes:
       - ./db:/app/db
+      - ./data:/app/data
       - ./logs:/app/logs
     env_file: .env
 
