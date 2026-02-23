@@ -4,38 +4,34 @@ RUN apt-get update && apt-get install -y \
     python3 \
     make \
     g++ \
+    sqlite3 \
+    libsqlite3-dev \
     && rm -rf /var/lib/apt/lists/*
-# Ensure python is available for node-gyp
-ENV PYTHON=/usr/bin/python3
-RUN ln -s /usr/bin/python3 /usr/bin/python
-RUN npm install -g pnpm@10
 WORKDIR /app
+COPY package*.json ./
 
 # --- Dependencies ---
 FROM base AS dependencies
-COPY pnpm-lock.yaml package.json pnpm-workspace.yaml ./
-RUN pnpm install --frozen-lockfile
+RUN npm install
 
 # --- Build Backend ---
 FROM base AS backend-builder
 COPY --from=dependencies /app/node_modules ./node_modules
 COPY . .
-RUN pnpm run build
+RUN npm run build
 
 # --- Build Frontend ---
 FROM base AS frontend-builder
 COPY --from=dependencies /app/node_modules ./node_modules
 COPY . .
-RUN pnpm run frontend:build
+RUN npm run frontend:build
 
 # --- Backend Runtime ---
 FROM base AS backend-runtime
 WORKDIR /app
-COPY --from=dependencies /app/package.json ./package.json
-COPY --from=dependencies /app/pnpm-lock.yaml ./pnpm-lock.yaml
-COPY --from=dependencies /app/pnpm-workspace.yaml ./pnpm-workspace.yaml
-# Re-install dependencies in the final image to ensure native bindings match the OS
-RUN pnpm install --prod --frozen-lockfile
+COPY package*.json ./
+# Install only production dependencies
+RUN npm install --omit=dev
 
 COPY --from=backend-builder /app/dist ./dist
 # Database and logs folders will be mounted as volumes
