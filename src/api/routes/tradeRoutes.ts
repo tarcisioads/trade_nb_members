@@ -7,7 +7,7 @@ const tradeController = new TradeController();
 
 // Serve alert.mp3 file
 router.get('/alert', (req, res) => {
-    res.sendFile(path.join(__dirname, '../../../data/alert.mp3'));
+    res.sendFile(path.join(process.cwd(), 'data/alert.mp3'));
 });
 
 router.get('/trades', (req, res) => tradeController.listTrades(req, res));

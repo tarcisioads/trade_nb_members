@@ -151,7 +151,7 @@ export class TradeMatcherService {
             }
 
             // Note: This path traversal is not ideal but preserved from original for behavior parity
-            const tradesJsonPath = path.join(__dirname, '../../../data/trades.json');
+            const tradesJsonPath = path.join(process.cwd(), 'data/trades.json');
             if (!fs.existsSync(tradesJsonPath)) {
                 return {
                     found: false,
