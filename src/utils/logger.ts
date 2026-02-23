@@ -3,13 +3,13 @@ import * as path from 'path';
 
 const transports: winston.transport[] = [
     new winston.transports.File({
-        filename: path.join(__dirname, '../../logs/trade_nb_members.log'),
+        filename: path.join(process.cwd(), 'logs/trade_nb_members.log'),
         maxsize: 5242880, // 5MB
         maxFiles: 5,
         tailable: true
     }),
     new winston.transports.File({
-        filename: path.join(__dirname, '../../logs/trade_nb_members-error.log'),
+        filename: path.join(process.cwd(), 'logs/trade_nb_members-error.log'),
         level: 'error',
         maxsize: 5242880, // 5MB
         maxFiles: 5,
