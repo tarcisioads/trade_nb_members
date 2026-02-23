@@ -4,7 +4,7 @@ services:
       context: .
       target: backend-runtime
     container_name: trade-api
-    command: node dist/api/index.js
+    command: node dist/src/api/index.js
     restart: unless-stopped
     ports:
       - "3000:3000"
@@ -19,7 +19,7 @@ services:
       context: .
       target: backend-runtime
     container_name: trade-bot
-    command: node dist/index.js
+    command: node dist/src/index.js
     restart: unless-stopped
     volumes:
       - ./db:/app/db
