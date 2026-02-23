@@ -48,10 +48,12 @@ RUN echo 'server { \
         index index.html; \
         try_files $uri $uri/ /index.html; \
     } \
-    location /api/ { \
+    location /api { \
         resolver 127.0.0.11 valid=30s; \
         set $upstream_api http://trade-api:3000; \
-        proxy_pass $upstream_api/api/; \
+        proxy_pass $upstream_api; \
+        proxy_set_header Host $host; \
+        proxy_set_header X-Real-IP $remote_addr; \
     } \
 }' > /etc/nginx/conf.d/default.conf
 EXPOSE 80
