@@ -27,12 +27,11 @@ COPY . .
 RUN pnpm run frontend:build
 
 # --- Backend Runtime ---
-FROM node:22 AS backend-runtime
+FROM base AS backend-runtime
 WORKDIR /app
 COPY --from=dependencies /app/package.json ./package.json
 COPY --from=dependencies /app/pnpm-lock.yaml ./pnpm-lock.yaml
 # Re-install dependencies in the final image to ensure native bindings match the OS
-RUN npm install -g pnpm@10
 RUN pnpm config set only-built-dependencies sqlite3
 RUN pnpm install --prod --frozen-lockfile
 
