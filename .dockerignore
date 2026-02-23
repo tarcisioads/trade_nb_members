@@ -1,0 +1,8 @@
+node_modules
+dist
+dist-fe
+db/*.db
+logs/*.log
+*.log
+.git
+.env
