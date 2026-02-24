@@ -11,15 +11,16 @@ import { ITradeDatabase } from '../../core/interfaces/ITradeDatabase';
 
 export class TradeDatabase implements ITradeDatabase {
   private db: any;
+  private readonly dbPath: string;
 
-  constructor() {
+  constructor(customDbPath?: string) {
+    this.dbPath = customDbPath || path.join(process.cwd(), 'db/trades.db');
     this.initializeDatabase();
   }
 
   private async initializeDatabase() {
-    const dbPath = path.join(process.cwd(), 'db/trades.db');
     this.db = await open({
-      filename: dbPath,
+      filename: this.dbPath,
       driver: sqlite3.Database
     });
 
