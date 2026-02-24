@@ -91,6 +91,38 @@ tradeCronJob.start();
 positionMonitorCronJob.start();
 positionHistoryCronJob.start();
 
+// Send Startup Notification
+async function sendStartupNotification() {
+    try {
+        const trades = await tradeRepository.readTrades();
+        const tradeCount = trades.length;
+
+        const checkEnv = (key: string) => process.env[key] ? '✅ OK' : '❌ Ausente';
+
+        const message = `
+<b>🚀 Trade Bot Iniciado</b>
+
+📊 <b>Trades Cadastrados:</b> ${tradeCount}
+
+🛠 <b>Configuração:</b>
+- BingX API: ${checkEnv('BINGX_API_KEY')}
+- Telegram Bot: ${checkEnv('TELEGRAM_BOT_TOKEN')}
+- Telegram Chat ID: ${checkEnv('TELEGRAM_CHAT_ID')}
+- Margem: ${process.env.BINGX_MARGIN || 'Não definida'} USDT
+- Prefixo: ${process.env.BINGX_ORDER_PREFIX_CODE || 'Não definido'}
+
+Status: Operacional e monitorando...
+        `.trim();
+
+        await telegramService.sendCustomMessage(message);
+        console.log('Startup notification sent to Telegram');
+    } catch (error) {
+        console.error('Error sending startup notification:', error);
+    }
+}
+
+sendStartupNotification();
+
 // Handle graceful shutdown
 process.on('SIGINT', () => {
     console.log('Stopping Trade Automation System...');
