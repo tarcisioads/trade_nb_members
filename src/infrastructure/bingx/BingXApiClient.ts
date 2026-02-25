@@ -4,6 +4,7 @@ import * as dotenv from 'dotenv';
 import winston from 'winston';
 import * as path from 'path';
 import { logger } from '../../utils/logger';
+import { TelegramService } from '../telegram/TelegramService';
 
 dotenv.config();
 
@@ -233,6 +234,15 @@ export class BingXApiClient {
                                         maxRetries,
                                         unblockTimestamp
                                     });
+
+                                    // Send Telegram notification
+                                    TelegramService.getInstance().sendCustomMessage(
+                                        `⚠️ <b>BingX Rate Limit Hit (100410)</b>\n\n` +
+                                        `📍 Path: <code>${path}</code>\n` +
+                                        `⏳ Pausando até: <code>${new Date(BingXApiClient.pauseRequestsUntil).toLocaleString()}</code>\n` +
+                                        `🔄 Tentativa: ${attempt}/${maxRetries}`
+                                    ).catch(err => logger.error('Error sending rate limit notification to Telegram', err));
+
                                     await this.sleep(waitTime + 1000);
                                     continue;
                                 }
@@ -240,6 +250,15 @@ export class BingXApiClient {
                                 // Default back-off if no timestamp is present
                                 BingXApiClient.pauseRequestsUntil = Date.now() + 60000; // 1 minute
                                 logger.warn('Frequency limit hit (100410) with no unblock info. Globally pausing for 60s.', { path });
+
+                                // Send Telegram notification
+                                TelegramService.getInstance().sendCustomMessage(
+                                    `⚠️ <b>BingX Rate Limit Hit (100410)</b> (Sem info de desbloqueio)\n\n` +
+                                    `📍 Path: <code>${path}</code>\n` +
+                                    `⏳ Pausando por 60 segundos.\n` +
+                                    `🔄 Tentativa: ${attempt}/${maxRetries}`
+                                ).catch(err => logger.error('Error sending rate limit notification to Telegram', err));
+
                                 await this.sleep(60000);
                                 continue;
                             }
@@ -269,6 +288,13 @@ export class BingXApiClient {
                             path,
                             unblockTimestamp
                         });
+
+                        // Send Telegram notification
+                        TelegramService.getInstance().sendCustomMessage(
+                            `⚠️ <b>BingX Rate Limit Hit (100410) (Axios Error)</b>\n\n` +
+                            `📍 Path: <code>${path}</code>\n` +
+                            `⏳ Pausando até: <code>${new Date(BingXApiClient.pauseRequestsUntil).toLocaleString()}</code>`
+                        ).catch(err => logger.error('Error sending rate limit notification to Telegram', err));
 
                         await this.sleep(BingXApiClient.pauseRequestsUntil - Date.now());
                         continue;
