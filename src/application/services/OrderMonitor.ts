@@ -14,6 +14,8 @@ export class OrderMonitor {
   private readonly orderExecutor: BingXOrderExecutor;
   private positionValidator: PositionValidator;
   private readonly notificationService: NotificationService;
+  private lastUpdate: number = 0;
+  private readonly CACHE_TTL = 10000; // 10 seconds cache
 
   constructor() {
     this.apiClient = new BingXApiClient();
@@ -26,7 +28,12 @@ export class OrderMonitor {
     return `${order.orderId}_${order.symbol}_${order.positionSide}`;
   }
 
-  public async updateOpenOrders(): Promise<void> {
+  public async updateOpenOrders(force: boolean = false): Promise<void> {
+    const now = Date.now();
+    if (!force && now - this.lastUpdate < this.CACHE_TTL) {
+      return;
+    }
+
     try {
       const path = '/openApi/swap/v2/trade/openOrders';
       const params = {
@@ -55,6 +62,7 @@ export class OrderMonitor {
           }
         }
 
+        this.lastUpdate = now;
 
       } catch (error) {
         console.error('Error fetching open orders:', error);

@@ -263,8 +263,7 @@ export class PositionMonitor {
     const positionKey = this.getPositionKey(position.symbol, position.positionSide);
     const existingPosition = this.monitoredPositions.get(positionKey);
 
-    // Update open orders to get latest stop loss orders
-    await this.orderMonitor.updateOpenOrders();
+    // Get latest stop loss orders from OrderMonitor (it was updated at start of updatePositions)
     let stopLossOrder = this.orderMonitor.getStopMarketOrder(position.symbol, position.positionSide);
 
     // Get trade info to get leverage and initial stop price

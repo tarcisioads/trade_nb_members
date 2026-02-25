@@ -8,12 +8,20 @@ dotenv.config();
 
 export class PositionValidator {
     private readonly apiClient: BingXApiClient;
+    private lastUpdate: number = 0;
+    private cachedPositions: Position[] = [];
+    private readonly CACHE_TTL = 10000; // 10 seconds cache
 
     constructor() {
         this.apiClient = new BingXApiClient();
     }
 
-    public async getPositions(symbol: string): Promise<Position[]> {
+    public async getPositions(symbol: string, force: boolean = false): Promise<Position[]> {
+        const now = Date.now();
+        if (!force && symbol === 'ALL' && now - this.lastUpdate < this.CACHE_TTL) {
+            return this.cachedPositions;
+        }
+
         const normalizedSymbol = symbol === 'ALL' ? '' : normalizeSymbolBingX(symbol);
         const path = '/openApi/swap/v2/user/positions';
         const params: Record<string, string> = {};
@@ -27,7 +35,14 @@ export class PositionValidator {
             if (response.code !== 0) {
                 throw new Error(`API returned non-zero code: ${response.code}, message: ${response.msg}`);
             }
-            return response.data || [];
+            const positions = response.data || [];
+
+            if (symbol === 'ALL') {
+                this.cachedPositions = positions;
+                this.lastUpdate = now;
+            }
+
+            return positions;
         } catch (error) {
             throw new Error('Error fetching positions: ' + (error instanceof Error ? error.message : error));
         }
@@ -40,7 +55,15 @@ export class PositionValidator {
     }> {
         try {
             const normalizedSymbol = normalizeSymbolBingX(symbol);
-            const positions = await this.getPositions(normalizedSymbol);
+            const now = Date.now();
+            let positions: Position[];
+
+            // Try to use cache if available and fresh
+            if (now - this.lastUpdate < this.CACHE_TTL && this.cachedPositions.length > 0) {
+                positions = this.cachedPositions.filter(p => normalizeSymbolBingX(p.symbol) === normalizedSymbol);
+            } else {
+                positions = await this.getPositions(normalizedSymbol);
+            }
 
             // Find position for the given symbol and type
             const position = positions.find(p =>
