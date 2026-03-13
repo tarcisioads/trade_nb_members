@@ -87,7 +87,7 @@ export class TradeCronJob {
         // Send notification for trades with warning status
         if (validationResult.warning) {
           let hasPos = false
-          if (!bingxApiKey || !bingxApiSecret) {
+          if (bingxApiKey && bingxApiSecret) {
             // Check for existing position
             const { hasPosition, message } = await new PositionValidator().hasOpenPosition(trade.symbol, trade.type);
             hasPos = hasPosition
