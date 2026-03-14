@@ -12,17 +12,22 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
       
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: 'npm'
+          cache: 'pnpm'
           
       - name: Install Dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
         
       - name: Run Tests
-        run: npm run test
+        run: pnpm run test
 
   deploy:
     needs: test
@@ -37,4 +42,5 @@ jobs:
           script: |
             cd ~/trade_nb_members
             git pull origin main
+            # O deploy no servidor continua usando docker-compose, que já lida com o build interno
             docker-compose up -d --build
