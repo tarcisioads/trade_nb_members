@@ -12,6 +12,8 @@ export class TradeCronJob {
   private readonly tradeValidator: TradeValidator;
   private readonly notificationService: NotificationService;
   private readonly tradeExecutor: TradeExecutor;
+  private isProcessingQueue: boolean = false;
+  private taskQueue: (() => Promise<void>)[] = [];
 
   constructor(
     tradeRepository?: ITradeRepository,
@@ -23,6 +25,27 @@ export class TradeCronJob {
     this.tradeValidator = tradeValidator || new TradeValidator();
     this.notificationService = notificationService || new NotificationService();
     this.tradeExecutor = tradeExecutor || new TradeExecutor();
+  }
+
+  private async processQueue(): Promise<void> {
+    if (this.isProcessingQueue) return;
+    this.isProcessingQueue = true;
+
+    try {
+      while (this.taskQueue.length > 0) {
+        const task = this.taskQueue.shift();
+        if (task) {
+          await task();
+        }
+      }
+    } finally {
+      this.isProcessingQueue = false;
+    }
+  }
+
+  private enqueueTask(task: () => Promise<void>): void {
+    this.taskQueue.push(task);
+    this.processQueue().catch(err => console.error('Error processing trade queue:', err));
   }
 
   private async readTrades(interval?: string): Promise<Trade[]> {
@@ -301,53 +324,60 @@ export class TradeCronJob {
 
   public start(): void {
     // Initial execution after 30 seconds
-    setTimeout(async () => {
-      console.log('Executing initial trade check after 30 seconds...');
-      try {
-        const trades5 = await this.readTrades('5m'); // Default to 5m interval for initial check
-        await this.processAndDisplayTrades(trades5);
+    setTimeout(() => {
+      this.enqueueTask(async () => {
+        console.log('Executing initial trade check after 30 seconds...');
+        try {
+          const trades5 = await this.readTrades('5m'); // Default to 5m interval for initial check
+          await this.processAndDisplayTrades(trades5);
 
-        const trades15 = await this.readTrades('15m'); // Default to 15m interval for initial check
-        await this.processAndDisplayTrades(trades15);
+          const trades15 = await this.readTrades('15m'); // Default to 15m interval for initial check
+          await this.processAndDisplayTrades(trades15);
 
-        const trades = await this.readTrades('1h'); // Default to 1h interval for initial check
-        await this.processAndDisplayTrades(trades);
-      } catch (error) {
-        console.error('Error trade initial cron :', error);
-      }
-
+          const trades = await this.readTrades('1h'); // Default to 1h interval for initial check
+          await this.processAndDisplayTrades(trades);
+        } catch (error) {
+          console.error('Error trade initial cron :', error);
+        }
+      });
     }, 30000);
 
     // Schedule the job to run at minute 1 of every hour
-    cron.schedule('1 * * * *', async () => {
-      try {
-        const trades = await this.readTrades('1h'); // Hourly interval
-        await this.processAndDisplayTrades(trades);
-      } catch (error) {
-        console.error('Error trade cron 1 hour:', error);
-      }
+    cron.schedule('1 * * * *', () => {
+      this.enqueueTask(async () => {
+        try {
+          const trades = await this.readTrades('1h'); // Hourly interval
+          await this.processAndDisplayTrades(trades);
+        } catch (error) {
+          console.error('Error trade cron 1 hour:', error);
+        }
+      });
     });
 
     // Schedule the job to run at 30 seconds past every 15 minutes (00, 15, 30, 45)
-    cron.schedule('30 */15 * * * *', async () => {
-      console.log('Executing 15-minute interval trade check...');
-      try {
-        const trades = await this.readTrades('15m'); // 15-minute interval
-        await this.processAndDisplayTrades(trades);
-      } catch (error) {
-        console.error('Error trade cron 15 minutes:', error);
-      }
+    cron.schedule('30 */15 * * * *', () => {
+      this.enqueueTask(async () => {
+        console.log('Executing 15-minute interval trade check...');
+        try {
+          const trades = await this.readTrades('15m'); // 15-minute interval
+          await this.processAndDisplayTrades(trades);
+        } catch (error) {
+          console.error('Error trade cron 15 minutes:', error);
+        }
+      });
     });
 
     // Schedule the job to run at 30 seconds past every 5 minutes
-    cron.schedule('15 */5 * * * *', async () => {
-      console.log('Executing 5-minute interval trade check...');
-      try {
-        const trades = await this.readTrades('5m'); // 5-minute interval
-        await this.processAndDisplayTrades(trades);
-      } catch (error) {
-        console.error('Error trade cron 5 minutes:', error);
-      }
+    cron.schedule('15 */5 * * * *', () => {
+      this.enqueueTask(async () => {
+        console.log('Executing 5-minute interval trade check...');
+        try {
+          const trades = await this.readTrades('5m'); // 5-minute interval
+          await this.processAndDisplayTrades(trades);
+        } catch (error) {
+          console.error('Error trade cron 5 minutes:', error);
+        }
+      });
     });
 
     console.log('Trade cron job started. Initial execution in 30 seconds, then will run at minute 1 of every hour, at 30 seconds past every 15 minutes, and at 30 seconds past every 5 minutes.');

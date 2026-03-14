@@ -6,6 +6,7 @@ export class PositionMonitorCronJob {
   private positionMonitor: PositionMonitor;
   private tradeOrderProcessor: TradeOrderProcessor;
   private isRunning: boolean = false;
+  private isUpdating: boolean = false;
 
   constructor(
     positionMonitor?: PositionMonitor,
@@ -42,6 +43,11 @@ export class PositionMonitorCronJob {
     }
     // Initial execution after 30 seconds
     setTimeout(async () => {
+      if (this.isUpdating) {
+        console.log(`\n[${new Date().toLocaleString()}] Skipping initial position update as another update is in progress...`);
+        return;
+      }
+      this.isUpdating = true;
       console.log(`\n[${new Date().toLocaleString()}] Running position update...`);
 
       try {
@@ -53,6 +59,8 @@ export class PositionMonitorCronJob {
         await this.logMonitoredPositions()
       } catch (error) {
         console.error('Error updating positions:', error);
+      } finally {
+        this.isUpdating = false;
       }
     }, 10000);
 
@@ -60,6 +68,11 @@ export class PositionMonitorCronJob {
 
     // Schedule the job to run every minute
     cron.schedule('* * * * *', async () => {
+      if (this.isUpdating) {
+        console.log(`\n[${new Date().toLocaleString()}] Skipping scheduled position update as another update is in progress...`);
+        return;
+      }
+      this.isUpdating = true;
       try {
         console.log(`\n[${new Date().toLocaleString()}] Running position update...`);
         await this.positionMonitor.updatePositions();
@@ -70,6 +83,8 @@ export class PositionMonitorCronJob {
         await this.logMonitoredPositions();
       } catch (error) {
         console.error('Error updating positions:', error);
+      } finally {
+        this.isUpdating = false;
       }
     });
 

@@ -190,6 +190,7 @@ export class BingXApiClient {
                         url,
                         headers: this.getHeaders(),
                         data,
+                        timeout: 15000,
                         transformResponse: [(data) => this.handleBigIntResponse(data)]
                     };
 

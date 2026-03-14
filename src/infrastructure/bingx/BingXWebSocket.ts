@@ -1,6 +1,7 @@
 import WebSocket from 'ws';
 import * as dotenv from 'dotenv';
 import zlib from "zlib";
+import { TelegramService } from '../telegram/TelegramService';
 
 // Load environment variables
 dotenv.config();
@@ -16,7 +17,7 @@ export class BingXWebSocket {
     private readonly baseUrl: string;
     private readonly symbol: string;
     private reconnectAttempts: number = 0;
-    private readonly maxReconnectAttempts: number = 5;
+    private readonly maxReconnectAttempts: number = Number.MAX_SAFE_INTEGER;
     private reconnectTimeout: NodeJS.Timeout | null = null;
     private pingInterval: NodeJS.Timeout | null = null;
     private readonly PING_INTERVAL = 30000; // 30 seconds
@@ -139,6 +140,13 @@ export class BingXWebSocket {
             this.reconnectAttempts++;
             console.log(`Connection lost. Attempting to reconnect in 1 minute... (Attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
             
+            if (this.reconnectAttempts === 5) {
+                TelegramService.getInstance().sendCustomMessage(
+                    `⚠️ <b>Instabilidade no WebSocket</b>\n\n` +
+                    `O WebSocket do ativo <b>${this.symbol}</b> falhou 5 vezes seguidas e continua tentando reconectar.`
+                ).catch(err => console.error('Error sending websocket instability notification', err));
+            }
+
             this.reconnectTimeout = setTimeout(() => {
                 this.connect();
             }, this.RECONNECT_DELAY);
