@@ -64,7 +64,8 @@ export class PositionHistoryController {
                 startTs ? parseInt(startTs as string) : undefined,
                 endTs ? parseInt(endTs as string) : undefined,
                 1,
-                100000
+                100000,
+                'openTime'
             );
 
             let positionsWithTradeInfo = await this.positionHistoryService.enrichPositionsWithTradeInfo(positions);
@@ -106,7 +107,8 @@ export class PositionHistoryController {
                 startTs ? parseInt(startTs as string) : undefined,
                 endTs ? parseInt(endTs as string) : undefined,
                 1,
-                100000
+                100000,
+                'openTime'
             );
 
             let positionsWithTradeInfo = await this.positionHistoryService.enrichPositionsWithTradeInfo(positions);
@@ -209,7 +211,8 @@ export class PositionHistoryController {
                 startTs ? parseInt(startTs as string) : undefined,
                 endTs ? parseInt(endTs as string) : undefined,
                 1,
-                100000
+                100000,
+                'openTime'
             );
             let positionsWithTradeInfo = await this.positionHistoryService.enrichPositionsWithTradeInfo(positions);
 

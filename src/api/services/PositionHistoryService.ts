@@ -22,8 +22,15 @@ export class PositionHistoryService {
     this.tradeMatcherService = tradeMatcherService || new TradeMatcherService(this.tradeDatabase);
   }
 
-  public async getPositionHistory(symbol: string, startTs?: number, endTs?: number, page: number = 1, pageSize: number = 100000): Promise<PositionHistory[]> {
-    return this.dbService.getPositionHistory(symbol, startTs, endTs, page, pageSize);
+  public async getPositionHistory(
+    symbol: string, 
+    startTs?: number, 
+    endTs?: number, 
+    page: number = 1, 
+    pageSize: number = 100000, 
+    filterField: 'openTime' | 'closeTime' = 'closeTime'
+  ): Promise<PositionHistory[]> {
+    return this.dbService.getPositionHistory(symbol, startTs, endTs, page, pageSize, filterField);
   }
 
   public async getAllTrades(): Promise<TradeRecord[]> {

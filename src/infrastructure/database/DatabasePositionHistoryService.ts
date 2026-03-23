@@ -90,7 +90,8 @@ export class DatabasePositionHistoryService {
         startTs?: number,
         endTs?: number,
         pageIndex: number = 1,
-        pageSize: number = 100
+        pageSize: number = 100,
+        filterField: 'openTime' | 'closeTime' = 'closeTime'
     ): Promise<PositionHistory[]> {
         if (!this.db) throw new Error('Database not initialized');
 
@@ -108,12 +109,14 @@ export class DatabasePositionHistoryService {
             query += ' WHERE 1=1';
         }
 
+        const timeColumn = filterField === 'openTime' ? 'openTime' : 'COALESCE(closeTime, updateTime)';
+
         if (startTs) {
-            query += ' AND openTime >= ?';
+            query += ` AND ${timeColumn} >= ?`;
             params.push(startTs);
         }
         if (endTs) {
-            query += ' AND openTime <= ?';
+            query += ` AND ${timeColumn} <= ?`;
             params.push(endTs);
         }
 

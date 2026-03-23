@@ -95,102 +95,75 @@ export class PositionHistory {
             console.log('Cache disabled, will fetch all data from API');
         }
 
-        // If we have cached data, query API only for newer records
-        if (maxCloseTimeFromCache > 0) {
-            console.log('Fetching newer data from API (incremental update)...');
-            const apiParamsForNewData: Record<string, string | number> = {
+        // Determine the start timestamp for API queries
+        const queryStartTs = maxCloseTimeFromCache > 0 
+            ? maxCloseTimeFromCache + 1 
+            : apiParams.startTs as number;
+        const queryEndTs = apiParams.endTs as number;
+
+        console.log(`Fetching data from API starting at ${new Date(queryStartTs).toISOString()}`);
+
+        const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+        let currentStart = queryStartTs;
+        const path = '/openApi/swap/v1/trade/positionHistory';
+
+        while (currentStart <= queryEndTs) {
+            let currentEnd = currentStart + SEVEN_DAYS_MS - 1;
+            if (currentEnd > queryEndTs) {
+                currentEnd = queryEndTs;
+            }
+
+            const chunkApiParams: Record<string, string | number> = {
                 symbol: normalizeSymbolBingX(requestParams.symbol),
-                startTs: maxCloseTimeFromCache + 1, // Start from the next millisecond after the latest cached record
-                endTs: apiParams.endTs
+                startTs: currentStart,
+                endTs: currentEnd
             };
 
-            if (requestParams.pageIndex) apiParamsForNewData.pageIndex = requestParams.pageIndex;
-            if (requestParams.pageSize) apiParamsForNewData.pageSize = requestParams.pageSize;
+            if (requestParams.pageIndex) chunkApiParams.pageIndex = requestParams.pageIndex;
+            if (requestParams.pageSize) chunkApiParams.pageSize = requestParams.pageSize;
 
-            console.log('API parameters for new data:', JSON.stringify(apiParamsForNewData, null, 2));
+            console.log(`Making API call chunk: ${new Date(currentStart).toISOString()} to ${new Date(currentEnd).toISOString()}`);
 
             try {
-                const path = '/openApi/swap/v1/trade/positionHistory';
-                console.log(`Making API call to: ${path}`);
-                const response = await this.apiClient.get<BingXPositionHistoryResponse>(path, apiParamsForNewData);
-
-                console.log('API response received:', {
-                    code: response.code,
-                    message: response.msg,
-                    hasData: !!response.data,
-                    positionCount: response.data?.positionHistory?.length || 0
-                });
+                const response = await this.apiClient.get<BingXPositionHistoryResponse>(path, chunkApiParams);
 
                 if (response.code === 109425) {
-                    console.warn(`Symbol ${requestParams.symbol} not found on BingX during incremental update. Marking as INVALID.`);
+                    console.warn(`Symbol ${requestParams.symbol} not found on BingX. Marking as INVALID.`);
                     await this.tradeDb.upsertMonitoredSymbol(requestParams.symbol, 'INVALID');
+                    break;
                 }
-
-                if (response.code === 0 && response.data && response.data.positionHistory && response.data.positionHistory.length > 0) {
-                    console.log(`Found ${response.data.positionHistory.length} new positions from API`);
-
-                    // Save new data to cache
-                    console.log('Saving new data to cache...');
-                    try {
-                        await this.dbService.savePositionHistory(response.data.positionHistory);
-                        console.log('Successfully saved new data to cache');
-                    } catch (error) {
-                        console.warn('Error saving new data to cache:', error);
-                    }
-
-                    // Combine cached and new data
-                    allPositions = [...allPositions, ...response.data.positionHistory];
-                    console.log(`Combined total positions: ${allPositions.length} (${cachedData.length} from cache + ${response.data.positionHistory.length} from API)`);
-                } else {
-                    console.log('No new data found from API');
-                }
-            } catch (error) {
-                console.error('Error fetching new position history from API:', error);
-            }
-        } else {
-            // No cache data, fetch all data from API
-            console.log('Fetching all data from API (no cache data available)...');
-            const path = '/openApi/swap/v1/trade/positionHistory';
-            console.log(`Making API call to: ${path}`);
-
-            try {
-                const response = await this.apiClient.get<BingXPositionHistoryResponse>(path, apiParams);
-                console.log('API response received:', {
-                    code: response.code,
-                    message: response.msg,
-                    hasData: !!response.data,
-                    positionCount: response.data?.positionHistory?.length || 0
-                });
 
                 if (response.code !== 0 || !response.data || !response.data.positionHistory) {
-                    if (response.code === 109425) {
-                        console.warn(`Symbol ${requestParams.symbol} not found on BingX (Error 109425). Marking as INVALID.`);
-                        await this.tradeDb.upsertMonitoredSymbol(requestParams.symbol, 'INVALID');
-                    }
-                    console.warn(`API returned non-zero code: ${response.code}, message: ${response.msg}`);
-                    console.log('=== getPositionHistory END (no data) ===');
-                    return [];
-                }
+                    console.warn(`API returned non-zero code for chunk: ${response.code}, message: ${response.msg}`);
+                } else if (response.data.positionHistory.length > 0) {
+                    const newPositions = response.data.positionHistory;
+                    console.log(`Found ${newPositions.length} positions from API chunk`);
 
-                const positions = response.data.positionHistory || [];
-                console.log(`Retrieved ${positions.length} positions from API`);
-
-                // Save to cache if we got data
-                if (positions.length > 0) {
-                    console.log('Saving data to cache...');
+                    // Save new data to cache
+                    console.log('Saving chunk data to cache...');
                     try {
-                        await this.dbService.savePositionHistory(positions);
-                        console.log('Successfully saved data to cache');
+                        await this.dbService.savePositionHistory(newPositions);
+                        console.log('Successfully saved chunk data to cache');
                     } catch (error) {
-                        console.warn('Error saving to cache:', error);
+                        console.warn('Error saving chunk data to cache:', error);
                     }
-                }
 
-                allPositions = positions;
+                    // Combine with existing data
+                    allPositions = [...allPositions, ...newPositions];
+                } else {
+                    console.log('No data found in this chunk');
+                }
             } catch (error) {
-                console.error('Error fetching position history:', error);
-                console.log('=== getPositionHistory END (error) ===');
-                return [];
+                console.error('Error fetching position history chunk from API:', error);
+                // Depending on the error, we could break or continue.
+                // For safety, we continue to the next chunk unless it's a critical block.
+            }
+
+            currentStart = currentEnd + 1;
+
+            // Small delay between chunk requests to avoid rate limits
+            if (currentStart <= queryEndTs) {
+                await new Promise(resolve => setTimeout(resolve, 200));
             }
         }
 
