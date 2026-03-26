@@ -44,9 +44,12 @@
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label class="block text-sm font-medium text-gray-400 mb-2">Pair</label>
-              <input v-model="pairUpperCase" type="text" 
-                class="w-full bg-gray-900/50 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all outline-none" 
-                required placeholder="BTCUSDT" @blur="handleSymbolBlur" />
+              <SymbolAutocomplete 
+                v-model="pairUpperCase" 
+                required 
+                placeholder="BTC-USDT" 
+                @blur="handleSymbolBlur" 
+              />
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-400 mb-2">Type</label>
@@ -184,6 +187,7 @@
 import { ref, onMounted, computed, reactive, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Trade } from '../../../utils/types';
+import SymbolAutocomplete from '../components/SymbolAutocomplete.vue'
 
 
 
