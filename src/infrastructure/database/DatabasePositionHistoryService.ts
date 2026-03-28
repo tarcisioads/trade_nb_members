@@ -60,29 +60,31 @@ export class DatabasePositionHistoryService {
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `);
 
-        for (const position of positions) {
-            await stmt.run(
-                position.positionId,
-                position.symbol,
-                position.positionSide,
-                position.isolated,
-                position.closeAllPositions,
-                position.positionAmt,
-                position.closePositionAmt,
-                position.realisedProfit,
-                position.netProfit,
-                position.avgClosePrice,
-                position.avgPrice,
-                position.leverage,
-                position.positionCommission,
-                position.totalFunding,
-                position.openTime,
-                position.closeTime,
-                position.updateTime
-            );
+        try {
+            for (const position of positions) {
+                await stmt.run(
+                    position.positionId,
+                    position.symbol,
+                    position.positionSide,
+                    position.isolated,
+                    position.closeAllPositions,
+                    position.positionAmt,
+                    position.closePositionAmt,
+                    position.realisedProfit,
+                    position.netProfit,
+                    position.avgClosePrice,
+                    position.avgPrice,
+                    position.leverage,
+                    position.positionCommission,
+                    position.totalFunding,
+                    position.openTime,
+                    position.closeTime,
+                    position.updateTime
+                );
+            }
+        } finally {
+            await stmt.finalize();
         }
-
-        await stmt.finalize();
     }
 
     public async getPositionHistory(
@@ -109,7 +111,7 @@ export class DatabasePositionHistoryService {
             query += ' WHERE 1=1';
         }
 
-        const timeColumn = filterField === 'openTime' ? 'openTime' : 'COALESCE(closeTime, updateTime)';
+        const timeColumn = filterField === 'openTime' ? 'openTime' : 'CASE WHEN closeTime = 0 OR closeTime IS NULL THEN updateTime ELSE closeTime END';
 
         if (startTs) {
             query += ` AND ${timeColumn} >= ?`;
@@ -120,8 +122,8 @@ export class DatabasePositionHistoryService {
             params.push(endTs);
         }
 
-        // Use COALESCE to fallback to updateTime when closeTime is null
-        query += ' ORDER BY COALESCE(closeTime, updateTime) DESC LIMIT ? OFFSET ?';
+        // Use CASE to fallback to updateTime when closeTime is 0 or null
+        query += ' ORDER BY CASE WHEN closeTime = 0 OR closeTime IS NULL THEN updateTime ELSE closeTime END DESC LIMIT ? OFFSET ?';
         params.push(pageSize, offset);
 
         return this.db.all<PositionHistory[]>(query, params);
