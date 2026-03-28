@@ -7,6 +7,7 @@ import tradeRoutes from './routes/tradeRoutes';
 import notificationRoutes from './routes/notificationRoutes';
 import positionHistoryRoutes from './routes/positionHistoryRoutes';
 import takeProfitRoutes from './routes/takeProfitRoutes';
+import bingxRoutes from './routes/bingxRoutes';
 
 const app = express();
 const server = createServer(app);
@@ -41,6 +42,7 @@ app.use('/api', tradeRoutes);
 app.use('/api', notificationRoutes);
 app.use('/api', positionHistoryRoutes);
 app.use('/api', takeProfitRoutes);
+app.use('/api', bingxRoutes);
 
 // Notification endpoint
 app.post('/api/notification', (req, res) => {

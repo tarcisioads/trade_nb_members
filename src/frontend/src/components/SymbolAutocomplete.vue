@@ -92,28 +92,14 @@ const filteredSuggestions = computed(() => {
 });
 
 onMounted(async () => {
-  const cacheKey = 'bingx_contracts_cache';
-  const cacheDuration = 60 * 60 * 1000; // 1 hour in ms
-
   try {
-    const cachedData = localStorage.getItem(cacheKey);
-    if (cachedData) {
-      const { timestamp, data } = JSON.parse(cachedData);
-      if (Date.now() - timestamp < cacheDuration) {
-        allContracts.value = data;
-        return;
-      }
-    }
-    
-    const response = await fetch('https://open-api.bingx.com/openApi/swap/v2/quote/contracts');
+    const response = await fetch('/api/bingx/contracts');
     const json = await response.json();
-    if (json && json.code === 0 && json.data) {
+    if (json && json.success && json.data) {
       const data = Array.isArray(json.data) ? json.data : [];
       allContracts.value = data;
-      localStorage.setItem(cacheKey, JSON.stringify({
-        timestamp: Date.now(),
-        data: data
-      }));
+    } else {
+      console.error('Failed to load BingX contracts format mismatch:', json);
     }
   } catch (err) {
     console.error('Failed to load BingX contracts:', err);

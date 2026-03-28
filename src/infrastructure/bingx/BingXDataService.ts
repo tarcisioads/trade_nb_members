@@ -31,6 +31,11 @@ export class BingXDataService implements IDataProvider {
   private readonly apiClient: BingXApiClient;
   private db: any;
 
+  // Memory cache for contracts to avoid rate limits
+  private cachedContracts: any[] | null = null;
+  private contractsCacheTimestamp: number = 0;
+  private readonly CONTRACTS_CACHE_DURATION = 60 * 60 * 1000; // 1 hour
+
   constructor() {
     // Initialize without any config since we're using environment variables
     this.apiClient = new BingXApiClient();
@@ -230,6 +235,36 @@ export class BingXDataService implements IDataProvider {
       return response.data;
     } catch (error) {
       logger.error(`Error fetching symbol info for ${normalizedSymbol}:`, error);
+      throw error;
+    }
+  }
+
+  public async getContracts(): Promise<any[]> {
+    if (this.cachedContracts && (Date.now() - this.contractsCacheTimestamp < this.CONTRACTS_CACHE_DURATION)) {
+      return this.cachedContracts;
+    }
+    
+    try {
+      const path = '/openApi/swap/v2/quote/contracts';
+      const params = {
+        timestamp: Date.now().toString()
+      };
+      
+      const response = await this.apiClient.get<{ code: number, data: any[] }>(path, params);
+      
+      if (response && response.code === 0 && response.data) {
+        this.cachedContracts = response.data;
+        this.contractsCacheTimestamp = Date.now();
+        return this.cachedContracts;
+      }
+      
+      throw new Error(`Invalid response format from BingX: ${JSON.stringify(response)}`);
+    } catch (error) {
+      logger.error('Error fetching contracts from BingX:', error);
+      if (this.cachedContracts) {
+        logger.warn('Falling back to expired contracts cache');
+        return this.cachedContracts;
+      }
       throw error;
     }
   }
