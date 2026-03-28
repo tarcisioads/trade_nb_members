@@ -7,7 +7,8 @@ export class PositionHistoryCronJob {
   private positionHistory: PositionHistory;
   private tradeDatabase: ITradeDatabase;
   private isRunning: boolean = false;
-  private isUpdating: boolean = false;
+  private isHighPriorityUpdating: boolean = false;
+  private isNormalPriorityUpdating: boolean = false;
   private highPrioritySymbols: string[] = [];
   private normalPrioritySymbols: string[] = [];
 
@@ -40,11 +41,11 @@ export class PositionHistoryCronJob {
   }
 
   private async updateHighPriorityPositions(): Promise<void> {
-    if (this.isUpdating) {
-      console.log(`\n[${new Date().toLocaleString()}] Skipping high priority update as another update is in progress...`);
+    if (this.isHighPriorityUpdating) {
+      console.log(`\n[${new Date().toLocaleString()}] Skipping high priority update as another high priority update is in progress...`);
       return;
     }
-    this.isUpdating = true;
+    this.isHighPriorityUpdating = true;
     try {
       console.log(`\n[${new Date().toLocaleString()}] Starting HIGH PRIORITY position history update...`);
       await this.loadSymbolsFromDatabase();
@@ -58,16 +59,16 @@ export class PositionHistoryCronJob {
     } catch (error) {
       console.error(`[${new Date().toLocaleString()}] Error in high priority update:`, error);
     } finally {
-      this.isUpdating = false;
+      this.isHighPriorityUpdating = false;
     }
   }
 
   private async updateNormalPriorityPositions(): Promise<void> {
-    if (this.isUpdating) {
-      console.log(`\n[${new Date().toLocaleString()}] Skipping normal priority update as another update is in progress...`);
+    if (this.isNormalPriorityUpdating) {
+      console.log(`\n[${new Date().toLocaleString()}] Skipping normal priority update as another normal priority update is in progress...`);
       return;
     }
-    this.isUpdating = true;
+    this.isNormalPriorityUpdating = true;
     try {
       console.log(`\n[${new Date().toLocaleString()}] Starting NORMAL PRIORITY position history update...`);
       await this.loadSymbolsFromDatabase();
@@ -81,7 +82,7 @@ export class PositionHistoryCronJob {
     } catch (error) {
       console.error(`[${new Date().toLocaleString()}] Error in normal priority update:`, error);
     } finally {
-      this.isUpdating = false;
+      this.isNormalPriorityUpdating = false;
     }
   }
 
@@ -112,15 +113,15 @@ export class PositionHistoryCronJob {
       await this.updateHighPriorityPositions();
     });
 
-    // Schedule NORMAL priority run every 12 hours
-    this.normalPriorityCronTask = cron.schedule('0 */12 * * *', async () => {
+    // Schedule NORMAL priority run every 6 hours
+    this.normalPriorityCronTask = cron.schedule('0 */6 * * *', async () => {
       await this.updateNormalPriorityPositions();
     });
 
     this.isRunning = true;
     console.log('PositionHistoryCronJob started.');
     console.log(' - High Priority: every 30 mins');
-    console.log(' - Normal Priority: every 12 hours');
+    console.log(' - Normal Priority: every 6 hours');
   }
 
   public stop(): void {

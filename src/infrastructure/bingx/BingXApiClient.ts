@@ -26,6 +26,7 @@ export class BingXApiClient {
     private static activeRequests: number = 0;
     private static readonly MAX_CONCURRENT_REQUESTS: number = 5;
     private static readonly REQUEST_QUEUE: (() => void)[] = [];
+    private static readonly MAX_WAIT_TIME: number = 5 * 60 * 1000; // 5 minutes
 
     constructor(config?: Partial<BingXApiConfig>) {
         // Always use environment variables by default
@@ -228,6 +229,12 @@ export class BingXApiClient {
                                     // Update global pause
                                     BingXApiClient.pauseRequestsUntil = Math.max(BingXApiClient.pauseRequestsUntil, unblockTimestamp + 1000);
 
+                                    if (waitTime > BingXApiClient.MAX_WAIT_TIME) {
+                                        const errorMsg = `BingX Rate Limit Hit (100410). Wait time too long: ${Math.round(waitTime / 1000)}s. Failing fast.`;
+                                        logger.error(errorMsg, { path, unblockTimestamp });
+                                        throw new Error(errorMsg);
+                                    }
+
                                     logger.warn(`Frequency limit hit (100410). Globally pausing until ${new Date(BingXApiClient.pauseRequestsUntil).toISOString()}`, {
                                         requestId,
                                         path,
@@ -282,8 +289,15 @@ export class BingXApiClient {
                         const msg = error.response.data.msg;
                         const unblockMatch = /unblocked after (\d{13,})/.exec(msg);
                         const unblockTimestamp = unblockMatch ? parseInt(unblockMatch[1], 10) : Date.now() + 60000;
+                        const waitTime = unblockTimestamp - Date.now();
 
                         BingXApiClient.pauseRequestsUntil = Math.max(BingXApiClient.pauseRequestsUntil, unblockTimestamp + 1000);
+
+                        if (waitTime > BingXApiClient.MAX_WAIT_TIME) {
+                            const errorMsg = `BingX Rate Limit Hit (100410) in Axios error. Wait time too long: ${Math.round(waitTime / 1000)}s. Failing fast.`;
+                            logger.error(errorMsg, { path, unblockTimestamp });
+                            throw new Error(errorMsg);
+                        }
 
                         logger.warn(`Frequency limit hit (100410) in error. Globally pausing until ${new Date(BingXApiClient.pauseRequestsUntil).toISOString()}`, {
                             path,

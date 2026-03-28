@@ -215,47 +215,51 @@ export class PositionHistory {
     public async createOrUpdateCache(symbols: string[]): Promise<void> {
         console.log(`Starting cache update for ${symbols.length} symbols...`);
 
-        for (let i = 0; i < symbols.length; i++) {
-            const symbol = symbols[i];
-            try {
-                console.log(`Updating cache for symbol: ${symbol}`);
+        const BATCH_SIZE = 3;
+        for (let i = 0; i < symbols.length; i += BATCH_SIZE) {
+            const batch = symbols.slice(i, i + BATCH_SIZE);
+            console.log(`Processing batch ${Math.floor(i / BATCH_SIZE) + 1}: ${batch.join(', ')}`);
 
-                // Get the latest position from cache to determine startTs
-                const cachedData = await this.dbService.getPositionHistory(
-                    symbol,
-                    undefined, // startTs
-                    undefined, // endTs
-                    1,        // pageIndex
-                    1         // pageSize - we only need the latest record
-                );
+            await Promise.allSettled(batch.map(async (symbol) => {
+                try {
+                    console.log(`Updating cache for symbol: ${symbol}`);
 
-                let startTs: number | undefined;
-                if (cachedData.length > 0) {
-                    // Sort by closeTime in descending order and get the most recent, using updateTime as fallback
-                    const latestPosition = cachedData.sort((a, b) => this.getEffectiveCloseTime(b) - this.getEffectiveCloseTime(a))[0];
-                    startTs = this.getEffectiveCloseTime(latestPosition);
-                    console.log(`Using startTs from latest cached position: ${new Date(startTs).toISOString()}`);
-                } else {
-                    console.log('No cached data found, will fetch from beginning');
+                    // Get the latest position from cache to determine startTs
+                    const cachedData = await this.dbService.getPositionHistory(
+                        symbol,
+                        undefined, // startTs
+                        undefined, // endTs
+                        1,        // pageIndex
+                        1         // pageSize - we only need the latest record
+                    );
+
+                    let startTs: number | undefined;
+                    if (cachedData.length > 0) {
+                        // Sort by closeTime in descending order and get the most recent, using updateTime as fallback
+                        const latestPosition = cachedData.sort((a, b) => this.getEffectiveCloseTime(b) - this.getEffectiveCloseTime(a))[0];
+                        startTs = this.getEffectiveCloseTime(latestPosition);
+                        console.log(`Using startTs from latest cached position for ${symbol}: ${new Date(startTs).toISOString()}`);
+                    } else {
+                        console.log(`No cached data found for ${symbol}, will fetch from beginning`);
+                    }
+
+                    // Using getPositionHistory with the determined startTs
+                    await this.getPositionHistory({
+                        symbol,
+                        startTs,
+                        useCache: true
+                    });
+                    console.log(`Successfully updated cache for symbol: ${symbol}`);
+                } catch (error) {
+                    console.error(`Error updating cache for symbol ${symbol}:`, error);
                 }
+            }));
 
-                // Using getPositionHistory with the determined startTs
-                await this.getPositionHistory({
-                    symbol,
-                    startTs,
-                    useCache: true
-                });
-                console.log(`Successfully updated cache for symbol: ${symbol}`);
-
-                // Add small random delay between symbols (200-500ms) except for the last symbol
-                if (i < symbols.length - 1) {
-                    const delay = Math.floor(Math.random() * 300) + 200; // Small delay
-                    console.log(`Waiting ${delay}ms before processing next symbol...`);
-                    await new Promise(resolve => setTimeout(resolve, delay));
-                }
-            } catch (error) {
-                console.error(`Error updating cache for symbol ${symbol}:`, error);
-                // Continue with next symbol even if one fails
+            // Add small delay between batches (except for the last batch)
+            if (i + BATCH_SIZE < symbols.length) {
+                const delay = 1000; 
+                console.log(`Waiting ${delay}ms before processing next batch...`);
+                await new Promise(resolve => setTimeout(resolve, delay));
             }
         }
 
