@@ -107,6 +107,7 @@ export class DataServiceManager {
 
     logger.error(`Failed to fetch data from all services for ${symbol}`);
     errors.forEach(e => logger.error(`${e.provider} error:`, e.error));
-    throw new Error(`Failed to fetch data for ${symbol} from all services`);
+    const errorDetails = errors.map(e => `[${e.provider}]: ${e.error.message}`).join(', ');
+    throw new Error(`Failed to fetch data for ${symbol} from all services. Details: ${errorDetails}`);
   }
 }
