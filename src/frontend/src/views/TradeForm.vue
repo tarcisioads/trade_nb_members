@@ -361,6 +361,10 @@ const saveTrade = async () => {
   try {
     errorMessage.value = ''
 
+    if (tradeData.value.symbol && tradeData.value.symbol.toUpperCase().endsWith('-USDT')) {
+      tradeData.value.symbol = tradeData.value.symbol.slice(0, -5) + 'USDT'
+    }
+
     // Validate duplicate TPs
     const tps = [
       tradeData.value.tp1,
