@@ -413,7 +413,57 @@ const saveTrade = async () => {
       throw new Error(error.message || 'Failed to save trade')
     }
 
-    router.push('/')
+    const savedSymbol = tradeData.value.symbol;
+    const savedType = tradeData.value.type;
+    const oppositeType = savedType === 'LONG' ? 'SHORT' : 'LONG';
+
+    // Fetch the updated list of trades from the backend
+    let currentTrades: Trade[] = [];
+    try {
+      const tradesResponse = await fetch('/api/trades')
+      if (tradesResponse.ok) {
+        currentTrades = await tradesResponse.json()
+      }
+    } catch (e) {
+      console.error('Failed to fetch updated trades:', e)
+    }
+
+    // Check if there is already a trade of the opposite type for the same symbol
+    const oppositeExists = currentTrades.some(
+      t => t.symbol.toUpperCase() === savedSymbol.toUpperCase() && t.type === oppositeType
+    );
+
+    if (!oppositeExists) {
+      // Reset edit mode if we were editing by navigating back to /trade/new
+      router.push('/trade/new')
+
+      // Pre-fill fields for the opposite trade
+      tradeData.value = {
+        symbol: savedSymbol,
+        type: oppositeType,
+        interval: tradeData.value.interval,
+        entry: 0,
+        stop: 0,
+        tp1: 0,
+        tp2: null,
+        tp3: null,
+        tp4: null,
+        tp5: null,
+        tp6: null,
+        volume_required: tradeData.value.volume_required,
+        volume_adds_margin: tradeData.value.volume_adds_margin,
+        sentiment_required: tradeData.value.sentiment_required,
+        sentiment_adds_margin: tradeData.value.sentiment_adds_margin,
+        setup_description: tradeData.value.setup_description,
+        url_analysis: tradeData.value.url_analysis
+      }
+
+      errorMessage.value = ''
+      warningMessage.value = ''
+      showToast(`Opposite ${oppositeType} trade initialized for ${savedSymbol}`)
+    } else {
+      router.push('/')
+    }
   } catch (error) {
     console.error('Failed to save trade:', error)
     errorMessage.value = error instanceof Error ? error.message : 'Failed to save trade'
