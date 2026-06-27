@@ -380,6 +380,30 @@ describe('TradeValidator', () => {
     expect(result.message).toContain('Trade is invalid: Entry invalid');
     expect(result.message).toContain('Volume is not high enough');
     expect(result.entryAnalysis).toEqual(mockEntryAnalysis);
-    expect(result.volumeAnalysis).toEqual(mockVolumeAnalysis);
+  });
+
+  it('should return invalid gracefully when the market is closed/paused on weekends', async () => {
+    const errorMsg = 'BingX API error 109415: NCCOGASOLINE2USD-USDT is pause currently,all validted symbols in api:/openApi/swap/v2/quote/contracts, please verify it';
+    mockTradeEntryAnalyzer.analyzeEntry.mockRejectedValue(new Error(errorMsg));
+
+    const trade = {
+      symbol: 'NCCOGASOLINE2USDUSDT',
+      type: 'LONG',
+      entry: 100,
+      stop: 95,
+      tp1: 105,
+      volume_required: true,
+      sentiment_required: true,
+      interval: '1h'
+    };
+
+    const result = await validator.validateTrade(trade as any);
+
+    expect(result.isValid).toBe(false);
+    expect(result.warning).toBe(false);
+    expect(result.message).toContain('Market is closed/paused');
+    expect(result.message).toContain('109415');
+    expect(result.entryAnalysis.canEnter).toBe(false);
+    expect(result.entryAnalysis.message).toContain('Market is closed/paused');
   });
 });

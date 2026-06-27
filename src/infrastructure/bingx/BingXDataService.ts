@@ -176,7 +176,10 @@ export class BingXDataService implements IDataProvider {
         timestamp: Date.now().toString()
       };
 
-      const response = await this.apiClient.get<{ data: any[] }>(path, params);
+      const response = await this.apiClient.get<any>(path, params);
+      if (response && response.code !== 0) {
+        throw new Error(`BingX API error ${response.code}: ${response.msg}`);
+      }
       const klineData = response.data.map(this.parseKlineData);
 
       // Cache the data
@@ -201,7 +204,10 @@ export class BingXDataService implements IDataProvider {
         timestamp: Date.now().toString()
       };
 
-      const response = await this.apiClient.get<{ data: { lastPrice: string } }>(path, params);
+      const response = await this.apiClient.get<any>(path, params);
+      if (response && response.code !== 0) {
+        throw new Error(`BingX API error ${response.code}: ${response.msg}`);
+      }
       return parseFloat(response.data.lastPrice);
     } catch (error) {
       logger.error(`Error fetching price for ${normalizedSymbol}:`, error);
@@ -223,15 +229,10 @@ export class BingXDataService implements IDataProvider {
         timestamp: Date.now().toString()
       };
 
-      const response = await this.apiClient.get<{
-        data: {
-          maxLeverage: number;
-          minLeverage: number;
-          maxPositionValue: number;
-          minPositionValue: number;
-        }
-      }>(path, params);
-
+      const response = await this.apiClient.get<any>(path, params);
+      if (response && response.code !== 0) {
+        throw new Error(`BingX API error ${response.code}: ${response.msg}`);
+      }
       return response.data;
     } catch (error) {
       logger.error(`Error fetching symbol info for ${normalizedSymbol}:`, error);

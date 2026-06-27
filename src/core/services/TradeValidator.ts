@@ -126,8 +126,52 @@ export class TradeValidator {
         warning,
         recentCloses
       };
-    } catch (error) {
+    } catch (error: any) {
       console.error(`Error validating trade for ${trade.symbol}:`, error);
+
+      const errorMsg = error?.message || '';
+      const isMarketClosed = errorMsg.includes('is pause currently') ||
+                             errorMsg.includes('109415') ||
+                             errorMsg.includes('paused') ||
+                             errorMsg.includes('closed');
+
+      if (isMarketClosed) {
+        return {
+          isValid: false,
+          entryAnalysis: {
+            canEnter: false,
+            currentClose: 0,
+            hasClosePriceBeforeEntry: false,
+            message: `Market is closed/paused: ${errorMsg}`,
+            warning: false
+          },
+          volumeAnalysis: {
+            color: VolumeColor.BLUE,
+            stdBar: 0,
+            mean: 0,
+            std: 0,
+            currentVolume: 0
+          },
+          sentimentAnalysis: {
+            sentiment: 'Neutral',
+            details: {
+              side: trade.type,
+              longShortRatio: { symbol: trade.symbol, currentRatio: null, variation: { vs1h: null, vs4h: null, vs24h: null }, timestamps: { current: null, h1: null, h4: null, d1: null } },
+              openInterest: { symbol: trade.symbol, currentOpenInterestValue: null, variation: { vs1h: null, vs4h: null, vs24h: null }, timestamps: { current: null, h1: null, h4: null, d1: null } },
+              analysis: {
+                lsrTrend: { trend: 'Neutral', score: 0 },
+                oiTrend: { trend: 'Neutral', score: 0 },
+                lsrSignal: 'Neutral',
+                oiSignal: 'Neutral'
+              }
+            }
+          },
+          message: `Trade is invalid: Market is closed/paused (${errorMsg})`,
+          warning: false,
+          recentCloses: []
+        };
+      }
+
       throw error;
     }
   }
