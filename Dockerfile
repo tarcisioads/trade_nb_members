@@ -31,7 +31,7 @@ FROM base AS backend-runtime
 WORKDIR /app
 COPY package*.json ./
 # Install only production dependencies
-RUN npm install --omit=dev
+RUN npm install --omit=dev --ignore-scripts
 
 COPY --from=backend-builder /app/dist ./dist
 # Database and logs folders will be mounted as volumes
