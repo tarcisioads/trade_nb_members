@@ -127,7 +127,7 @@ npm run build:all
 
 - **ESLint & Prettier:** Standard `@typescript-eslint` and `plugin:vue/vue3-recommended` rules enforced across backend and frontend code in [.eslintrc.json](file:///home/tarpinha/Projects/trade_nb_members/.eslintrc.json) and [.prettierrc](file:///home/tarpinha/Projects/trade_nb_members/.prettierrc).
 - **Git Pre-commit Hooks (Husky & lint-staged):** Automatically formats staged files (`eslint --fix` & `prettier --write`) and runs `npm test` before any commit is accepted locally.
-- **GitHub Actions CI Workflow:** [.github/workflows/ci.yml](file:///home/tarpinha/Projects/trade_nb_members/.github/workflows/ci.yml) automatically runs on push and pull-requests to `main`, validating formatting, ESLint rules, TypeScript compilation (`tsc --noEmit`), and Jest test coverage thresholds.
+- **GitHub Actions CI Workflow:** [.github/workflows/deploy.yml](file:///home/tarpinha/Projects/trade_nb_members/.github/workflows/deploy.yml) automatically runs on push and pull-requests to `main`, validating formatting, ESLint rules, TypeScript compilation (`tsc --noEmit`), and Jest test coverage thresholds.
 - **Jest Coverage Thresholds:** Configured in [jest.config.js](file:///home/tarpinha/Projects/trade_nb_members/jest.config.js) to enforce code coverage minimums across domain and infrastructure services.
 
 ### Docker Operations
