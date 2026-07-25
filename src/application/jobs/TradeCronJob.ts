@@ -45,7 +45,7 @@ export class TradeCronJob {
 
   private enqueueTask(task: () => Promise<void>): void {
     this.taskQueue.push(task);
-    this.processQueue().catch(err => console.error('Error processing trade queue:', err));
+    this.processQueue().catch((err) => console.error('Error processing trade queue:', err));
   }
 
   private async readTrades(interval?: string): Promise<Trade[]> {
@@ -53,7 +53,7 @@ export class TradeCronJob {
       const trades = await this.tradeRepository.readTrades();
 
       if (interval) {
-        return trades.filter(trade => trade.interval === interval);
+        return trades.filter((trade) => trade.interval === interval);
       }
 
       return trades;
@@ -72,7 +72,7 @@ export class TradeCronJob {
       try {
         // Delay de 1/2 segundos entre cada trade
         if (validCount > 0 || trades.indexOf(trade) > 0) {
-          await new Promise(res => setTimeout(res, 500));
+          await new Promise((res) => setTimeout(res, 500));
         }
 
         // Validate the trade
@@ -84,21 +84,33 @@ export class TradeCronJob {
         console.log(`Interval: ${trade.interval}`);
         console.log(`Entry: ${trade.entry}`);
         console.log(`Stop: ${trade.stop}`);
-        console.log(`Take Profits: ${[trade.tp1, trade.tp2, trade.tp3, trade.tp4, trade.tp5, trade.tp6]
-          .filter(tp => tp !== null)
-          .join(', ')}`);
+        console.log(
+          `Take Profits: ${[trade.tp1, trade.tp2, trade.tp3, trade.tp4, trade.tp5, trade.tp6]
+            .filter((tp) => tp !== null)
+            .join(', ')}`
+        );
         console.log('\nValidation Results:');
         console.log(`Validation: ${validationResult.isValid}`);
         console.log(`Message: ${validationResult.message}`);
-        console.log(`Volume Analysis: ${validationResult.volumeAnalysis.color} (StdBar: ${validationResult.volumeAnalysis.stdBar.toFixed(2)})`);
-        console.log(`Sentiment Analysis: ${validationResult.sentimentAnalysis.sentiment} (${validationResult.sentimentAnalysis.sentiment} - lsrTrend ${validationResult.sentimentAnalysis.details.analysis.lsrTrend} - oiTrend ${validationResult.sentimentAnalysis.details.analysis.oiTrend} - lsrSignal ${validationResult.sentimentAnalysis.details.analysis.lsrSignal} - oiSignal ${validationResult.sentimentAnalysis.details.analysis.oiSignal})`);
-        console.log(`Sentiment LSr: (lsr:${validationResult.sentimentAnalysis.details.longShortRatio.currentRatio} - lsr Variations 1h ${validationResult.sentimentAnalysis.details.longShortRatio.variation.vs1h} - 4h ${validationResult.sentimentAnalysis.details.longShortRatio.variation.vs4h} - 24h ${validationResult.sentimentAnalysis.details.longShortRatio.variation.vs24h} )`);
-        console.log(`Sentiment OI: (oi:${validationResult.sentimentAnalysis.details.openInterest.currentOpenInterestValue} - OI Variations 1h ${validationResult.sentimentAnalysis.details.openInterest.variation.vs1h} - 4h ${validationResult.sentimentAnalysis.details.openInterest.variation.vs4h} - 24h ${validationResult.sentimentAnalysis.details.openInterest.variation.vs24h} )`);
+        console.log(
+          `Volume Analysis: ${validationResult.volumeAnalysis.color} (StdBar: ${validationResult.volumeAnalysis.stdBar.toFixed(2)})`
+        );
+        console.log(
+          `Sentiment Analysis: ${validationResult.sentimentAnalysis.sentiment} (${validationResult.sentimentAnalysis.sentiment} - lsrTrend ${validationResult.sentimentAnalysis.details.analysis.lsrTrend} - oiTrend ${validationResult.sentimentAnalysis.details.analysis.oiTrend} - lsrSignal ${validationResult.sentimentAnalysis.details.analysis.lsrSignal} - oiSignal ${validationResult.sentimentAnalysis.details.analysis.oiSignal})`
+        );
+        console.log(
+          `Sentiment LSr: (lsr:${validationResult.sentimentAnalysis.details.longShortRatio.currentRatio} - lsr Variations 1h ${validationResult.sentimentAnalysis.details.longShortRatio.variation.vs1h} - 4h ${validationResult.sentimentAnalysis.details.longShortRatio.variation.vs4h} - 24h ${validationResult.sentimentAnalysis.details.longShortRatio.variation.vs24h} )`
+        );
+        console.log(
+          `Sentiment OI: (oi:${validationResult.sentimentAnalysis.details.openInterest.currentOpenInterestValue} - OI Variations 1h ${validationResult.sentimentAnalysis.details.openInterest.variation.vs1h} - 4h ${validationResult.sentimentAnalysis.details.openInterest.variation.vs4h} - 24h ${validationResult.sentimentAnalysis.details.openInterest.variation.vs24h} )`
+        );
         console.log(`Current Close: ${validationResult.entryAnalysis.currentClose}`);
         console.log(`Recent Closes: ${validationResult.recentCloses}`);
 
         if (validationResult.warning) {
-          console.log(`⚠️ WARNING: Trade has warning status - Entry conditions met but invalidated by other factors`);
+          console.log(
+            `⚠️ WARNING: Trade has warning status - Entry conditions met but invalidated by other factors`
+          );
         }
         console.log('----------------------------------------');
 
@@ -106,14 +118,16 @@ export class TradeCronJob {
         const bingxApiKey = process.env.BINGX_API_KEY;
         const bingxApiSecret = process.env.BINGX_API_SECRET;
 
-
         // Send notification for trades with warning status
         if (validationResult.warning) {
-          let hasPos = false
+          let hasPos = false;
           if (bingxApiKey && bingxApiSecret) {
             // Check for existing position
-            const { hasPosition, message } = await new PositionValidator().hasOpenPosition(trade.symbol, trade.type);
-            hasPos = hasPosition
+            const { hasPosition, message } = await new PositionValidator().hasOpenPosition(
+              trade.symbol,
+              trade.type
+            );
+            hasPos = hasPosition;
           }
 
           if (!hasPos) {
@@ -133,7 +147,7 @@ export class TradeCronJob {
                 tp3: trade.tp3,
                 tp4: trade.tp4,
                 tp5: trade.tp5,
-                tp6: trade.tp6
+                tp6: trade.tp6,
               },
               validation: validationResult,
               analysisUrl: trade.url_analysis || '',
@@ -143,19 +157,19 @@ export class TradeCronJob {
               volume_required: trade.volume_required,
               sentiment_adds_margin: trade.sentiment_adds_margin,
               sentiment_required: trade.sentiment_required,
-              interval: trade.interval
+              interval: trade.interval,
             });
           }
-
         }
 
         if (validationResult.isValid) {
           validCount++;
 
-
           if (!bingxApiKey || !bingxApiSecret) {
             console.log('\nTrade Execution Skipped:');
-            console.log('BingX API credentials not configured. Please set bingx_api_key and bingx_api_secret environment variables.');
+            console.log(
+              'BingX API credentials not configured. Please set bingx_api_key and bingx_api_secret environment variables.'
+            );
             console.log('----------------------------------------');
 
             // Send notification about skipped execution
@@ -170,7 +184,7 @@ export class TradeCronJob {
                 tp3: trade.tp3,
                 tp4: trade.tp4,
                 tp5: trade.tp5,
-                tp6: trade.tp6
+                tp6: trade.tp6,
               },
               validation: validationResult,
               analysisUrl: trade.url_analysis || '',
@@ -180,7 +194,7 @@ export class TradeCronJob {
               volume_required: trade.volume_required,
               sentiment_adds_margin: trade.sentiment_adds_margin,
               sentiment_required: trade.sentiment_required,
-              interval: trade.interval
+              interval: trade.interval,
             });
             continue;
           }
@@ -203,7 +217,7 @@ export class TradeCronJob {
             sentiment_adds_margin: trade.sentiment_adds_margin,
             sentiment_required: trade.sentiment_required,
             modify_tp1: process.env.MODIFY_TP1 === 'true',
-            interval: trade.interval
+            interval: trade.interval,
           });
 
           if (executionResult.success) {
@@ -214,13 +228,16 @@ export class TradeCronJob {
 
             // Volume margin info is now handled by TradeExecutor
             if (executionResult.data?.volumeMarginAdded) {
-              console.log(`Volume Margin Added: ${executionResult.data.volumeMarginAdded.percentage}%`);
+              console.log(
+                `Volume Margin Added: ${executionResult.data.volumeMarginAdded.percentage}%`
+              );
             }
             // Sentiment margin info is now handled by TradeExecutor
             if (executionResult.data?.sentimentMarginAdded) {
-              console.log(`Sentiment Margin Added: ${executionResult.data.sentimentMarginAdded.percentage}%`);
+              console.log(
+                `Sentiment Margin Added: ${executionResult.data.sentimentMarginAdded.percentage}%`
+              );
             }
-
 
             console.log('----------------------------------------');
 
@@ -236,7 +253,7 @@ export class TradeCronJob {
                 tp3: trade.tp3,
                 tp4: trade.tp4,
                 tp5: trade.tp5,
-                tp6: trade.tp6
+                tp6: trade.tp6,
               },
               validation: validationResult,
               analysisUrl: trade.url_analysis || '',
@@ -245,26 +262,32 @@ export class TradeCronJob {
               volume_required: trade.volume_required,
               sentiment_adds_margin: trade.sentiment_adds_margin,
               sentiment_required: trade.sentiment_required,
-              executionResult: executionResult.success && executionResult.data ? {
-                leverage: executionResult.data.leverage.optimalLeverage,
-                quantity: executionResult.data.quantity,
-                entryOrderId: executionResult.data.entryOrder.data.order.orderId,
-                stopOrderId: executionResult.data.stopOrder.data.order.orderId,
-                volumeMarginAdded: executionResult.data.volumeMarginAdded,
-                sentimentMarginAdded: executionResult.data.sentimentMarginAdded
-              } : undefined,
+              executionResult:
+                executionResult.success && executionResult.data
+                  ? {
+                      leverage: executionResult.data.leverage.optimalLeverage,
+                      quantity: executionResult.data.quantity,
+                      entryOrderId: executionResult.data.entryOrder.data.order.orderId,
+                      stopOrderId: executionResult.data.stopOrder.data.order.orderId,
+                      volumeMarginAdded: executionResult.data.volumeMarginAdded,
+                      sentimentMarginAdded: executionResult.data.sentimentMarginAdded,
+                    }
+                  : undefined,
               executionError: !executionResult.success ? executionResult.message : undefined,
-              interval: trade.interval
+              interval: trade.interval,
             });
           } else {
             throw new Error(`Failed to execute trade:${executionResult.message}`);
           }
         }
       } catch (error: any) {
-        console.error(`\n❌ Error processing trade #${trades.indexOf(trade) + 1} (${trade.symbol}):`, error);
+        console.error(
+          `\n❌ Error processing trade #${trades.indexOf(trade) + 1} (${trade.symbol}):`,
+          error
+        );
         console.log('----------------------------------------');
-        let msg = error?.message || '';
-        let maxPosMatch = msg.match(/Found open/);
+        const msg = error?.message || '';
+        const maxPosMatch = msg.match(/Found open/);
         if (!maxPosMatch) {
           // Send notification about the error
           try {
@@ -279,25 +302,27 @@ export class TradeCronJob {
                 tp3: trade.tp3,
                 tp4: trade.tp4,
                 tp5: trade.tp5,
-                tp6: trade.tp6
+                tp6: trade.tp6,
               },
-              validation: validationResult ? validationResult : {
-                isValid: false,
-                message: 'Error during processing',
-                volumeAnalysis: {
-                  color: 'UNKNOWN',
-                  stdBar: 0,
-                  currentVolume: 0,
-                  mean: 0,
-                  std: 0
-                },
-                entryAnalysis: {
-                  currentClose: 0,
-                  canEnter: false,
-                  hasClosePriceBeforeEntry: false,
-                  message: 'Error during processing'
-                }
-              },
+              validation: validationResult
+                ? validationResult
+                : {
+                    isValid: false,
+                    message: 'Error during processing',
+                    volumeAnalysis: {
+                      color: 'UNKNOWN',
+                      stdBar: 0,
+                      currentVolume: 0,
+                      mean: 0,
+                      std: 0,
+                    },
+                    entryAnalysis: {
+                      currentClose: 0,
+                      canEnter: false,
+                      hasClosePriceBeforeEntry: false,
+                      message: 'Error during processing',
+                    },
+                  },
               analysisUrl: trade.url_analysis || '',
               executionError: error instanceof Error ? error.message : 'Unknown error occurred',
               volume_adds_margin: trade.volume_adds_margin,
@@ -305,13 +330,12 @@ export class TradeCronJob {
               volume_required: trade.volume_required,
               sentiment_adds_margin: trade.sentiment_adds_margin,
               sentiment_required: trade.sentiment_required,
-              interval: trade.interval
+              interval: trade.interval,
             });
           } catch (notificationError) {
             console.error('Failed to send error notification:', notificationError);
           }
         }
-
       }
     }
 
@@ -380,11 +404,13 @@ export class TradeCronJob {
       });
     });
 
-    console.log('Trade cron job started. Initial execution in 30 seconds, then will run at minute 1 of every hour, at 30 seconds past every 15 minutes, and at 30 seconds past every 5 minutes.');
+    console.log(
+      'Trade cron job started. Initial execution in 30 seconds, then will run at minute 1 of every hour, at 30 seconds past every 15 minutes, and at 30 seconds past every 5 minutes.'
+    );
   }
 
   public stop(): void {
     // Stop all cron tasks if we stored them, but for now just log
     console.log('TradeCronJob stopped');
   }
-} 
+}

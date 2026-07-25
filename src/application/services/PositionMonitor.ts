@@ -54,9 +54,10 @@ export class PositionMonitor {
   private async matchPositionWithTrade(position: Position): Promise<number | undefined> {
     const normalizedSymbol = normalizeSymbolBingX(position.symbol);
     const trades = await this.tradeDatabase.getAllTrades();
-    const matchingTrades = trades.filter(trade =>
-      normalizeSymbolBingX(trade.symbol) === normalizedSymbol &&
-      trade.type === position.positionSide
+    const matchingTrades = trades.filter(
+      (trade) =>
+        normalizeSymbolBingX(trade.symbol) === normalizedSymbol &&
+        trade.type === position.positionSide
     );
 
     if (matchingTrades.length === 0) {
@@ -64,7 +65,7 @@ export class PositionMonitor {
     }
 
     // Return the trade with the maximum ID
-    return Math.max(...matchingTrades.map(trade => trade.id));
+    return Math.max(...matchingTrades.map((trade) => trade.id));
   }
 
   public async checkStopLossBeforeLiquidation(
@@ -82,9 +83,10 @@ export class PositionMonitor {
     // Calculate liquidation price based on leverage and position side
     const liquidationPrice = parseFloat(position.liquidationPrice); // For SHORT positions
 
-    const isBeforeLiquidation = position.positionSide === 'LONG'
-      ? stopPrice < liquidationPrice
-      : stopPrice > liquidationPrice;
+    const isBeforeLiquidation =
+      position.positionSide === 'LONG'
+        ? stopPrice < liquidationPrice
+        : stopPrice > liquidationPrice;
 
     if (isBeforeLiquidation) {
       await this.notificationService.sendTradeNotification({
@@ -98,7 +100,7 @@ export class PositionMonitor {
           tp3: null,
           tp4: null,
           tp5: null,
-          tp6: null
+          tp6: null,
         },
         validation: {
           isValid: true,
@@ -108,21 +110,21 @@ export class PositionMonitor {
             stdBar: 0,
             currentVolume: 0,
             mean: 0,
-            std: 0
+            std: 0,
           },
           entryAnalysis: {
             currentClose: currentPrice,
             canEnter: false,
             hasClosePriceBeforeEntry: true,
-            message: 'Stop loss before liquidation - DANGER'
-          }
+            message: 'Stop loss before liquidation - DANGER',
+          },
         },
         analysisUrl: '',
         volume_required: false,
         volume_adds_margin: false,
         setup_description: `⚠️ DANGER: Stop loss order (${stopPrice}) is before liquidation price (${liquidationPrice}) for ${position.symbol} ${position.positionSide} position. `,
         interval: null,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
   }
@@ -144,7 +146,7 @@ export class PositionMonitor {
         type: 'STOP',
         price: initialStopPrice,
         stopPrice: initialStopPrice,
-        quantity: parseFloat(position.positionAmt)
+        quantity: parseFloat(position.positionAmt),
       });
 
       const newStopOrder = await this.orderExecutor.placeOrder(
@@ -155,7 +157,9 @@ export class PositionMonitor {
         initialStopPrice,
         initialStopPrice,
         parseFloat(position.positionAmt),
-        undefined, undefined, position.positionId
+        undefined,
+        undefined,
+        position.positionId
       );
 
       const stopLossOrder: Order = {
@@ -170,7 +174,7 @@ export class PositionMonitor {
         status: 'NEW',
         clientOrderId: newStopOrder.data.order.clientOrderId || '',
         createTime: Date.now(),
-        updateTime: Date.now()
+        updateTime: Date.now(),
       };
 
       // Send notification about the new stop loss order
@@ -185,7 +189,7 @@ export class PositionMonitor {
           tp3: null,
           tp4: null,
           tp5: null,
-          tp6: null
+          tp6: null,
         },
         validation: {
           isValid: true,
@@ -195,26 +199,29 @@ export class PositionMonitor {
             stdBar: 0,
             currentVolume: 0,
             mean: 0,
-            std: 0
+            std: 0,
           },
           entryAnalysis: {
             currentClose: parseFloat(position.markPrice),
             canEnter: false,
             hasClosePriceBeforeEntry: true,
-            message: 'Stop loss order created'
-          }
+            message: 'Stop loss order created',
+          },
         },
         analysisUrl: '',
         volume_required: false,
         volume_adds_margin: false,
         setup_description: `✅ New stop loss order created for ${position.symbol} ${position.positionSide} position at ${initialStopPrice}. Entry: ${position.avgPrice}, Current Price: ${position.markPrice}`,
         interval: null,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
 
       return stopLossOrder;
     } catch (error) {
-      console.error(`Error creating stop loss order for ${position.symbol} ${position.positionSide}:`, error);
+      console.error(
+        `Error creating stop loss order for ${position.symbol} ${position.positionSide}:`,
+        error
+      );
 
       // Send notification about the error
       await this.notificationService.sendTradeNotification({
@@ -228,7 +235,7 @@ export class PositionMonitor {
           tp3: null,
           tp4: null,
           tp5: null,
-          tp6: null
+          tp6: null,
         },
         validation: {
           isValid: false,
@@ -238,21 +245,21 @@ export class PositionMonitor {
             stdBar: 0,
             currentVolume: 0,
             mean: 0,
-            std: 0
+            std: 0,
           },
           entryAnalysis: {
             currentClose: parseFloat(position.markPrice),
             canEnter: false,
             hasClosePriceBeforeEntry: true,
-            message: 'Error creating stop loss'
-          }
+            message: 'Error creating stop loss',
+          },
         },
         analysisUrl: '',
         volume_required: false,
         volume_adds_margin: false,
         setup_description: `❌ Failed to create stop loss order for ${position.symbol} ${position.positionSide} position at ${initialStopPrice}. Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
         interval: null,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
 
       return undefined;
@@ -264,18 +271,19 @@ export class PositionMonitor {
     const existingPosition = this.monitoredPositions.get(positionKey);
 
     // Get latest stop loss orders from OrderMonitor (it was updated at start of updatePositions)
-    let stopLossOrder = this.orderMonitor.getStopMarketOrder(position.symbol, position.positionSide);
+    let stopLossOrder = this.orderMonitor.getStopMarketOrder(
+      position.symbol,
+      position.positionSide
+    );
 
     // Get trade info to get leverage and initial stop price
     const tradeId = await this.matchPositionWithTrade(position);
-    let leverage: number | undefined;
-    leverage = parseFloat(position.leverage.toString());
+    const leverage = parseFloat(position.leverage.toString());
 
     // Check for stop loss before liquidation
     if (stopLossOrder) {
       await this.checkStopLossBeforeLiquidation(position, stopLossOrder);
     }
-
 
     let initialStopPrice: number | undefined;
     let initialTp1: number | undefined;
@@ -315,15 +323,27 @@ export class PositionMonitor {
         tradeId,
         lastPrice: undefined,
         stopLossOrder,
-        initialStopPrice: initialStopPrice ? initialStopPrice : stopLossOrder ? parseFloat(stopLossOrder.price) : undefined,
+        initialStopPrice: initialStopPrice
+          ? initialStopPrice
+          : stopLossOrder
+            ? parseFloat(stopLossOrder.price)
+            : undefined,
         entryPrice: parseFloat(position.avgPrice),
-        leverage
+        leverage,
       });
     }
   }
 
-  private async checkAndUpdateStopLoss(position: MonitoredPosition, currentPrice: number): Promise<void> {
-    if (!position.initialStopPrice || !position.entryPrice || !position.stopLossOrder || !position.leverage) {
+  private async checkAndUpdateStopLoss(
+    position: MonitoredPosition,
+    currentPrice: number
+  ): Promise<void> {
+    if (
+      !position.initialStopPrice ||
+      !position.entryPrice ||
+      !position.stopLossOrder ||
+      !position.leverage
+    ) {
       return;
     }
 
@@ -335,9 +355,8 @@ export class PositionMonitor {
       return;
     }
 
-    const isStopLossInProfit = positionSide === 'LONG'
-      ? currentStopPrice >= entryPrice
-      : currentStopPrice <= entryPrice;
+    const isStopLossInProfit =
+      positionSide === 'LONG' ? currentStopPrice >= entryPrice : currentStopPrice <= entryPrice;
 
     if (isStopLossInProfit) {
       return;
@@ -349,15 +368,15 @@ export class PositionMonitor {
     const risk_with_factor = risk * this.activationFactorStoploss;
     let hitTakeProfit1 = false;
     if (position.initialTp1) {
-      if ((positionSide == 'LONG') && (currentPrice >= position.initialTp1)) {
+      if (positionSide == 'LONG' && currentPrice >= position.initialTp1) {
         hitTakeProfit1 = true;
       }
-      if ((positionSide == 'SHORT') && (currentPrice <= position.initialTp1)) {
+      if (positionSide == 'SHORT' && currentPrice <= position.initialTp1) {
         hitTakeProfit1 = true;
       }
     }
 
-    if ((reward >= risk_with_factor) || (hitTakeProfit1)) {
+    if (reward >= risk_with_factor || hitTakeProfit1) {
       // Usar o método estático da nova classe
       const breakevenData = StopLossUpdater.calculateBreakeven(
         entryPrice,
@@ -388,7 +407,6 @@ export class PositionMonitor {
         reward,
         breakevenData
       );
-
     }
   }
 
@@ -416,7 +434,7 @@ export class PositionMonitor {
 
   private removeClosedPositions(currentPositions: Position[]): void {
     const currentPositionKeys = new Set(
-      currentPositions.map(p => this.getPositionKey(p.symbol, p.positionSide))
+      currentPositions.map((p) => this.getPositionKey(p.symbol, p.positionSide))
     );
 
     // Remove positions that are no longer open
@@ -449,7 +467,6 @@ export class PositionMonitor {
       }
 
       await this.orderMonitor.cancelOrphanedOrders(this.monitoredPositions);
-
     } catch (error) {
       console.error('Error updating positions:', error);
       throw error;
@@ -460,7 +477,10 @@ export class PositionMonitor {
     return Array.from(this.monitoredPositions.values());
   }
 
-  public getMonitoredPosition(symbol: string, positionSide: 'LONG' | 'SHORT'): MonitoredPosition | undefined {
+  public getMonitoredPosition(
+    symbol: string,
+    positionSide: 'LONG' | 'SHORT'
+  ): MonitoredPosition | undefined {
     return this.monitoredPositions.get(this.getPositionKey(symbol, positionSide));
   }
 
@@ -474,4 +494,4 @@ export class PositionMonitor {
     }
     this.monitoredPositions.clear();
   }
-} 
+}

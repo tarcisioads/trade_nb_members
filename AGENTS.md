@@ -7,6 +7,7 @@ This document provides context, architectural design, and operational guidelines
 `trade_nb_members` is a TypeScript-based cryptocurrency trading automation system. It analyzes market conditions across multiple exchanges (Binance for market data/sentiment analysis, BingX for market data and order execution), calculates dynamic leverage and position risk/reward, executes orders automatically on BingX, tracks live open positions, records historical trade statistics in an SQLite database, and presents a modern web interface for trade monitoring and management.
 
 ### Key Capabilities
+
 - **Multi-Exchange Analysis:** Integrates with Binance Futures (K-lines, Long/Short ratio, Open Interest) and BingX Futures APIs/WebSockets.
 - **Automated Order Execution:** Submits limit/market entry, stop-loss, and multi-tier take-profit (TP1–TP6) orders on BingX with custom order prefixing.
 - **Risk & Sentiment Validation:** Evaluates risk-reward ratios, volume requirements, order blocks / FVGs, and market sentiment before trade entry.
@@ -55,28 +56,28 @@ src/
 
 Configuration is managed via environment variables (loaded via `dotenv` from `.env`). Reference `.env.example` when setting up new environments.
 
-| Variable | Description | Default / Example |
-| :--- | :--- | :--- |
-| `BINGX_API_KEY` | BingX API Key (Required for trading bot) | `your_api_key` |
-| `BINGX_API_SECRET` | BingX API Secret (Required for trading bot) | `your_api_secret` |
-| `BINGX_ORDER_PREFIX_CODE` | Prefix code for custom order IDs | `DEF` |
-| `BINGX_BASE_URL` | BingX REST API URL | `https://open-api.bingx.com` |
-| `BINGX_WS_URL` | BingX WebSocket market URL | `wss://open-api-swap.bingx.com/swap-market` |
-| `BINGX_MARGIN` | Default position margin in USDT | `500` |
-| `BINGX_LIMIT_ORDER_FEE` | Limit order fee rate | `0.02` |
-| `BINGX_MARKET_ORDER_FEE` | Market order fee rate | `0.05` |
-| `VOLUME_MARGIN_PERCENTAGE` | Additional margin % for volume-confirmed setups | `10` |
-| `SENTIMENT_MARGIN_PERCENTAGE`| Additional margin % for sentiment-confirmed setups | `0` |
-| `MAX_LEVERAGE` | Maximum allowed leverage factor | `200` |
-| `LEVERAGE_SAFETY_FACTOR_PERCENT` | Default leverage safety margin percentage | `50` |
-| `LEVERAGE_SAFETY_FACTOR_PERCENT_1H` | Leverage safety margin for 1-hour timeframe | `40` |
-| `LEVERAGE_SAFETY_FACTOR_PERCENT_15` | Leverage safety margin for 15-minute timeframe | `60` |
-| `LEVERAGE_SAFETY_FACTOR_PERCENT_5` | Leverage safety margin for 5-minute timeframe | `70` |
-| `LOG_TO_CONSOLE` | Enable console output for Winston logger | `false` |
-| `MODIFY_TP1` | Adjust TP1 for 1:1 risk-reward ratio if `true` | `false` |
-| `VALIDATE_RISK_REWARD` | Minimum risk-reward threshold ratio | `1.0` |
-| `TELEGRAM_BOT_TOKEN` | Telegram Bot token for notifications | `your_bot_token` |
-| `TELEGRAM_CHAT_ID` | Telegram Chat ID for notification target | `your_chat_id` |
+| Variable                            | Description                                        | Default / Example                           |
+| :---------------------------------- | :------------------------------------------------- | :------------------------------------------ |
+| `BINGX_API_KEY`                     | BingX API Key (Required for trading bot)           | `your_api_key`                              |
+| `BINGX_API_SECRET`                  | BingX API Secret (Required for trading bot)        | `your_api_secret`                           |
+| `BINGX_ORDER_PREFIX_CODE`           | Prefix code for custom order IDs                   | `DEF`                                       |
+| `BINGX_BASE_URL`                    | BingX REST API URL                                 | `https://open-api.bingx.com`                |
+| `BINGX_WS_URL`                      | BingX WebSocket market URL                         | `wss://open-api-swap.bingx.com/swap-market` |
+| `BINGX_MARGIN`                      | Default position margin in USDT                    | `500`                                       |
+| `BINGX_LIMIT_ORDER_FEE`             | Limit order fee rate                               | `0.02`                                      |
+| `BINGX_MARKET_ORDER_FEE`            | Market order fee rate                              | `0.05`                                      |
+| `VOLUME_MARGIN_PERCENTAGE`          | Additional margin % for volume-confirmed setups    | `10`                                        |
+| `SENTIMENT_MARGIN_PERCENTAGE`       | Additional margin % for sentiment-confirmed setups | `0`                                         |
+| `MAX_LEVERAGE`                      | Maximum allowed leverage factor                    | `200`                                       |
+| `LEVERAGE_SAFETY_FACTOR_PERCENT`    | Default leverage safety margin percentage          | `50`                                        |
+| `LEVERAGE_SAFETY_FACTOR_PERCENT_1H` | Leverage safety margin for 1-hour timeframe        | `40`                                        |
+| `LEVERAGE_SAFETY_FACTOR_PERCENT_15` | Leverage safety margin for 15-minute timeframe     | `60`                                        |
+| `LEVERAGE_SAFETY_FACTOR_PERCENT_5`  | Leverage safety margin for 5-minute timeframe      | `70`                                        |
+| `LOG_TO_CONSOLE`                    | Enable console output for Winston logger           | `false`                                     |
+| `MODIFY_TP1`                        | Adjust TP1 for 1:1 risk-reward ratio if `true`     | `false`                                     |
+| `VALIDATE_RISK_REWARD`              | Minimum risk-reward threshold ratio                | `1.0`                                       |
+| `TELEGRAM_BOT_TOKEN`                | Telegram Bot token for notifications               | `your_bot_token`                            |
+| `TELEGRAM_CHAT_ID`                  | Telegram Chat ID for notification target           | `your_chat_id`                              |
 
 ---
 
@@ -103,6 +104,13 @@ npm run dev:web
 # Run API + Frontend + Trading Bot concurrently
 npm run dev:all
 
+# Code quality guardrails & verification
+npm run lint          # Run ESLint check for TS & Vue
+npm run lint:fix      # Auto-fix fixable ESLint issues
+npm run format:check  # Verify Prettier formatting
+npm run type-check    # TypeScript compiler type check
+npm run test:coverage # Run Jest unit tests with coverage reporting
+
 # Build backend TypeScript code to dist/
 npm run build
 
@@ -112,6 +120,15 @@ npm run frontend:build
 # Build production frontend and start API in production mode
 npm run build:all
 ```
+
+---
+
+## 🛡️ Code Quality & Automated Guardrails
+
+- **ESLint & Prettier:** Standard `@typescript-eslint` and `plugin:vue/vue3-recommended` rules enforced across backend and frontend code in [.eslintrc.json](file:///home/tarpinha/Projects/trade_nb_members/.eslintrc.json) and [.prettierrc](file:///home/tarpinha/Projects/trade_nb_members/.prettierrc).
+- **Git Pre-commit Hooks (Husky & lint-staged):** Automatically formats staged files (`eslint --fix` & `prettier --write`) and runs `npm test` before any commit is accepted locally.
+- **GitHub Actions CI Workflow:** [.github/workflows/ci.yml](file:///home/tarpinha/Projects/trade_nb_members/.github/workflows/ci.yml) automatically runs on push and pull-requests to `main`, validating formatting, ESLint rules, TypeScript compilation (`tsc --noEmit`), and Jest test coverage thresholds.
+- **Jest Coverage Thresholds:** Configured in [jest.config.js](file:///home/tarpinha/Projects/trade_nb_members/jest.config.js) to enforce code coverage minimums across domain and infrastructure services.
 
 ### Docker Operations
 

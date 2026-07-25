@@ -37,7 +37,7 @@ export class OrderMonitor {
     try {
       const path = '/openApi/swap/v2/trade/openOrders';
       const params = {
-        timestamp: Date.now().toString()
+        timestamp: Date.now().toString(),
       };
 
       try {
@@ -63,13 +63,12 @@ export class OrderMonitor {
         }
 
         this.lastUpdate = now;
-
       } catch (error) {
         console.error('Error fetching open orders:', error);
-        throw new Error('Error fetching positions: ' + (error instanceof Error ? error.message : error));
+        throw new Error(
+          'Error fetching positions: ' + (error instanceof Error ? error.message : error)
+        );
       }
-
-
     } catch (error) {
       console.error('Error fetching open orders:', error);
       throw error;
@@ -95,16 +94,13 @@ export class OrderMonitor {
   }
 
   public getOpenOrdersBySymbol(symbol: string): Order[] {
-    return Array.from(this.openOrders.values())
-      .filter(order => order.symbol === symbol);
+    return Array.from(this.openOrders.values()).filter((order) => order.symbol === symbol);
   }
 
   public getOpenOrdersByPositionSide(symbol: string, positionSide: 'LONG' | 'SHORT'): Order[] {
-    return Array.from(this.openOrders.values())
-      .filter(order =>
-        order.symbol === symbol &&
-        order.positionSide === positionSide
-      );
+    return Array.from(this.openOrders.values()).filter(
+      (order) => order.symbol === symbol && order.positionSide === positionSide
+    );
   }
 
   public hasOpenStopMarketOrder(symbol: string, positionSide: 'LONG' | 'SHORT'): boolean {
@@ -137,7 +133,7 @@ export class OrderMonitor {
           tp3: null,
           tp4: null,
           tp5: null,
-          tp6: null
+          tp6: null,
         },
         validation: {
           isValid: true,
@@ -147,23 +143,26 @@ export class OrderMonitor {
             stdBar: 0,
             currentVolume: 0,
             mean: 0,
-            std: 0
+            std: 0,
           },
           entryAnalysis: {
             currentClose: 0, // Not applicable for orphaned orders
             canEnter: false,
             hasClosePriceBeforeEntry: true,
-            message: 'Orphaned order cancelled'
-          }
+            message: 'Orphaned order cancelled',
+          },
         },
         analysisUrl: '',
         volume_required: false,
         volume_adds_margin: false,
         setup_description: `⚠️ Cancelled orphaned ${order.type} order for ${order.symbol} ${order.positionSide}. Order ID: ${order.orderId}, Price: ${order.price}, Stop: ${order.stopPrice || 'N/A'}`,
-        interval: null
+        interval: null,
       });
     } catch (error) {
-      console.error(`Error cancelling order ${order.orderId} for ${order.symbol} ${order.positionSide}:`, error);
+      console.error(
+        `Error cancelling order ${order.orderId} for ${order.symbol} ${order.positionSide}:`,
+        error
+      );
 
       // Send notification about the error cancelling the order
       await this.notificationService.sendTradeNotification({
@@ -177,7 +176,7 @@ export class OrderMonitor {
           tp3: null,
           tp4: null,
           tp5: null,
-          tp6: null
+          tp6: null,
         },
         validation: {
           isValid: false,
@@ -187,30 +186,32 @@ export class OrderMonitor {
             stdBar: 0,
             currentVolume: 0,
             mean: 0,
-            std: 0
+            std: 0,
           },
           entryAnalysis: {
             currentClose: 0,
             canEnter: false,
             hasClosePriceBeforeEntry: true,
-            message: 'Error cancelling orphaned order'
-          }
+            message: 'Error cancelling orphaned order',
+          },
         },
         analysisUrl: '',
         volume_required: false,
         volume_adds_margin: false,
         setup_description: `❌ Failed to cancel orphaned ${order.type} order for ${order.symbol} ${order.positionSide}. Order ID: ${order.orderId}, Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        interval: null
+        interval: null,
       });
     }
   }
 
-  public async cancelOrphanedOrders(monitoredPositions: Map<string, MonitoredPosition>): Promise<void> {
+  public async cancelOrphanedOrders(
+    monitoredPositions: Map<string, MonitoredPosition>
+  ): Promise<void> {
     try {
       // Update open orders first to get latest state
       await this.updateOpenOrders();
 
-      let list: string[] = []
+      const list: string[] = [];
 
       // For each open order, check if there's a corresponding monitored position
       for (const order of this.openOrders.values()) {
@@ -220,17 +221,23 @@ export class OrderMonitor {
         // If no position exists for this order, cancel it
         if (!hasPosition) {
           // Add 1 second delay before checking position
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          await new Promise((resolve) => setTimeout(resolve, 1000));
 
           try {
             // Check for existing position
-            const { hasPosition: hasPositionRevalidate, position, message } = await this.positionValidator.hasOpenPosition(order.symbol, order.positionSide);
-            if ((!hasPositionRevalidate) && (!position) && (!message.toLowerCase().includes('error'))) {
-              console.log(`Found orphaned order for ${order.symbol} ${order.positionSide} (${order.type})`);
+            const {
+              hasPosition: hasPositionRevalidate,
+              position,
+              message,
+            } = await this.positionValidator.hasOpenPosition(order.symbol, order.positionSide);
+            if (!hasPositionRevalidate && !position && !message.toLowerCase().includes('error')) {
+              console.log(
+                `Found orphaned order for ${order.symbol} ${order.positionSide} (${order.type})`
+              );
               //await this.cancelOrder(order);
-              const item = list.find(p => p == positionKey)
+              const item = list.find((p) => p == positionKey);
               if (!item) {
-                list.push(positionKey)
+                list.push(positionKey);
                 // Send notification about the error cancelling the order
                 await this.notificationService.sendTradeNotification({
                   symbol: order.symbol,
@@ -243,7 +250,7 @@ export class OrderMonitor {
                     tp3: null,
                     tp4: null,
                     tp5: null,
-                    tp6: null
+                    tp6: null,
                   },
                   validation: {
                     isValid: false,
@@ -253,29 +260,27 @@ export class OrderMonitor {
                       stdBar: 0,
                       currentVolume: 0,
                       mean: 0,
-                      std: 0
+                      std: 0,
                     },
                     entryAnalysis: {
                       currentClose: 0,
                       canEnter: false,
                       hasClosePriceBeforeEntry: true,
-                      message: 'Founded orphaned order'
-                    }
+                      message: 'Founded orphaned order',
+                    },
                   },
                   analysisUrl: '',
                   volume_required: false,
                   volume_adds_margin: false,
                   setup_description: `❌ Founded orphaned order for ${order.symbol} ${order.positionSide}. Order ID: ${order.orderId}`,
-                  interval: null
+                  interval: null,
                 });
-
               }
             }
           } catch (error) {
             console.error('Error cancelling orphaned orders:', error);
             throw error;
           }
-
         }
       }
     } catch (error) {
@@ -283,4 +288,4 @@ export class OrderMonitor {
       throw error;
     }
   }
-} 
+}

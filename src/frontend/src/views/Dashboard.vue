@@ -22,7 +22,12 @@
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 items-end">
               <div>
                 <label for="symbolFilter" class="block text-sm font-semibold mb-2">Symbol</label>
-                <select v-model="filters.symbol" @change="loadData" class="w-full bg-gray-900/50 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all outline-none appearance-none" id="symbolFilter">
+                <select
+                  id="symbolFilter"
+                  v-model="filters.symbol"
+                  class="w-full bg-gray-900/50 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all outline-none appearance-none"
+                  @change="loadData"
+                >
                   <option value="ALL">All Symbols</option>
                   <option v-for="symbol in availableSymbols" :key="symbol" :value="symbol">
                     {{ symbol }}
@@ -31,7 +36,12 @@
               </div>
               <div>
                 <label for="setupFilter" class="block text-sm font-semibold mb-2">Setup</label>
-                <select v-model="filters.setupDescription" @change="loadData" class="w-full bg-gray-900/50 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all outline-none appearance-none" id="setupFilter">
+                <select
+                  id="setupFilter"
+                  v-model="filters.setupDescription"
+                  class="w-full bg-gray-900/50 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all outline-none appearance-none"
+                  @change="loadData"
+                >
                   <option value="ALL">All Setups</option>
                   <option v-for="setup in availableSetupDescriptions" :key="setup" :value="setup">
                     {{ setup }}
@@ -40,36 +50,66 @@
               </div>
               <div>
                 <label for="startDate" class="block text-sm font-semibold mb-2">Start Date</label>
-                <input type="date" v-model="filters.startDate" @change="loadData" class="w-full bg-gray-900/50 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all outline-none"
-                  id="startDate">
+                <input
+                  id="startDate"
+                  v-model="filters.startDate"
+                  type="date"
+                  class="w-full bg-gray-900/50 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all outline-none"
+                  @change="loadData"
+                />
               </div>
               <div>
                 <label for="endDate" class="block text-sm font-semibold mb-2">End Date</label>
-                <input type="date" v-model="filters.endDate" @change="loadData" class="w-full bg-gray-900/50 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all outline-none" id="endDate">
+                <input
+                  id="endDate"
+                  v-model="filters.endDate"
+                  type="date"
+                  class="w-full bg-gray-900/50 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all outline-none"
+                  @change="loadData"
+                />
               </div>
               <div>
                 <label for="minResult" class="block text-sm font-semibold mb-2">
                   Min Result ($)
-                  <span class="block text-xs text-gray-400 font-normal">
-                    Abs result ≥ amount
-                  </span>
+                  <span class="block text-xs text-gray-400 font-normal"> Abs result ≥ amount </span>
                 </label>
-                <input type="number" v-model="filters.minResult" @change="loadData" class="w-full bg-gray-900/50 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all outline-none"
-                  id="minResult" placeholder="0.00" step="0.01">
+                <input
+                  id="minResult"
+                  v-model="filters.minResult"
+                  type="number"
+                  class="w-full bg-gray-900/50 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all outline-none"
+                  placeholder="0.00"
+                  step="0.01"
+                  @change="loadData"
+                />
               </div>
               <div class="flex items-center h-[72px]">
                 <div class="flex items-center gap-2">
-                  <input type="checkbox" v-model="filters.onlyWithTradeInfo" @change="loadData" id="onlyWithTradeInfo" class="w-5 h-5 rounded bg-gray-900/50 border-gray-700 text-blue-500 focus:ring-blue-500/50">
-                  <label for="onlyWithTradeInfo" class="text-sm font-semibold cursor-pointer">Only with Trade Info</label>
+                  <input
+                    id="onlyWithTradeInfo"
+                    v-model="filters.onlyWithTradeInfo"
+                    type="checkbox"
+                    class="w-5 h-5 rounded bg-gray-900/50 border-gray-700 text-blue-500 focus:ring-blue-500/50"
+                    @change="loadData"
+                  />
+                  <label for="onlyWithTradeInfo" class="text-sm font-semibold cursor-pointer"
+                    >Only with Trade Info</label
+                  >
                 </div>
               </div>
               <div>
                 <div class="flex gap-2">
-                  <button @click="loadData" class="btn-primary flex-1 flex items-center justify-center">
+                  <button
+                    class="btn-primary flex-1 flex items-center justify-center"
+                    @click="loadData"
+                  >
                     <i class="bi bi-arrow-clockwise mr-2"></i>
                     Refresh
                   </button>
-                  <button @click="resetFilters" class="px-4 py-2 border border-gray-600 rounded-lg hover:bg-gray-800 transition-colors">
+                  <button
+                    class="px-4 py-2 border border-gray-600 rounded-lg hover:bg-gray-800 transition-colors"
+                    @click="resetFilters"
+                  >
                     <i class="bi bi-x-circle"></i>
                   </button>
                 </div>
@@ -80,54 +120,97 @@
 
         <!-- Statistics Cards -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 mb-8">
-          <div class="glass-card p-4 h-full flex flex-col justify-center relative overflow-hidden group">
-            <div class="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-               <span class="text-4xl">📈</span>
+          <div
+            class="glass-card p-4 h-full flex flex-col justify-center relative overflow-hidden group"
+          >
+            <div
+              class="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"
+            >
+              <span class="text-4xl">📈</span>
             </div>
-            <h6 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Total Positions</h6>
+            <h6 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">
+              Total Positions
+            </h6>
             <h3 class="text-2xl font-bold text-blue-400">{{ stats.totalPositions }}</h3>
           </div>
-          
-          <div class="glass-card p-4 h-full flex flex-col justify-center relative overflow-hidden group">
-            <div class="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-               <span class="text-4xl">💰</span>
+
+          <div
+            class="glass-card p-4 h-full flex flex-col justify-center relative overflow-hidden group"
+          >
+            <div
+              class="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"
+            >
+              <span class="text-4xl">💰</span>
             </div>
-            <h6 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Total Profit</h6>
-            <h3 class="text-2xl font-bold text-green-400">${{ formatNumber(stats.totalProfit) }}</h3>
+            <h6 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">
+              Total Profit
+            </h6>
+            <h3 class="text-2xl font-bold text-green-400">
+              ${{ formatNumber(stats.totalProfit) }}
+            </h3>
           </div>
 
-          <div class="glass-card p-4 h-full flex flex-col justify-center relative overflow-hidden group">
-            <div class="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-               <span class="text-4xl">📉</span>
+          <div
+            class="glass-card p-4 h-full flex flex-col justify-center relative overflow-hidden group"
+          >
+            <div
+              class="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"
+            >
+              <span class="text-4xl">📉</span>
             </div>
-            <h6 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Total Loss</h6>
+            <h6 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">
+              Total Loss
+            </h6>
             <h3 class="text-2xl font-bold text-red-400">${{ formatNumber(stats.totalLoss) }}</h3>
           </div>
 
-          <div class="glass-card p-4 h-full flex flex-col justify-center relative overflow-hidden group">
-             <div class="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-               <span class="text-4xl">🧮</span>
+          <div
+            class="glass-card p-4 h-full flex flex-col justify-center relative overflow-hidden group"
+          >
+            <div
+              class="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"
+            >
+              <span class="text-4xl">🧮</span>
             </div>
-            <h6 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Net Result</h6>
-            <h3 class="text-2xl font-bold" :class="stats.netProfit >= 0 ? 'text-green-400' : 'text-red-400'">
+            <h6 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">
+              Net Result
+            </h6>
+            <h3
+              class="text-2xl font-bold"
+              :class="stats.netProfit >= 0 ? 'text-green-400' : 'text-red-400'"
+            >
               ${{ formatNumber(stats.netProfit) }}
             </h3>
           </div>
 
-          <div class="glass-card p-4 h-full flex flex-col justify-center relative overflow-hidden group">
-            <div class="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-               <span class="text-4xl">🎯</span>
+          <div
+            class="glass-card p-4 h-full flex flex-col justify-center relative overflow-hidden group"
+          >
+            <div
+              class="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"
+            >
+              <span class="text-4xl">🎯</span>
             </div>
-            <h6 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Win Rate</h6>
+            <h6 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">
+              Win Rate
+            </h6>
             <h3 class="text-2xl font-bold text-cyan-400">{{ stats.winRate }}%</h3>
           </div>
 
-          <div class="glass-card p-4 h-full flex flex-col justify-center relative overflow-hidden group">
-            <div class="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-               <span class="text-4xl">📊</span>
+          <div
+            class="glass-card p-4 h-full flex flex-col justify-center relative overflow-hidden group"
+          >
+            <div
+              class="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"
+            >
+              <span class="text-4xl">📊</span>
             </div>
-            <h6 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Sharpe Ratio</h6>
-            <h3 class="text-2xl font-bold text-yellow-400">{{ formatNumber(detailedStats?.performanceMetrics?.sharpeRatio || 0) }}</h3>
+            <h6 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">
+              Sharpe Ratio
+            </h6>
+            <h3 class="text-2xl font-bold text-yellow-400">
+              {{ formatNumber(detailedStats?.performanceMetrics?.sharpeRatio || 0) }}
+            </h3>
           </div>
         </div>
 
@@ -151,7 +234,8 @@
                 <div class="grid grid-cols-2 gap-4">
                   <div class="col-span-1">
                     <div class="text-center p-3 rounded-lg bg-white/5">
-                      <div class="text-2xl font-bold text-blue-400">{{ formatNumber(stats.tradeMetrics?.avgLeverage || 0) }}x
+                      <div class="text-2xl font-bold text-blue-400">
+                        {{ formatNumber(stats.tradeMetrics?.avgLeverage || 0) }}x
                       </div>
                       <div class="text-xs text-gray-400 mt-1">Avg Leverage</div>
                     </div>
@@ -161,22 +245,30 @@
 
                 <!-- Best/Worst Trades -->
                 <div class="mt-4 space-y-3">
-                    <div class="flex justify-between items-center bg-white/5 p-2 rounded">
-                      <span class="text-gray-400 text-sm">Best Trade</span>
-                      <span class="px-2 py-1 text-xs font-bold text-green-900 bg-green-400 rounded">${{ formatNumber(stats.tradeMetrics?.bestProfit || 0) }}</span>
-                    </div>
-                    <div class="flex justify-between items-center bg-white/5 p-2 rounded">
-                      <span class="text-gray-400 text-sm">Worst Trade</span>
-                      <span class="px-2 py-1 text-xs font-bold text-red-900 bg-red-400 rounded">${{ formatNumber(stats.tradeMetrics?.worstProfit || 0) }}</span>
-                    </div>
-                    <div class="flex justify-between items-center bg-white/5 p-2 rounded">
-                      <span class="text-gray-400 text-sm">Most Profitable Symbol</span>
-                      <span class="px-2 py-1 text-xs font-bold text-blue-900 bg-blue-400 rounded">{{ stats.tradeMetrics?.mostProfitableSymbol || 'N/A' }}</span>
-                    </div>
-                    <div class="flex justify-between items-center bg-white/5 p-2 rounded">
-                      <span class="text-gray-400 text-sm">Most Profitable Side</span>
-                      <span class="px-2 py-1 text-xs font-bold text-gray-900 bg-gray-400 rounded">{{ stats.tradeMetrics?.mostProfitableSide || 'N/A' }}</span>
-                    </div>
+                  <div class="flex justify-between items-center bg-white/5 p-2 rounded">
+                    <span class="text-gray-400 text-sm">Best Trade</span>
+                    <span class="px-2 py-1 text-xs font-bold text-green-900 bg-green-400 rounded"
+                      >${{ formatNumber(stats.tradeMetrics?.bestProfit || 0) }}</span
+                    >
+                  </div>
+                  <div class="flex justify-between items-center bg-white/5 p-2 rounded">
+                    <span class="text-gray-400 text-sm">Worst Trade</span>
+                    <span class="px-2 py-1 text-xs font-bold text-red-900 bg-red-400 rounded"
+                      >${{ formatNumber(stats.tradeMetrics?.worstProfit || 0) }}</span
+                    >
+                  </div>
+                  <div class="flex justify-between items-center bg-white/5 p-2 rounded">
+                    <span class="text-gray-400 text-sm">Most Profitable Symbol</span>
+                    <span class="px-2 py-1 text-xs font-bold text-blue-900 bg-blue-400 rounded">{{
+                      stats.tradeMetrics?.mostProfitableSymbol || 'N/A'
+                    }}</span>
+                  </div>
+                  <div class="flex justify-between items-center bg-white/5 p-2 rounded">
+                    <span class="text-gray-400 text-sm">Most Profitable Side</span>
+                    <span class="px-2 py-1 text-xs font-bold text-gray-900 bg-gray-400 rounded">{{
+                      stats.tradeMetrics?.mostProfitableSide || 'N/A'
+                    }}</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -201,11 +293,15 @@
                     <div class="text-xs text-gray-400 mt-1">Total Trades</div>
                   </div>
                   <div class="text-center p-3 rounded-lg bg-white/5">
-                    <div class="text-2xl font-bold text-green-400">${{ formatNumber(stats.avgProfit) }}</div>
+                    <div class="text-2xl font-bold text-green-400">
+                      ${{ formatNumber(stats.avgProfit) }}
+                    </div>
                     <div class="text-xs text-gray-400 mt-1">Average Profit</div>
                   </div>
                   <div class="text-center p-3 rounded-lg bg-white/5">
-                    <div class="text-2xl font-bold text-red-400">${{ formatNumber(stats.avgLoss) }}</div>
+                    <div class="text-2xl font-bold text-red-400">
+                      ${{ formatNumber(stats.avgLoss) }}
+                    </div>
                     <div class="text-xs text-gray-400 mt-1">Average Loss</div>
                   </div>
                 </div>
@@ -220,11 +316,15 @@
               <div class="p-4 flex-grow">
                 <div class="grid grid-cols-2 gap-4">
                   <div class="text-center p-3 rounded-lg bg-white/5">
-                    <div class="text-2xl font-bold text-green-400">${{ formatNumber(stats.maxProfit) }}</div>
+                    <div class="text-2xl font-bold text-green-400">
+                      ${{ formatNumber(stats.maxProfit) }}
+                    </div>
                     <div class="text-xs text-gray-400 mt-1">Highest Profit</div>
                   </div>
                   <div class="text-center p-3 rounded-lg bg-white/5">
-                    <div class="text-2xl font-bold text-red-400">${{ formatNumber(stats.maxLoss) }}</div>
+                    <div class="text-2xl font-bold text-red-400">
+                      ${{ formatNumber(stats.maxLoss) }}
+                    </div>
                     <div class="text-xs text-gray-400 mt-1">Highest Loss</div>
                   </div>
                 </div>
@@ -236,10 +336,18 @@
         <!-- Analysis Tables -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
           <div>
-            <AnalysisTable title="Symbol Analysis" columnTitle="Symbol" :data="detailedStats?.symbolAnalysis || {}" />
+            <AnalysisTable
+              title="Symbol Analysis"
+              column-title="Symbol"
+              :data="detailedStats?.symbolAnalysis || {}"
+            />
           </div>
           <div>
-            <AnalysisTable title="Side Analysis" columnTitle="Side" :data="detailedStats?.sideAnalysis || {}" />
+            <AnalysisTable
+              title="Side Analysis"
+              column-title="Side"
+              :data="detailedStats?.sideAnalysis || {}"
+            />
           </div>
           <div>
             <SetupAnalysisCard :positions="positions" />
@@ -334,7 +442,9 @@
               <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <!-- Commission Summary -->
                 <div class="text-center p-4 lg:border-r border-white/10">
-                  <div class="text-3xl font-bold text-yellow-400 mb-2">${{ formatNumber(totalCommission) }}</div>
+                  <div class="text-3xl font-bold text-yellow-400 mb-2">
+                    ${{ formatNumber(totalCommission) }}
+                  </div>
                   <div class="text-gray-400 mb-2">Total Commission</div>
                   <div class="text-sm text-gray-500">
                     Avg: ${{ formatNumber(averageCommission) }} per trade
@@ -343,7 +453,9 @@
 
                 <!-- Funding Summary -->
                 <div class="text-center p-4 lg:border-r border-white/10">
-                  <div class="text-3xl font-bold text-blue-400 mb-2">${{ formatNumber(totalFunding) }}</div>
+                  <div class="text-3xl font-bold text-blue-400 mb-2">
+                    ${{ formatNumber(totalFunding) }}
+                  </div>
                   <div class="text-gray-400 mb-2">Total Funding</div>
                   <div class="text-sm text-gray-500">
                     Avg: ${{ formatNumber(averageFunding) }} per trade
@@ -352,7 +464,9 @@
 
                 <!-- Total Costs -->
                 <div class="text-center p-4">
-                  <div class="text-3xl font-bold text-red-400 mb-2">${{ formatNumber(totalCosts) }}</div>
+                  <div class="text-3xl font-bold text-red-400 mb-2">
+                    ${{ formatNumber(totalCosts) }}
+                  </div>
                   <div class="text-gray-400 mb-2">Total Trading Costs</div>
                   <div class="text-sm text-gray-500">
                     {{ ((totalCosts / stats.netProfit) * 100).toFixed(1) }}% of net profit
@@ -375,13 +489,23 @@
                       </tr>
                     </thead>
                     <tbody class="divide-y divide-white/5">
-                      <tr v-for="(costs, symbol) in costsBySymbol" :key="symbol" class="hover:bg-white/5 transition-colors">
+                      <tr
+                        v-for="(costs, symbol) in costsBySymbol"
+                        :key="symbol"
+                        class="hover:bg-white/5 transition-colors"
+                      >
                         <td class="px-4 py-3 font-medium">
                           <span class="px-2 py-1 bg-gray-700 rounded text-xs">{{ symbol }}</span>
                         </td>
-                        <td class="px-4 py-3 text-right text-yellow-400">${{ formatNumber(costs.commission) }}</td>
-                        <td class="px-4 py-3 text-right text-blue-400">${{ formatNumber(costs.funding) }}</td>
-                        <td class="px-4 py-3 text-right text-red-400 font-bold">${{ formatNumber(costs.total) }}</td>
+                        <td class="px-4 py-3 text-right text-yellow-400">
+                          ${{ formatNumber(costs.commission) }}
+                        </td>
+                        <td class="px-4 py-3 text-right text-blue-400">
+                          ${{ formatNumber(costs.funding) }}
+                        </td>
+                        <td class="px-4 py-3 text-right text-red-400 font-bold">
+                          ${{ formatNumber(costs.total) }}
+                        </td>
                         <td class="px-4 py-3 text-right text-gray-500 text-xs">
                           {{ costs.percentageOfProfit }}%
                         </td>
@@ -396,14 +520,22 @@
 
         <!-- Positions Table -->
         <div class="glass-card overflow-hidden">
-          <div class="p-4 border-b border-white/10 bg-blue-600/20 flex justify-between items-center">
+          <div
+            class="p-4 border-b border-white/10 bg-blue-600/20 flex justify-between items-center"
+          >
             <h5 class="text-lg font-semibold text-white">Position History</h5>
             <div class="flex items-center gap-2">
               <span class="text-gray-400 text-sm">Showing {{ positions.length }} positions</span>
-              <button @click="exportToCSV" class="btn-primary flex items-center gap-1 text-sm bg-green-600 hover:bg-green-700 border-none ml-2">
+              <button
+                class="btn-primary flex items-center gap-1 text-sm bg-green-600 hover:bg-green-700 border-none ml-2"
+                @click="exportToCSV"
+              >
                 <i class="bi bi-file-earmark-spreadsheet"></i> Export
               </button>
-              <router-link to="/position-history/new" class="btn-primary flex items-center gap-1 text-sm">
+              <router-link
+                to="/position-history/new"
+                class="btn-primary flex items-center gap-1 text-sm"
+              >
                 <i class="bi bi-plus-lg"></i> Add
               </router-link>
             </div>
@@ -429,27 +561,50 @@
                 </tr>
               </thead>
               <tbody class="divide-y divide-white/5">
-                <tr v-for="position in positions" :key="position.positionId" class="hover:bg-white/5 transition-colors">
+                <tr
+                  v-for="position in positions"
+                  :key="position.positionId"
+                  class="hover:bg-white/5 transition-colors"
+                >
                   <td class="px-4 py-3">
                     <div>
-                      <span class="px-2 py-1 bg-blue-600 rounded text-xs font-bold">{{ position.symbol }}</span>
+                      <span class="px-2 py-1 bg-blue-600 rounded text-xs font-bold">{{
+                        position.symbol
+                      }}</span>
                       <div class="text-xs text-gray-500 mt-1">ID: {{ position.positionId }}</div>
                       <div class="mt-1">
-                        <div v-if="position.tradeInfo?.found && position.tradeInfo.trade?.setup_description">
-                          <span class="px-2 py-0.5 bg-blue-400/20 text-blue-300 rounded text-xs">{{ position.tradeInfo.trade.setup_description }}</span>
+                        <div
+                          v-if="
+                            position.tradeInfo?.found && position.tradeInfo.trade?.setup_description
+                          "
+                        >
+                          <span class="px-2 py-0.5 bg-blue-400/20 text-blue-300 rounded text-xs">{{
+                            position.tradeInfo.trade.setup_description
+                          }}</span>
                         </div>
                         <div v-else class="text-gray-500 text-xs">-</div>
                       </div>
                     </div>
                   </td>
                   <td class="px-4 py-3">
-                    <span class="px-2 py-1 rounded text-xs font-bold" :class="position.positionSide === 'LONG' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'">
+                    <span
+                      class="px-2 py-1 rounded text-xs font-bold"
+                      :class="
+                        position.positionSide === 'LONG'
+                          ? 'bg-green-500/20 text-green-400'
+                          : 'bg-red-500/20 text-red-400'
+                      "
+                    >
                       {{ position.positionSide }}
                     </span>
                   </td>
                   <td class="px-4 py-3 font-mono">{{ position.closePositionAmt }}</td>
-                  <td class="px-4 py-3 font-mono">${{ formatNumber(parseFloat(position.avgPrice), 5) }}</td>
-                  <td class="px-4 py-3 font-mono">${{ formatNumber(position.avgClosePrice, 5) }}</td>
+                  <td class="px-4 py-3 font-mono">
+                    ${{ formatNumber(parseFloat(position.avgPrice), 5) }}
+                  </td>
+                  <td class="px-4 py-3 font-mono">
+                    ${{ formatNumber(position.avgClosePrice, 5) }}
+                  </td>
                   <td class="px-4 py-3">{{ position.leverage }}x</td>
                   <td class="px-4 py-3">
                     <span class="font-semibold">{{ calculateFinancialRR(position) }}</span>
@@ -458,37 +613,58 @@
                     </div>
                   </td>
                   <td class="px-4 py-3">
-                    <span class="font-bold"
-                      :class="parseFloat(position.netProfit) >= 0 ? 'text-green-400' : 'text-red-400'">
+                    <span
+                      class="font-bold"
+                      :class="
+                        parseFloat(position.netProfit) >= 0 ? 'text-green-400' : 'text-red-400'
+                      "
+                    >
                       ${{ formatNumber(parseFloat(position.netProfit)) }}
                     </span>
                   </td>
                   <td class="px-4 py-3">
                     <div class="text-xs">
-                      <div class="text-yellow-400">${{ formatNumber(parseFloat(position.positionCommission)) }}</div>
-                      <div class="text-blue-400">${{ formatNumber(parseFloat(position.totalFunding)) }}</div>
+                      <div class="text-yellow-400">
+                        ${{ formatNumber(parseFloat(position.positionCommission)) }}
+                      </div>
+                      <div class="text-blue-400">
+                        ${{ formatNumber(parseFloat(position.totalFunding)) }}
+                      </div>
                     </div>
                   </td>
                   <td class="px-4 py-3">
                     <div v-if="position.tradeInfo?.found" class="text-xs">
                       <div class="text-gray-400">Vol: {{ position.tradeInfo.trade?.volume }}</div>
-                      <div class="text-gray-400">Sent: {{ position.tradeInfo.trade?.sentiment }}</div>
+                      <div class="text-gray-400">
+                        Sent: {{ position.tradeInfo.trade?.sentiment }}
+                      </div>
                     </div>
                     <div v-else class="text-gray-500 text-xs">No info</div>
                   </td>
                   <td class="px-4 py-3">
                     <div v-if="position.tradeInfo?.found" class="text-xs">
                       <div class="text-green-400">#{{ position.tradeInfo.trade?.id }}</div>
-                      <div class="text-gray-400">Entry: ${{ formatNumber(parseFloat(position.avgPrice) || 0, 5) }}</div>
-                      <div class="text-gray-400">Stop: ${{ formatNumber(position.tradeInfo.trade?.stop || 0, 5) }}</div>
+                      <div class="text-gray-400">
+                        Entry: ${{ formatNumber(parseFloat(position.avgPrice) || 0, 5) }}
+                      </div>
+                      <div class="text-gray-400">
+                        Stop: ${{ formatNumber(position.tradeInfo.trade?.stop || 0, 5) }}
+                      </div>
                     </div>
                     <div v-else class="text-gray-500 text-xs">No info</div>
                   </td>
-                  <td class="px-4 py-3 text-xs text-gray-400">{{ formatDate(position.openTime) }}</td>
-                  <td class="px-4 py-3 text-xs text-gray-400">{{ formatDate(getEffectiveCloseTime(position)) }}</td>
+                  <td class="px-4 py-3 text-xs text-gray-400">
+                    {{ formatDate(position.openTime) }}
+                  </td>
+                  <td class="px-4 py-3 text-xs text-gray-400">
+                    {{ formatDate(getEffectiveCloseTime(position)) }}
+                  </td>
                   <td class="px-4 py-3">
-                    <router-link :to="`/position-history/edit/${position.positionId}`"
-                      class="px-2 py-1 border border-blue-500 text-blue-400 rounded hover:bg-blue-500/10 transition-colors text-sm" title="Edit Position">
+                    <router-link
+                      :to="`/position-history/edit/${position.positionId}`"
+                      class="px-2 py-1 border border-blue-500 text-blue-400 rounded hover:bg-blue-500/10 transition-colors text-sm"
+                      title="Edit Position"
+                    >
                       <i class="bi bi-pencil"></i>
                     </router-link>
                   </td>
@@ -503,68 +679,68 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
-import { PositionHistory, PositionStats, DetailedRiskStats } from '../types/positionHistory'
-import PerformanceChart from '../components/PerformanceChart.vue'
-import ProfitBySymbolChart from '../components/ProfitBySymbolChart.vue'
-import LossBySymbolChart from '../components/LossBySymbolChart.vue'
-import MonthlyPerformanceChart from '../components/MonthlyPerformanceChart.vue'
-import OpeningDatePerformanceChart from '../components/OpeningDatePerformanceChart.vue'
-import RiskStatsCard from '../components/RiskStatsCard.vue'
-import PerformanceMetricsCard from '../components/PerformanceMetricsCard.vue'
-import AnalysisTable from '../components/AnalysisTable.vue'
-import SetupAnalysisCard from '../components/SetupAnalysisCard.vue'
+import { ref, onMounted, computed } from 'vue';
+import { PositionHistory, PositionStats, DetailedRiskStats } from '../types/positionHistory';
+import PerformanceChart from '../components/PerformanceChart.vue';
+import ProfitBySymbolChart from '../components/ProfitBySymbolChart.vue';
+import LossBySymbolChart from '../components/LossBySymbolChart.vue';
+import MonthlyPerformanceChart from '../components/MonthlyPerformanceChart.vue';
+import OpeningDatePerformanceChart from '../components/OpeningDatePerformanceChart.vue';
+import RiskStatsCard from '../components/RiskStatsCard.vue';
+import PerformanceMetricsCard from '../components/PerformanceMetricsCard.vue';
+import AnalysisTable from '../components/AnalysisTable.vue';
+import SetupAnalysisCard from '../components/SetupAnalysisCard.vue';
 
 // Types
 interface CostsBySymbol {
-  commission: number
-  funding: number
-  total: number
-  percentageOfProfit: string
+  commission: number;
+  funding: number;
+  total: number;
+  percentageOfProfit: string;
 }
 
 /**
  * Helper function to get the effective close time, using updateTime as fallback
  */
 const getEffectiveCloseTime = (position: PositionHistory): number => {
-  return position.closeTime || position.updateTime
-}
+  return position.closeTime || position.updateTime;
+};
 
 /**
  * Calculate the risk amount based on stop loss or margin
  */
 const calculateRiskAmount = (position: PositionHistory): number => {
   try {
-    const quantity = parseFloat(position.closePositionAmt)
-    const avgPrice = parseFloat(position.avgPrice)
-    const leverage = position.leverage
+    const quantity = parseFloat(position.closePositionAmt);
+    const avgPrice = parseFloat(position.avgPrice);
+    const leverage = position.leverage;
 
     // Check if we have trade info with stop loss
     if (position.tradeInfo?.found && position.tradeInfo.trade?.stop) {
-      const stopPrice = position.tradeInfo.trade.stop
+      const stopPrice = position.tradeInfo.trade.stop;
 
       // Calculate the price difference to stop loss
-      const priceDifference = Math.abs(avgPrice - stopPrice)
+      const priceDifference = Math.abs(avgPrice - stopPrice);
 
       // Calculate the potential loss in dollars (price difference * quantity)
-      const potentialLoss = priceDifference * quantity
+      const potentialLoss = priceDifference * quantity;
 
       // Calculate the margin used (position value / leverage)
-      const positionValue = quantity * avgPrice
-      const marginUsed = positionValue / leverage
+      const positionValue = quantity * avgPrice;
+      const marginUsed = positionValue / leverage;
 
       // Risk is the potential loss (limited by margin used)
-      return Math.min(potentialLoss, marginUsed)
+      return Math.min(potentialLoss, marginUsed);
     } else {
       // Fallback to margin-based calculation if no stop loss info
-      const positionValue = quantity * avgPrice
-      return positionValue / leverage
+      const positionValue = quantity * avgPrice;
+      return positionValue / leverage;
     }
   } catch (error) {
-    console.error('Error calculating risk amount:', error)
-    return 0
+    console.error('Error calculating risk amount:', error);
+    return 0;
   }
-}
+};
 
 /**
  * Calculate financial risk/reward ratio based on stop loss and leverage
@@ -573,65 +749,65 @@ const calculateRiskAmount = (position: PositionHistory): number => {
  */
 const calculateFinancialRR = (position: PositionHistory): string => {
   try {
-    const quantity = parseFloat(position.closePositionAmt)
-    const avgPrice = parseFloat(position.avgPrice)
-    const leverage = position.leverage
-    const netProfit = parseFloat(position.netProfit)
+    const quantity = parseFloat(position.closePositionAmt);
+    const avgPrice = parseFloat(position.avgPrice);
+    const leverage = position.leverage;
+    const netProfit = parseFloat(position.netProfit);
 
     // Check if we have trade info with stop loss
     if (position.tradeInfo?.found && position.tradeInfo.trade?.stop) {
-      const stopPrice = position.tradeInfo.trade.stop
+      const stopPrice = position.tradeInfo.trade.stop;
 
       // Calculate the price difference to stop loss
-      const priceDifference = Math.abs(avgPrice - stopPrice)
+      const priceDifference = Math.abs(avgPrice - stopPrice);
 
       // Calculate the potential loss in dollars (price difference * quantity)
-      const potentialLoss = priceDifference * quantity
+      const potentialLoss = priceDifference * quantity;
 
       // Calculate the margin used (position value / leverage)
-      const positionValue = quantity * avgPrice
-      const marginUsed = positionValue / leverage
+      const positionValue = quantity * avgPrice;
+      const marginUsed = positionValue / leverage;
 
       // Risk is the potential loss (limited by margin used)
-      const risk = Math.min(potentialLoss, marginUsed)
+      const risk = Math.min(potentialLoss, marginUsed);
 
       // Reward is the net profit
-      const reward = netProfit
+      const reward = netProfit;
 
       // Calculate R:R ratio
       if (risk > 0 && reward > 0) {
-        const ratio = reward / risk
-        return `${ratio.toFixed(2)}`
+        const ratio = reward / risk;
+        return `${ratio.toFixed(2)}`;
       } else if (risk > 0) {
-        return `-1`
+        return `-1`;
       } else {
-        return '-'
+        return '-';
       }
     } else {
       // Fallback to margin-based calculation if no stop loss info
-      const positionValue = quantity * avgPrice
-      const marginUsed = positionValue / leverage
-      const risk = marginUsed
-      const reward = netProfit
+      const positionValue = quantity * avgPrice;
+      const marginUsed = positionValue / leverage;
+      const risk = marginUsed;
+      const reward = netProfit;
 
       if (risk > 0 && reward > 0) {
-        const ratio = reward / risk
-        return `${ratio.toFixed(2)}`
+        const ratio = reward / risk;
+        return `${ratio.toFixed(2)}`;
       } else if (risk > 0) {
-        return `-1`
+        return `-1`;
       } else {
-        return '-'
+        return '-';
       }
     }
   } catch (error) {
-    console.error('Error calculating financial R:R:', error)
-    return '-'
+    console.error('Error calculating financial R:R:', error);
+    return '-';
   }
-}
+};
 
 // Reactive data
-const loading = ref(false)
-const positions = ref<PositionHistory[]>([])
+const loading = ref(false);
+const positions = ref<PositionHistory[]>([]);
 const stats = ref<PositionStats>({
   totalPositions: 0,
   totalProfit: 0,
@@ -643,11 +819,11 @@ const stats = ref<PositionStats>({
   maxProfit: 0,
   maxLoss: 0,
   profitBySymbol: {},
-  profitBySide: {}
-})
-const detailedStats = ref<DetailedRiskStats | null>(null)
-const availableSymbols = ref<string[]>([])
-const availableSetupDescriptions = ref<string[]>([])
+  profitBySide: {},
+});
+const detailedStats = ref<DetailedRiskStats | null>(null);
+const availableSymbols = ref<string[]>([]);
+const availableSetupDescriptions = ref<string[]>([]);
 const today = new Date();
 const twoMonthsAgo = new Date(new Date().setMonth(today.getMonth() - 2));
 
@@ -657,7 +833,7 @@ const filters = ref({
   startDate: null,
   endDate: null,
   minResult: 0,
-  onlyWithTradeInfo: true
+  onlyWithTradeInfo: true,
 });
 
 // Computed properties for risk stats
@@ -672,8 +848,8 @@ const riskStats = computed(() => {
       tradesWithNegativeRR: 0,
       bestRiskRewardRatio: 0,
       worstRiskRewardRatio: 0,
-      avgRiskReturnedPositive: 0
-    }
+      avgRiskReturnedPositive: 0,
+    };
   }
 
   return {
@@ -685,9 +861,9 @@ const riskStats = computed(() => {
     tradesWithNegativeRR: detailedStats.value.riskRewardAnalysis.tradesWithNegativeRR,
     bestRiskRewardRatio: detailedStats.value.riskRewardAnalysis.bestRiskRewardRatio,
     worstRiskRewardRatio: detailedStats.value.riskRewardAnalysis.worstRiskRewardRatio,
-    avgRiskReturnedPositive: detailedStats.value.riskRewardAnalysis.avgRiskReturnedPositive
-  }
-})
+    avgRiskReturnedPositive: detailedStats.value.riskRewardAnalysis.avgRiskReturnedPositive,
+  };
+});
 
 const performanceStats = computed(() => {
   if (!detailedStats.value) {
@@ -697,8 +873,8 @@ const performanceStats = computed(() => {
       calmarRatio: 0,
       recoveryFactor: 0,
       maxDrawdown: 0,
-      avgDrawdown: 0
-    }
+      avgDrawdown: 0,
+    };
   }
 
   return {
@@ -707,257 +883,257 @@ const performanceStats = computed(() => {
     calmarRatio: detailedStats.value.performanceMetrics.calmarRatio,
     recoveryFactor: detailedStats.value.performanceMetrics.recoveryFactor,
     maxDrawdown: detailedStats.value.performanceMetrics.maxDrawdown,
-    avgDrawdown: detailedStats.value.performanceMetrics.avgDrawdown
-  }
-})
+    avgDrawdown: detailedStats.value.performanceMetrics.avgDrawdown,
+  };
+});
 
 // Computed properties for costs
 const totalCommission = computed(() => {
   return positions.value.reduce((total: number, position: PositionHistory) => {
-    return total + parseFloat(position.positionCommission || '0')
-  }, 0)
-})
+    return total + parseFloat(position.positionCommission || '0');
+  }, 0);
+});
 
 const totalFunding = computed(() => {
   return positions.value.reduce((total: number, position: PositionHistory) => {
-    return total + parseFloat(position.totalFunding || '0')
-  }, 0)
-})
+    return total + parseFloat(position.totalFunding || '0');
+  }, 0);
+});
 
 const totalCosts = computed(() => {
-  return totalCommission.value + totalFunding.value
-})
+  return totalCommission.value + totalFunding.value;
+});
 
 const averageCommission = computed(() => {
-  return positions.value.length > 0 ? totalCommission.value / positions.value.length : 0
-})
+  return positions.value.length > 0 ? totalCommission.value / positions.value.length : 0;
+});
 
 const averageFunding = computed(() => {
-  return positions.value.length > 0 ? totalFunding.value / positions.value.length : 0
-})
+  return positions.value.length > 0 ? totalFunding.value / positions.value.length : 0;
+});
 
 const costsBySymbol = computed(() => {
-  const costs: { [key: string]: CostsBySymbol } = {}
+  const costs: { [key: string]: CostsBySymbol } = {};
 
   positions.value.forEach((position: PositionHistory) => {
-    const symbol = position.symbol
-    const commission = parseFloat(position.positionCommission || '0')
-    const funding = parseFloat(position.totalFunding || '0')
-    const netProfit = parseFloat(position.netProfit || '0')
+    const symbol = position.symbol;
+    const commission = parseFloat(position.positionCommission || '0');
+    const funding = parseFloat(position.totalFunding || '0');
+    const netProfit = parseFloat(position.netProfit || '0');
 
     if (!costs[symbol]) {
       costs[symbol] = {
         commission: 0,
         funding: 0,
         total: 0,
-        percentageOfProfit: '0.0'
-      }
+        percentageOfProfit: '0.0',
+      };
     }
 
-    costs[symbol].commission += commission
-    costs[symbol].funding += funding
-    costs[symbol].total += commission + funding
+    costs[symbol].commission += commission;
+    costs[symbol].funding += funding;
+    costs[symbol].total += commission + funding;
 
     // Calculate percentage of net profit
     if (netProfit !== 0) {
-      const percentage = ((commission + funding) / Math.abs(netProfit)) * 100
-      costs[symbol].percentageOfProfit = percentage.toFixed(1)
+      const percentage = ((commission + funding) / Math.abs(netProfit)) * 100;
+      costs[symbol].percentageOfProfit = percentage.toFixed(1);
     }
-  })
+  });
 
-  return costs
-})
+  return costs;
+});
 
 // Methods
 const loadAvailableSymbols = async () => {
   try {
-    const response = await fetch('/api/position-history/symbols')
+    const response = await fetch('/api/position-history/symbols');
 
     if (!response.ok) {
-      console.error('HTTP error loading symbols:', response.status, response.statusText)
-      return
+      console.error('HTTP error loading symbols:', response.status, response.statusText);
+      return;
     }
 
-    const text = await response.text()
+    const text = await response.text();
     if (!text) {
-      console.warn('Empty response from symbols endpoint')
-      availableSymbols.value = []
-      return
+      console.warn('Empty response from symbols endpoint');
+      availableSymbols.value = [];
+      return;
     }
 
-    const result = await JSON.parse(text)
+    const result = await JSON.parse(text);
     if (result.success) {
-      availableSymbols.value = result.data || []
+      availableSymbols.value = result.data || [];
     } else {
-      console.error('API error loading symbols:', result.error)
-      availableSymbols.value = []
+      console.error('API error loading symbols:', result.error);
+      availableSymbols.value = [];
     }
   } catch (error) {
-    console.error('Error loading symbols:', error)
-    availableSymbols.value = []
+    console.error('Error loading symbols:', error);
+    availableSymbols.value = [];
   }
-}
+};
 
 const loadAvailableSetupDescriptions = async () => {
   try {
-    const response = await fetch('/api/position-history/setup-descriptions')
+    const response = await fetch('/api/position-history/setup-descriptions');
 
     if (!response.ok) {
-      console.error('HTTP error loading setup descriptions:', response.status, response.statusText)
-      return
+      console.error('HTTP error loading setup descriptions:', response.status, response.statusText);
+      return;
     }
 
-    const text = await response.text()
+    const text = await response.text();
     if (!text) {
-      console.warn('Empty response from setup descriptions endpoint')
-      availableSetupDescriptions.value = []
-      return
+      console.warn('Empty response from setup descriptions endpoint');
+      availableSetupDescriptions.value = [];
+      return;
     }
 
-    const result = await JSON.parse(text)
+    const result = await JSON.parse(text);
     if (result.success) {
-      availableSetupDescriptions.value = result.data || []
+      availableSetupDescriptions.value = result.data || [];
     } else {
-      console.error('API error loading setup descriptions:', result.error)
-      availableSetupDescriptions.value = []
+      console.error('API error loading setup descriptions:', result.error);
+      availableSetupDescriptions.value = [];
     }
   } catch (error) {
-    console.error('Error loading setup descriptions:', error)
-    availableSetupDescriptions.value = []
+    console.error('Error loading setup descriptions:', error);
+    availableSetupDescriptions.value = [];
   }
-}
+};
 
-const DASHBOARD_FILTERS_KEY = 'dashboard_filters'
+const DASHBOARD_FILTERS_KEY = 'dashboard_filters';
 
 const loadData = async () => {
   // Save filters to localStorage whenever data is loaded (which happens on filter change)
-  localStorage.setItem(DASHBOARD_FILTERS_KEY, JSON.stringify(filters.value))
-  
-  loading.value = true
+  localStorage.setItem(DASHBOARD_FILTERS_KEY, JSON.stringify(filters.value));
+
+  loading.value = true;
   try {
     // Load available symbols if not loaded yet
     if (availableSymbols.value.length === 0) {
-      await loadAvailableSymbols()
+      await loadAvailableSymbols();
     }
 
     // Load available setup descriptions if not loaded yet
     if (availableSetupDescriptions.value.length === 0) {
-      await loadAvailableSetupDescriptions()
+      await loadAvailableSetupDescriptions();
     }
 
     // Load position data
-    await loadPositions()
+    await loadPositions();
 
     // Load statistics
-    await loadStats()
+    await loadStats();
 
     // Load detailed risk statistics
-    await loadDetailedRiskStats()
+    await loadDetailedRiskStats();
   } catch (error) {
-    console.error('Error loading data:', error)
+    console.error('Error loading data:', error);
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-}
+};
 
 const loadPositions = async () => {
   try {
     const params = new URLSearchParams({
-      symbol: filters.value.symbol
-    })
+      symbol: filters.value.symbol,
+    });
 
     if (filters.value.setupDescription !== 'ALL') {
-      params.append('setupDescription', filters.value.setupDescription)
+      params.append('setupDescription', filters.value.setupDescription);
     }
 
     if (filters.value.startDate) {
-      params.append('startTs', new Date(filters.value.startDate).getTime().toString())
+      params.append('startTs', new Date(filters.value.startDate).getTime().toString());
     }
     if (filters.value.endDate) {
-      params.append('endTs', new Date(filters.value.endDate).getTime().toString())
+      params.append('endTs', new Date(filters.value.endDate).getTime().toString());
     }
 
-    params.append('minResult', filters.value.minResult.toString())
-    params.append('onlyWithTradeInfo', filters.value.onlyWithTradeInfo.toString())
+    params.append('minResult', filters.value.minResult.toString());
+    params.append('onlyWithTradeInfo', filters.value.onlyWithTradeInfo.toString());
 
-    const response = await fetch(`/api/position-history?${params}`)
-    const result = await response.json()
+    const response = await fetch(`/api/position-history?${params}`);
+    const result = await response.json();
 
     if (result.success) {
-      positions.value = result.data
+      positions.value = result.data;
     }
   } catch (error) {
-    console.error('Error loading positions:', error)
+    console.error('Error loading positions:', error);
   }
-}
+};
 
 const loadStats = async () => {
   try {
     const params = new URLSearchParams({
-      symbol: filters.value.symbol
-    })
+      symbol: filters.value.symbol,
+    });
 
     if (filters.value.setupDescription !== 'ALL') {
-      params.append('setupDescription', filters.value.setupDescription)
+      params.append('setupDescription', filters.value.setupDescription);
     }
 
     if (filters.value.startDate) {
-      params.append('startTs', new Date(filters.value.startDate).getTime().toString())
+      params.append('startTs', new Date(filters.value.startDate).getTime().toString());
     }
     if (filters.value.endDate) {
-      params.append('endTs', new Date(filters.value.endDate).getTime().toString())
+      params.append('endTs', new Date(filters.value.endDate).getTime().toString());
     }
 
     if (filters.value.minResult !== 0) {
-      params.append('minResult', filters.value.minResult.toString())
+      params.append('minResult', filters.value.minResult.toString());
     }
 
-    params.append('onlyWithTradeInfo', filters.value.onlyWithTradeInfo.toString())
+    params.append('onlyWithTradeInfo', filters.value.onlyWithTradeInfo.toString());
 
-    const response = await fetch(`/api/position-history/stats?${params}`)
-    const result = await response.json()
+    const response = await fetch(`/api/position-history/stats?${params}`);
+    const result = await response.json();
 
     if (result.success) {
-      stats.value = result.data
+      stats.value = result.data;
     }
   } catch (error) {
-    console.error('Error loading statistics:', error)
+    console.error('Error loading statistics:', error);
   }
-}
+};
 
 const loadDetailedRiskStats = async () => {
   try {
     const params = new URLSearchParams({
-      symbol: filters.value.symbol
-    })
+      symbol: filters.value.symbol,
+    });
 
     if (filters.value.setupDescription !== 'ALL') {
-      params.append('setupDescription', filters.value.setupDescription)
+      params.append('setupDescription', filters.value.setupDescription);
     }
 
     if (filters.value.startDate) {
-      params.append('startTs', new Date(filters.value.startDate).getTime().toString())
+      params.append('startTs', new Date(filters.value.startDate).getTime().toString());
     }
     if (filters.value.endDate) {
-      params.append('endTs', new Date(filters.value.endDate).getTime().toString())
+      params.append('endTs', new Date(filters.value.endDate).getTime().toString());
     }
 
     if (filters.value.minResult !== 0) {
-      params.append('minResult', filters.value.minResult.toString())
+      params.append('minResult', filters.value.minResult.toString());
     }
 
-    params.append('onlyWithTradeInfo', filters.value.onlyWithTradeInfo.toString())
+    params.append('onlyWithTradeInfo', filters.value.onlyWithTradeInfo.toString());
 
-    const response = await fetch(`/api/position-history/risk-stats?${params}`)
-    const result = await response.json()
+    const response = await fetch(`/api/position-history/risk-stats?${params}`);
+    const result = await response.json();
 
     if (result.success) {
-      detailedStats.value = result.data
+      detailedStats.value = result.data;
     }
   } catch (error) {
-    console.error('Error loading detailed risk statistics:', error)
+    console.error('Error loading detailed risk statistics:', error);
   }
-}
+};
 
 const resetFilters = () => {
   const today = new Date();
@@ -968,60 +1144,60 @@ const resetFilters = () => {
     startDate: twoMonthsAgo.toISOString().split('T')[0],
     endDate: new Date().toISOString().split('T')[0],
     minResult: 0,
-    onlyWithTradeInfo: true
-  }
-  loadData()
-}
+    onlyWithTradeInfo: true,
+  };
+  loadData();
+};
 
 const formatNumber = (value: number, maximum: number = 2): string => {
   return value.toLocaleString('en-US', {
     minimumFractionDigits: 2,
-    maximumFractionDigits: maximum
-  })
-}
+    maximumFractionDigits: maximum,
+  });
+};
 
 const formatDate = (timestamp: number): string => {
-  return new Date(timestamp).toLocaleString('en-US')
-}
+  return new Date(timestamp).toLocaleString('en-US');
+};
 
 const formatCSVNumber = (val: number | string | null | undefined): string => {
-  if (val === null || val === undefined || val === '') return ''
-  const num = typeof val === 'number' ? val : parseFloat(String(val))
-  if (isNaN(num)) return ''
-  return String(num)
-}
+  if (val === null || val === undefined || val === '') return '';
+  const num = typeof val === 'number' ? val : parseFloat(String(val));
+  if (isNaN(num)) return '';
+  return String(num);
+};
 
 const formatCSVText = (val: string | number | null | undefined): string => {
-  if (val === null || val === undefined) return '""'
-  let str = String(val).replace(/\r?\n|\r/g, ' ')
-  
+  if (val === null || val === undefined) return '""';
+  let str = String(val).replace(/\r?\n|\r/g, ' ');
+
   // Prevent CSV Formula Injection in Google Sheets/Excel
   if (/^[=+\-@\t\r]/.test(str)) {
-    str = "'" + str
+    str = "'" + str;
   }
-  
-  const escaped = str.replace(/"/g, '""')
-  return `"${escaped}"`
-}
+
+  const escaped = str.replace(/"/g, '""');
+  return `"${escaped}"`;
+};
 
 const formatCSVDate = (timestamp: number | string | null | undefined): string => {
-  if (!timestamp) return '""'
-  const date = new Date(timestamp)
-  if (isNaN(date.getTime())) return '""'
-  const pad = (n: number) => n.toString().padStart(2, '0')
-  const yyyy = date.getFullYear()
-  const mm = pad(date.getMonth() + 1)
-  const dd = pad(date.getDate())
-  const hh = pad(date.getHours())
-  const mi = pad(date.getMinutes())
-  const ss = pad(date.getSeconds())
-  return `"${yyyy}-${mm}-${dd} ${hh}:${mi}:${ss}"`
-}
+  if (!timestamp) return '""';
+  const date = new Date(timestamp);
+  if (isNaN(date.getTime())) return '""';
+  const pad = (n: number) => n.toString().padStart(2, '0');
+  const yyyy = date.getFullYear();
+  const mm = pad(date.getMonth() + 1);
+  const dd = pad(date.getDate());
+  const hh = pad(date.getHours());
+  const mi = pad(date.getMinutes());
+  const ss = pad(date.getSeconds());
+  return `"${yyyy}-${mm}-${dd} ${hh}:${mi}:${ss}"`;
+};
 
 const exportToCSV = () => {
   if (positions.value.length === 0) {
-    alert('No data to export')
-    return
+    alert('No data to export');
+    return;
   }
 
   // Define headers for the CSV - properly escaped for Google Sheets
@@ -1051,24 +1227,24 @@ const exportToCSV = () => {
     'Trade Volume',
     'Trade Sentiment',
     'Risk Amount',
-    'Financial RR'
-  ].map(h => formatCSVText(h))
+    'Financial RR',
+  ].map((h) => formatCSVText(h));
 
   // Map data to rows with numeric preservation
   const rows = positions.value.map((pos: PositionHistory) => {
-    const trade = pos.tradeInfo?.trade
-    const commission = parseFloat(pos.positionCommission || '0')
-    const funding = parseFloat(pos.totalFunding || '0')
-    const netProfit = parseFloat(pos.netProfit || '0')
-    const totalCost = commission + funding
-    let costPercentage: number | null = null
+    const trade = pos.tradeInfo?.trade;
+    const commission = parseFloat(pos.positionCommission || '0');
+    const funding = parseFloat(pos.totalFunding || '0');
+    const netProfit = parseFloat(pos.netProfit || '0');
+    const totalCost = commission + funding;
+    let costPercentage: number | null = null;
     if (netProfit !== 0 && !isNaN(netProfit)) {
-      costPercentage = parseFloat(((Math.abs(totalCost) / Math.abs(netProfit)) * 100).toFixed(2))
+      costPercentage = parseFloat(((Math.abs(totalCost) / Math.abs(netProfit)) * 100).toFixed(2));
     }
 
-    const riskAmount = calculateRiskAmount(pos)
-    const financialRRStr = calculateFinancialRR(pos)
-    const financialRR = parseFloat(financialRRStr)
+    const riskAmount = calculateRiskAmount(pos);
+    const financialRRStr = calculateFinancialRR(pos);
+    const financialRR = parseFloat(financialRRStr);
 
     return [
       formatCSVText(pos.positionId),
@@ -1096,42 +1272,45 @@ const exportToCSV = () => {
       formatCSVNumber(trade?.volume),
       formatCSVText(trade?.sentiment),
       formatCSVNumber(riskAmount),
-      formatCSVNumber(financialRR)
-    ].join(',')
-  })
+      formatCSVNumber(financialRR),
+    ].join(',');
+  });
 
   // Combine headers and rows
-  const csvContent = [headers.join(','), ...rows].join('\n')
-  
+  const csvContent = [headers.join(','), ...rows].join('\n');
+
   // Create blob and download link with UTF-8 BOM
-  const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' })
-  const url = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.setAttribute('href', url)
-  link.setAttribute('download', `position_history_export_${new Date().toISOString().slice(0, 10)}.csv`)
-  link.style.visibility = 'hidden'
-  document.body.appendChild(link)
-  link.click()
-  document.body.removeChild(link)
-  URL.revokeObjectURL(url)
-}
+  const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.setAttribute('href', url);
+  link.setAttribute(
+    'download',
+    `position_history_export_${new Date().toISOString().slice(0, 10)}.csv`
+  );
+  link.style.visibility = 'hidden';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+};
 
 // Lifecycle
 onMounted(() => {
   // Try to load filters from localStorage
-  const savedFilters = localStorage.getItem(DASHBOARD_FILTERS_KEY)
+  const savedFilters = localStorage.getItem(DASHBOARD_FILTERS_KEY);
   if (savedFilters) {
     try {
-      const parsed = JSON.parse(savedFilters)
+      const parsed = JSON.parse(savedFilters);
       // Merge saved filters with default structure to ensure backward compatibility
-      filters.value = { ...filters.value, ...parsed }
+      filters.value = { ...filters.value, ...parsed };
     } catch (e) {
-      console.error('Error parsing saved filters:', e)
+      console.error('Error parsing saved filters:', e);
     }
   }
-  
-  loadData()
-})
+
+  loadData();
+});
 </script>
 
 <style scoped>
@@ -1312,4 +1491,4 @@ onMounted(() => {
     height: 200px !important;
   }
 }
-</style> 
+</style>

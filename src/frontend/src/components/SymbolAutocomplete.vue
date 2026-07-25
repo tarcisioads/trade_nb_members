@@ -1,13 +1,13 @@
 <template>
   <div class="relative w-full">
     <input
-      type="text"
       v-bind="$attrs"
       v-model="internalValue"
+      type="text"
+      class="w-full bg-gray-900/50 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all outline-none"
       @input="handleInput"
       @focus="showSuggestions = true"
       @blur="handleBlur"
-      class="w-full bg-gray-900/50 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all outline-none"
     />
     <div
       v-if="showSuggestions && filteredSuggestions.length > 0"
@@ -16,17 +16,29 @@
       <div
         v-for="item in filteredSuggestions"
         :key="item.symbol"
-        @mousedown.prevent="selectSymbol(item)"
         class="px-4 py-3 hover:bg-gray-700 cursor-pointer flex flex-col gap-1 border-b border-gray-700/50 last:border-b-0"
+        @mousedown.prevent="selectSymbol(item)"
       >
         <div class="flex justify-between items-center">
           <span class="font-bold text-white">{{ item.symbol }}</span>
           <span class="text-xs text-gray-400">{{ item.displayName }}</span>
         </div>
         <div class="flex justify-between items-center text-xs mt-1">
-          <span class="text-gray-400">Open: <span :class="item.apiStateOpen === 'true' ? 'text-green-400' : 'text-red-400'">{{ item.apiStateOpen }}</span></span>
-          <span class="text-gray-400">Close: <span :class="item.apiStateClose === 'true' ? 'text-green-400' : 'text-red-400'">{{ item.apiStateClose }}</span></span>
-          <span class="text-gray-400">Precision: <span class="text-gray-200">{{ item.pricePrecision }}</span></span>
+          <span class="text-gray-400"
+            >Open:
+            <span :class="item.apiStateOpen === 'true' ? 'text-green-400' : 'text-red-400'">{{
+              item.apiStateOpen
+            }}</span></span
+          >
+          <span class="text-gray-400"
+            >Close:
+            <span :class="item.apiStateClose === 'true' ? 'text-green-400' : 'text-red-400'">{{
+              item.apiStateClose
+            }}</span></span
+          >
+          <span class="text-gray-400"
+            >Precision: <span class="text-gray-200">{{ item.pricePrecision }}</span></span
+          >
         </div>
       </div>
     </div>
@@ -37,7 +49,7 @@
 import { ref, computed, onMounted, watch } from 'vue';
 
 defineOptions({
-  inheritAttrs: false
+  inheritAttrs: false,
 });
 
 const props = defineProps<{
@@ -61,9 +73,12 @@ const internalValue = ref(props.modelValue);
 const allContracts = ref<Contract[]>([]);
 const showSuggestions = ref(false);
 
-watch(() => props.modelValue, (newVal) => {
-  internalValue.value = newVal;
-});
+watch(
+  () => props.modelValue,
+  (newVal) => {
+    internalValue.value = newVal;
+  }
+);
 
 const handleInput = () => {
   emit('update:modelValue', internalValue.value);
@@ -85,10 +100,13 @@ const selectSymbol = (item: Contract) => {
 const filteredSuggestions = computed(() => {
   if (!internalValue.value) return [];
   const query = internalValue.value.toLowerCase();
-  return allContracts.value.filter(c => 
-    (c.symbol && c.symbol.toLowerCase().includes(query)) || 
-    (c.displayName && c.displayName.toLowerCase().includes(query))
-  ).slice(0, 50);
+  return allContracts.value
+    .filter(
+      (c) =>
+        (c.symbol && c.symbol.toLowerCase().includes(query)) ||
+        (c.displayName && c.displayName.toLowerCase().includes(query))
+    )
+    .slice(0, 50);
 });
 
 onMounted(async () => {

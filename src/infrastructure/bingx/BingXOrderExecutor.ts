@@ -4,7 +4,14 @@ import { PositionValidator } from '../../core/services/PositionValidator';
 import { TradeDatabase } from '../database/TradeDatabase';
 import { ITradeDatabase } from '../../core/interfaces/ITradeDatabase';
 import { normalizeSymbolBingX, getPairPrice } from '../../utils/bingxUtils';
-import { Trade, BingXOrderResponse, TradeRecord, SentimentResult, VolumeColor, AnalyzeVolumeResult } from '../../utils/types';
+import {
+  Trade,
+  BingXOrderResponse,
+  TradeRecord,
+  SentimentResult,
+  VolumeColor,
+  AnalyzeVolumeResult,
+} from '../../utils/types';
 import { isVolumeValid, isSentimentValid } from '../../utils/utils';
 import * as dotenv from 'dotenv';
 import { VolumeAnalyzer } from '../../core/services/VolumeAnalyzer';
@@ -38,12 +45,17 @@ export class BingXOrderExecutor implements IOrderExecutor {
     this.positionValidator = new PositionValidator();
     this.tradeDatabase = tradeDatabase || new TradeDatabase();
     this.activation_fator_below = parseFloat(process.env.ACTIVATION_FACTOR_BELOW || '1');
-    this.activation_fator_above = parseFloat(process.env.ACTIVATION_FACTOR_ABOVE || '1')
+    this.activation_fator_above = parseFloat(process.env.ACTIVATION_FACTOR_ABOVE || '1');
     this.orderPrefix = process.env.BINGX_ORDER_PREFIX_CODE || 'DEF';
   }
 
-
-  private async calculatePositionQuantity(pair: string, leverage: number, trade: Trade, volumeAnalysis: AnalyzeVolumeResult, sentimentResult: SentimentResult): Promise<number> {
+  private async calculatePositionQuantity(
+    pair: string,
+    leverage: number,
+    trade: Trade,
+    volumeAnalysis: AnalyzeVolumeResult,
+    sentimentResult: SentimentResult
+  ): Promise<number> {
     try {
       const normalizedPair = normalizeSymbolBingX(pair);
       // Get current price
@@ -53,7 +65,7 @@ export class BingXOrderExecutor implements IOrderExecutor {
         if (currentPrice !== null && currentPrice !== undefined) {
           break;
         }
-        await new Promise(resolve => setTimeout(resolve, 30000));
+        await new Promise((resolve) => setTimeout(resolve, 30000));
       }
 
       if (currentPrice === null || currentPrice === undefined) {
@@ -62,8 +74,6 @@ export class BingXOrderExecutor implements IOrderExecutor {
 
       // Calculate base margin
       let totalMargin = this.margin;
-
-
 
       // Add volume-based margin if trade has volume_adds_margin
       if (trade.volume_adds_margin) {
@@ -81,13 +91,10 @@ export class BingXOrderExecutor implements IOrderExecutor {
         }
       }
 
-
-
       const positionValue = totalMargin * leverage;
 
       // Calculate quantity based on position value and current price
       const quantity = positionValue / currentPrice;
-
 
       // Round to 4 decimal places
       return Math.floor(quantity * 10000) / 10000;
@@ -99,7 +106,9 @@ export class BingXOrderExecutor implements IOrderExecutor {
 
   private generateClientOrderId(tradeId?: number): string {
     const timestamp = Date.now().toString();
-    const randomSuffix = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+    const randomSuffix = Math.floor(Math.random() * 1000)
+      .toString()
+      .padStart(3, '0');
     return `NBM_${this.orderPrefix}_${tradeId ? tradeId : '0'}_${timestamp}_${randomSuffix}`;
   }
 
@@ -125,13 +134,12 @@ export class BingXOrderExecutor implements IOrderExecutor {
       price: price.toString(),
       stopPrice: stopPrice.toString(),
       quantity: quantity.toString(),
-      clientOrderId: this.generateClientOrderId(tradeId)
+      clientOrderId: this.generateClientOrderId(tradeId),
     };
 
     if (positionId) {
       params.positionId = positionId;
     }
-
 
     if (reduceOnly) {
       params.reduceOnly = reduceOnly;
@@ -148,9 +156,8 @@ export class BingXOrderExecutor implements IOrderExecutor {
       }
     }
 
-
     // Add activationPrice for TRIGGER_LIMIT orders
-    if ((type === 'TRIGGER_LIMIT') || (type === 'LIMIT')) {
+    if (type === 'TRIGGER_LIMIT' || type === 'LIMIT') {
       const priceNum = parseFloat(price.toString());
       if (positionSide === 'LONG') {
         // For LONG positions, activation price should be slightly below the target price
@@ -168,7 +175,9 @@ export class BingXOrderExecutor implements IOrderExecutor {
 
       // Check if the response indicates an error
       if (response && typeof response === 'object' && 'code' in response && response.code !== 0) {
-        throw new Error(`API Error: ${response.msg} (code: ${response.code} params: ${JSON.stringify(params)})`);
+        throw new Error(
+          `API Error: ${response.msg} (code: ${response.code} params: ${JSON.stringify(params)})`
+        );
       }
 
       // Save log if tradeId is provided
@@ -193,28 +202,23 @@ export class BingXOrderExecutor implements IOrderExecutor {
       params.stopPrice = stopPrice.toString();
 
       // Add activationPrice for TRIGGER_LIMIT orders
-      if ((type === 'TRIGGER_LIMIT') || (type === 'LIMIT')) {
+      if (type === 'TRIGGER_LIMIT' || type === 'LIMIT') {
         params.activationPrice = price.toString();
       }
 
       // Generate a new clientOrderId for retry
       params.clientOrderId = this.generateClientOrderId(tradeId);
 
-      try {
+      const response = await this.apiClient.post<BingXOrderResponse>(path, params);
 
-        const response = await this.apiClient.post<BingXOrderResponse>(path, params);
-
-        // Check if the response indicates an error
-        if (response && typeof response === 'object' && 'code' in response && response.code !== 0) {
-          throw new Error(`API Error: ${response.msg} (code: ${response.code} params: ${JSON.stringify(params)})`);
-        }
-
-        return response;
-      } catch (error) {
-
-        throw error;
-
+      // Check if the response indicates an error
+      if (response && typeof response === 'object' && 'code' in response && response.code !== 0) {
+        throw new Error(
+          `API Error: ${response.msg} (code: ${response.code} params: ${JSON.stringify(params)})`
+        );
       }
+
+      return response;
     }
   }
 
@@ -240,7 +244,7 @@ export class BingXOrderExecutor implements IOrderExecutor {
       price: price.toString(),
       activationPrice: activationPrice.toString(),
       clientOrderId: this.generateClientOrderId(tradeId),
-      positionId: positionId
+      positionId: positionId,
     };
 
     try {
@@ -250,7 +254,9 @@ export class BingXOrderExecutor implements IOrderExecutor {
       if (response && typeof response === 'object' && 'code' in response && response.code !== 0) {
         if (response.code === 110418) {
           // Extract max trailing distance from error message
-          const maxTrailingDistanceMatch = response.msg.match(/maximum trailing distance of ([\d.]+)/);
+          const maxTrailingDistanceMatch = response.msg.match(
+            /maximum trailing distance of ([\d.]+)/
+          );
           if (!maxTrailingDistanceMatch) {
             throw new Error('Could not extract maximum trailing distance from error message');
           }
@@ -259,10 +265,11 @@ export class BingXOrderExecutor implements IOrderExecutor {
           console.log(`Extracted maximum trailing distance: ${maxTrailingDistance}`);
 
           // Adjust price to meet the maximum allowed distance
-          let adjustedPrice: number;
-          adjustedPrice = maxTrailingDistance * 0.95;
+          const adjustedPrice = maxTrailingDistance * 0.95;
 
-          console.log(`Adjusted trailing stop price from ${price} to ${adjustedPrice} to meet maximum trailing distance of ${maxTrailingDistance}`);
+          console.log(
+            `Adjusted trailing stop price from ${price} to ${adjustedPrice} to meet maximum trailing distance of ${maxTrailingDistance}`
+          );
 
           params.price = adjustedPrice.toString();
           const retryResponse = await this.apiClient.post<BingXOrderResponse>(path, params);
@@ -281,16 +288,26 @@ export class BingXOrderExecutor implements IOrderExecutor {
               retryResponse
             );
           } else {
-            throw new Error(`API Error placeTrailingStopOrder: ${retryResponse.msg} (code: ${retryResponse.code})`);
+            throw new Error(
+              `API Error placeTrailingStopOrder: ${retryResponse.msg} (code: ${retryResponse.code})`
+            );
           }
 
           return retryResponse;
         }
-        throw new Error(`API Error placeTrailingStopOrder: ${response.msg} (code: ${response.code})`);
+        throw new Error(
+          `API Error placeTrailingStopOrder: ${response.msg} (code: ${response.code})`
+        );
       }
 
       // Save log if tradeId is provided
-      if (response && typeof response === 'object' && 'code' in response && response.code == 0 && tradeId) {
+      if (
+        response &&
+        typeof response === 'object' &&
+        'code' in response &&
+        response.code == 0 &&
+        tradeId
+      ) {
         await this.tradeDatabase.saveTradeLog(
           tradeId,
           normalizedPair,
@@ -311,7 +328,12 @@ export class BingXOrderExecutor implements IOrderExecutor {
     }
   }
 
-  private async placeTakeProfitOrders(trade: Trade, quantity: number, tradeId: number, positionId?: string): Promise<BingXOrderResponse[]> {
+  private async placeTakeProfitOrders(
+    trade: Trade,
+    quantity: number,
+    tradeId: number,
+    positionId?: string
+  ): Promise<BingXOrderResponse[]> {
     const tpOrders: BingXOrderResponse[] = [];
     const takeProfits = [
       { level: 1, price: trade.tp1 },
@@ -319,8 +341,8 @@ export class BingXOrderExecutor implements IOrderExecutor {
       { level: 3, price: trade.tp3 },
       { level: 4, price: trade.tp4 },
       { level: 5, price: trade.tp5 },
-      { level: 6, price: trade.tp6 }
-    ].filter(tp => tp.price !== null && tp.price > 0);
+      { level: 6, price: trade.tp6 },
+    ].filter((tp) => tp.price !== null && tp.price > 0);
 
     if (takeProfits.length === 0) {
       // No take profits set, use trailing stop for entire position
@@ -451,7 +473,10 @@ export class BingXOrderExecutor implements IOrderExecutor {
       }
 
       // Check for existing position
-      const { hasPosition, message } = await this.positionValidator.hasOpenPosition(trade.symbol, trade.type);
+      const { hasPosition, message } = await this.positionValidator.hasOpenPosition(
+        trade.symbol,
+        trade.type
+      );
 
       if (hasPosition) {
         throw new Error(`Cannot execute trade: ${message}`);
@@ -464,10 +489,14 @@ export class BingXOrderExecutor implements IOrderExecutor {
 
       // Validate stop price based on trade type and current price
       if (trade.type === 'LONG' && trade.stop > currentPrice) {
-        throw new Error(`Invalid stop price for LONG position: stop (${trade.stop}) must be below current price (${currentPrice})`);
+        throw new Error(
+          `Invalid stop price for LONG position: stop (${trade.stop}) must be below current price (${currentPrice})`
+        );
       }
       if (trade.type === 'SHORT' && trade.stop < currentPrice) {
-        throw new Error(`Invalid stop price for SHORT position: stop (${trade.stop}) must be above current price (${currentPrice})`);
+        throw new Error(
+          `Invalid stop price for SHORT position: stop (${trade.stop}) must be above current price (${currentPrice})`
+        );
       }
 
       // Calculate and set optimal leverage
@@ -488,22 +517,36 @@ export class BingXOrderExecutor implements IOrderExecutor {
         trade.type
       );
 
-      let volumeAnalyzer: VolumeAnalyzer = new VolumeAnalyzer();
-      const volumeAnalysis = await volumeAnalyzer.analyzeVolume(trade.symbol, trade.interval || '1h')
-      trade.volume = volumeAnalysis.color
+      const volumeAnalyzer: VolumeAnalyzer = new VolumeAnalyzer();
+      const volumeAnalysis = await volumeAnalyzer.analyzeVolume(
+        trade.symbol,
+        trade.interval || '1h'
+      );
+      trade.volume = volumeAnalysis.color;
 
-      let sentimentService: SentimentService = new SentimentService();
-      let sentimentResult: SentimentResult = await sentimentService.getSentiment(trade.symbol, trade.interval || '1h', trade.type);
-      trade.sentiment = sentimentResult.sentiment
-      trade.lsrtrend = sentimentResult.details.analysis.lsrTrend.trend
-      trade.oitrend = sentimentResult.details.analysis.oiTrend.trend
-      trade.lsrsignal = sentimentResult.details.analysis.lsrSignal
-      trade.oisignal = sentimentResult.details.analysis.oiSignal
-
+      const sentimentService: SentimentService = new SentimentService();
+      const sentimentResult: SentimentResult = await sentimentService.getSentiment(
+        trade.symbol,
+        trade.interval || '1h',
+        trade.type
+      );
+      trade.sentiment = sentimentResult.sentiment;
+      trade.lsrtrend = sentimentResult.details.analysis.lsrTrend.trend;
+      trade.oitrend = sentimentResult.details.analysis.oiTrend.trend;
+      trade.lsrsignal = sentimentResult.details.analysis.lsrSignal;
+      trade.oisignal = sentimentResult.details.analysis.oiSignal;
 
       // Calculate position quantity based on margin and leverage, passing the trade object
-      let quantity = await this.calculatePositionQuantity(trade.symbol, leverageInfo.optimalLeverage, trade, volumeAnalysis, sentimentResult);
-      console.log(`Calculated position quantity: ${quantity} based on margin ${this.margin} USDT and leverage ${leverageInfo.optimalLeverage}x`);
+      let quantity = await this.calculatePositionQuantity(
+        trade.symbol,
+        leverageInfo.optimalLeverage,
+        trade,
+        volumeAnalysis,
+        sentimentResult
+      );
+      console.log(
+        `Calculated position quantity: ${quantity} based on margin ${this.margin} USDT and leverage ${leverageInfo.optimalLeverage}x`
+      );
 
       // Save trade to database first to get the tradeId
       const tradeRecord = await this.tradeDatabase.saveTrade(
@@ -511,7 +554,7 @@ export class BingXOrderExecutor implements IOrderExecutor {
         {
           entryOrder: { data: { order: { orderId: 'pending' } } } as BingXOrderResponse,
           stopOrder: { data: { order: { orderId: 'pending' } } } as BingXOrderResponse,
-          tpOrders: []
+          tpOrders: [],
         },
         quantity,
         leverageInfo.optimalLeverage
@@ -533,7 +576,9 @@ export class BingXOrderExecutor implements IOrderExecutor {
       } catch (error: any) {
         // Handle max position value error
         let msg = error?.message || '';
-        let maxPosMatch = msg.match(/The maximum position value for this leverage is ([\d.]+) USDT/);
+        let maxPosMatch = msg.match(
+          /The maximum position value for this leverage is ([\d.]+) USDT/
+        );
         if (!maxPosMatch) {
           throw error;
         }
@@ -541,9 +586,11 @@ export class BingXOrderExecutor implements IOrderExecutor {
           const maxPositionValue = parseFloat(maxPosMatch[1]);
           let newLeverage = leverageInfo.optimalLeverage - 2;
           if (newLeverage <= 0) {
-            newLeverage = 1
+            newLeverage = 1;
           }
-          console.warn(`Adjusting leverage to ${newLeverage}x due to the max position value limit of ${maxPositionValue} USDT for this quantity (${quantity}).`);
+          console.warn(
+            `Adjusting leverage to ${newLeverage}x due to the max position value limit of ${maxPositionValue} USDT for this quantity (${quantity}).`
+          );
 
           try {
             // Set the new leverage
@@ -552,9 +599,16 @@ export class BingXOrderExecutor implements IOrderExecutor {
             leverageInfo.optimalLeverage = newLeverage;
             await this.tradeDatabase.updateLeverage(tradeRecord.id, newLeverage);
             // Calculate position quantity based on margin and leverage, passing the trade object
-            quantity = await this.calculatePositionQuantity(trade.symbol, leverageInfo.optimalLeverage, trade, volumeAnalysis, sentimentResult);
-            console.log(`Calculated position quantity: ${quantity} based on margin ${this.margin} USDT and leverage ${leverageInfo.optimalLeverage}x`);
-
+            quantity = await this.calculatePositionQuantity(
+              trade.symbol,
+              leverageInfo.optimalLeverage,
+              trade,
+              volumeAnalysis,
+              sentimentResult
+            );
+            console.log(
+              `Calculated position quantity: ${quantity} based on margin ${this.margin} USDT and leverage ${leverageInfo.optimalLeverage}x`
+            );
 
             // Retry with the same quantity
             entryOrder = await this.placeOrder(
@@ -570,12 +624,14 @@ export class BingXOrderExecutor implements IOrderExecutor {
             maxPosMatch = null; // Exit loop on success
           } catch (error: any) {
             msg = error?.message || '';
-            maxPosMatch = msg.match(/The maximum position value for this leverage is ([\d.]+) USDT/);
-            if ((!maxPosMatch) || (newLeverage == 1)) {
+            maxPosMatch = msg.match(
+              /The maximum position value for this leverage is ([\d.]+) USDT/
+            );
+            if (!maxPosMatch || newLeverage == 1) {
               throw error;
             }
             // Add delay before retrying
-            await new Promise(resolve => setTimeout(resolve, 100));
+            await new Promise((resolve) => setTimeout(resolve, 100));
           }
         }
       }
@@ -585,15 +641,19 @@ export class BingXOrderExecutor implements IOrderExecutor {
       }
 
       // Add 1/2 second delay before checking position
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
-      const { hasPosition: hasPositionPost, position, message: messagePost } = await this.positionValidator.hasOpenPosition(trade.symbol, trade.type);
+      const {
+        hasPosition: hasPositionPost,
+        position,
+        message: messagePost,
+      } = await this.positionValidator.hasOpenPosition(trade.symbol, trade.type);
 
       if (!hasPositionPost) {
         throw new Error(`Cannot execute trade: ${messagePost}`);
       }
       if (parseFloat(position?.positionAmt || '0') !== 0) {
-        quantity = parseFloat(position?.positionAmt || '0')
+        quantity = parseFloat(position?.positionAmt || '0');
       }
 
       // Update trade record with positionId if available
@@ -617,7 +677,7 @@ export class BingXOrderExecutor implements IOrderExecutor {
 
       // If modify_tp1 is true, adjust tp1 to create 1:1 risk-reward ratio
       if (trade.modify_tp1 && position) {
-        const avgPrice = parseFloat(position.avgPrice)
+        const avgPrice = parseFloat(position.avgPrice);
         if (trade.type === 'LONG') {
           trade.tp1 = avgPrice + (avgPrice - trade.stop);
         } else {
@@ -626,9 +686,13 @@ export class BingXOrderExecutor implements IOrderExecutor {
         console.log(`Modified tp1 to ${trade.tp1} for 1:1 risk-reward ratio`);
       }
 
-
       // Place take profit orders based on the scenario
-      const tpOrders = await this.placeTakeProfitOrders(trade, quantity, tradeRecord.id, position?.positionId);
+      const tpOrders = await this.placeTakeProfitOrders(
+        trade,
+        quantity,
+        tradeRecord.id,
+        position?.positionId
+      );
 
       // Update trade record with actual order IDs
       await this.tradeDatabase.updateOrderIds(tradeRecord.id, {
@@ -640,7 +704,7 @@ export class BingXOrderExecutor implements IOrderExecutor {
         tp4OrderId: tpOrders[3]?.data.order.orderId || null,
         tp5OrderId: tpOrders[4]?.data.order.orderId || null,
         tp6OrderId: tpOrders[5]?.data.order.orderId || null,
-        trailingStopOrderId: tpOrders[6]?.data.order.orderId || null
+        trailingStopOrderId: tpOrders[6]?.data.order.orderId || null,
       });
 
       // Get updated trade record
@@ -652,7 +716,7 @@ export class BingXOrderExecutor implements IOrderExecutor {
         tpOrders,
         leverage: leverageInfo,
         quantity,
-        tradeRecord: updatedTradeRecord
+        tradeRecord: updatedTradeRecord,
       };
     } catch (error) {
       console.error('Error executing trade:', error);
@@ -662,10 +726,10 @@ export class BingXOrderExecutor implements IOrderExecutor {
 
   public async cancelOrder(pair: string, orderId: string): Promise<void> {
     const path = '/openApi/swap/v2/trade/order';
-    const _orderId = BigInt(orderId)
+    const _orderId = BigInt(orderId);
     const params = {
       symbol: pair,
-      orderId: _orderId
+      orderId: _orderId,
     };
 
     try {
@@ -675,7 +739,6 @@ export class BingXOrderExecutor implements IOrderExecutor {
       throw error;
     }
   }
-
 
   public async cancelReplaceOrder(
     pair: string,
@@ -698,7 +761,7 @@ export class BingXOrderExecutor implements IOrderExecutor {
       price: price.toString(),
       stopPrice: stopPrice.toString(),
       quantity: quantity.toString(),
-      clientOrderId: this.generateClientOrderId(tradeId)
+      clientOrderId: this.generateClientOrderId(tradeId),
     };
 
     if (type === 'STOP') {
@@ -713,7 +776,7 @@ export class BingXOrderExecutor implements IOrderExecutor {
     }
 
     // Add activationPrice for TRIGGER_LIMIT orders
-    if ((type === 'TRIGGER_LIMIT') || (type === 'LIMIT')) {
+    if (type === 'TRIGGER_LIMIT' || type === 'LIMIT') {
       const priceNum = parseFloat(price.toString());
       if (positionSide === 'LONG') {
         // For LONG positions, activation price should be slightly below the target price
@@ -725,8 +788,8 @@ export class BingXOrderExecutor implements IOrderExecutor {
     }
 
     if (orderId) {
-      params.cancelReplaceMode = "STOP_ON_FAILURE"
-      params.cancelOrderId = BigInt(orderId)
+      params.cancelReplaceMode = 'STOP_ON_FAILURE';
+      params.cancelOrderId = BigInt(orderId);
     }
 
     try {
@@ -749,10 +812,9 @@ export class BingXOrderExecutor implements IOrderExecutor {
 
       return response;
     } catch (error) {
-
-      params.price = price.toString()
-      params.stopPrice = stopPrice.toString()
-      params.clientOrderId = this.generateClientOrderId(tradeId)
+      params.price = price.toString();
+      params.stopPrice = stopPrice.toString();
+      params.clientOrderId = this.generateClientOrderId(tradeId);
       try {
         const response = await this.apiClient.post<BingXOrderResponse>(path, params);
 
@@ -805,12 +867,9 @@ export class BingXOrderExecutor implements IOrderExecutor {
           return response;
         } catch (error) {
           console.error('Error placing order:', error);
-          throw error
+          throw error;
         }
-
       }
     }
   }
-
-
-} 
+}

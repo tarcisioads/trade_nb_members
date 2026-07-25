@@ -17,7 +17,9 @@ export class TelegramService implements ITelegramService {
     const telegramChatId = process.env.TELEGRAM_CHAT_ID;
 
     if (!telegramToken || !telegramChatId) {
-      console.warn('Telegram configuration not found in .env file. Telegram notifications will be disabled.');
+      console.warn(
+        'Telegram configuration not found in .env file. Telegram notifications will be disabled.'
+      );
       console.warn('Please set TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID in your .env file.');
       this.chatId = '';
     } else {
@@ -58,7 +60,7 @@ export class TelegramService implements ITelegramService {
     const status = trade.isWarning ? '⚠️ AVISO' : '✅ TRADE';
     const validationStatus = trade.validation.isValid ? '✅ Válido' : '❌ Inválido';
 
-    let message = `
+    const message = `
 <b>🚨 ${status} - ${direction}</b>
 
 📊 Par: ${trade.symbol}
@@ -79,17 +81,29 @@ export class TelegramService implements ITelegramService {
 ${trade.validation.message ? `\n📝 Mensagem: ${trade.validation.message}` : ''}
 ${trade.setup_description ? `\n📋 Setup: ${trade.setup_description}` : ''}
 ${trade.executionError ? `\n❌ Erro: ${trade.executionError}` : ''}
-${trade.executionResult ? `
+${
+  trade.executionResult
+    ? `
 ✅ Trade Executado:
    Alavancagem: ${trade.executionResult.leverage}x
    Quantidade: ${trade.executionResult.quantity}
-   ${trade.executionResult.volumeMarginAdded ? `
+   ${
+     trade.executionResult.volumeMarginAdded
+       ? `
    Volume Margem Adicional: ${trade.executionResult.volumeMarginAdded.percentage}%
-    ` : ''}
-  ${trade.executionResult.sentimentMarginAdded ? `
+    `
+       : ''
+   }
+  ${
+    trade.executionResult.sentimentMarginAdded
+      ? `
    Sentiment Margem Adicional: ${trade.executionResult.sentimentMarginAdded.percentage}%
-    ` : ''}
-` : ''}
+    `
+      : ''
+  }
+`
+    : ''
+}
 
 ${trade.analysisUrl ? `\n🔍 <a href="${trade.analysisUrl}">Ver Análise</a>` : ''}
         `.trim();
@@ -105,4 +119,4 @@ ${trade.analysisUrl ? `\n🔍 <a href="${trade.analysisUrl}">Ver Análise</a>` :
   public async sendCustomMessage(message: string): Promise<void> {
     await this.sendMessage(message);
   }
-} 
+}

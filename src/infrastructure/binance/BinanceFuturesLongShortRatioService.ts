@@ -7,7 +7,6 @@ import { AllowedInterval } from '../../utils/types';
 
 const BASE_URL = 'https://fapi.binance.com';
 
-
 /**
  * Parameters for the Long/Short Ratio endpoint.
  * @property {RatioPeriod} period - The chart period.
@@ -44,8 +43,6 @@ interface CacheKey {
   year: number;
 }
 
-
-
 /**
  * Provides a method to fetch Global Long/Short Ratio data from the Binance Futures API, with caching.
  */
@@ -54,8 +51,7 @@ export class BinanceFuturesLongShortRatioService {
   private db: any;
   private readonly ratioType: string = 'global_account_ratio';
 
-  constructor() {
-  }
+  constructor() {}
 
   public static async create(): Promise<BinanceFuturesLongShortRatioService> {
     const instance = new BinanceFuturesLongShortRatioService();
@@ -63,12 +59,11 @@ export class BinanceFuturesLongShortRatioService {
     return instance;
   }
 
-
   private async initializeDatabase() {
     const dbPath = path.join(process.cwd(), 'db/binance_futures_lsr_cache.db');
     this.db = await open({
       filename: dbPath,
-      driver: sqlite3.Database
+      driver: sqlite3.Database,
     });
 
     // The table schema is kept the same for simplicity, to avoid migration issues.
@@ -109,7 +104,7 @@ export class BinanceFuturesLongShortRatioService {
       minutes: cacheMinutes,
       day: now.getDate(),
       month: now.getMonth() + 1, // getMonth() returns 0-11
-      year: now.getFullYear()
+      year: now.getFullYear(),
     };
   }
 
@@ -122,7 +117,7 @@ export class BinanceFuturesLongShortRatioService {
         if (error && error.code === 'SQLITE_BUSY') {
           lastError = error;
           if (i < retries - 1) {
-            await new Promise(res => setTimeout(res, delayMs * Math.pow(2, i)));
+            await new Promise((res) => setTimeout(res, delayMs * Math.pow(2, i)));
             continue;
           }
         }
@@ -132,11 +127,23 @@ export class BinanceFuturesLongShortRatioService {
     throw lastError;
   }
 
-  private async getCachedData(symbol: string, timeComponents: Omit<CacheKey, 'symbol'>): Promise<GlobalLongShortRatio[] | null> {
+  private async getCachedData(
+    symbol: string,
+    timeComponents: Omit<CacheKey, 'symbol'>
+  ): Promise<GlobalLongShortRatio[] | null> {
     const result = await this.withRetry(() =>
       this.db.get(
         'SELECT data FROM futures_ratio_cache WHERE ratio_type = ? AND symbol = ? AND period = ? AND hour = ? AND minutes = ? AND day = ? AND month = ? AND year = ?',
-        [this.ratioType, symbol, timeComponents.interval, timeComponents.hour, timeComponents.minutes, timeComponents.day, timeComponents.month, timeComponents.year]
+        [
+          this.ratioType,
+          symbol,
+          timeComponents.interval,
+          timeComponents.hour,
+          timeComponents.minutes,
+          timeComponents.day,
+          timeComponents.month,
+          timeComponents.year,
+        ]
       )
     );
 
@@ -146,21 +153,40 @@ export class BinanceFuturesLongShortRatioService {
     return null;
   }
 
-  private async cacheData(symbol: string, timeComponents: Omit<CacheKey, 'symbol'>, data: GlobalLongShortRatio[]): Promise<void> {
+  private async cacheData(
+    symbol: string,
+    timeComponents: Omit<CacheKey, 'symbol'>,
+    data: GlobalLongShortRatio[]
+  ): Promise<void> {
     await this.withRetry(() =>
       this.db.run(
         'INSERT OR REPLACE INTO futures_ratio_cache (ratio_type, symbol, period, hour, minutes, day, month, year, data, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-        [this.ratioType, symbol, timeComponents.interval, timeComponents.hour, timeComponents.minutes, timeComponents.day, timeComponents.month, timeComponents.year, JSON.stringify(data), Date.now()]
+        [
+          this.ratioType,
+          symbol,
+          timeComponents.interval,
+          timeComponents.hour,
+          timeComponents.minutes,
+          timeComponents.day,
+          timeComponents.month,
+          timeComponents.year,
+          JSON.stringify(data),
+          Date.now(),
+        ]
       )
     );
   }
 
-  private async fetchData(symbol: string, interval: AllowedInterval = '1h', limit: number = 56): Promise<GlobalLongShortRatio[]> {
-    let params: RatioParams = {
+  private async fetchData(
+    symbol: string,
+    interval: AllowedInterval = '1h',
+    limit: number = 56
+  ): Promise<GlobalLongShortRatio[]> {
+    const params: RatioParams = {
       symbol: symbol,
       period: interval,
-      limit: limit
-    }
+      limit: limit,
+    };
 
     const url = `${this.baseUrl}/futures/data/globalLongShortAccountRatio`;
     try {
@@ -178,9 +204,14 @@ export class BinanceFuturesLongShortRatioService {
    * @param noCache - If true, bypasses the cache.
    * @returns A promise that resolves to an array of ratio data.
    */
-  public async getGlobalLongShortAccountRatio(symbol: string, interval: AllowedInterval = '1h', limit: number = 56, noCache: boolean = false): Promise<GlobalLongShortRatio[]> {
+  public async getGlobalLongShortAccountRatio(
+    symbol: string,
+    interval: AllowedInterval = '1h',
+    limit: number = 56,
+    noCache: boolean = false
+  ): Promise<GlobalLongShortRatio[]> {
     const timeComponents = this.getCurrentTimeComponents(interval);
-    console.log(`${symbol} ${interval} ${limit} ${noCache}`)
+    console.log(`${symbol} ${interval} ${limit} ${noCache}`);
 
     if (!noCache) {
       const cachedData = await this.getCachedData(symbol, timeComponents);
@@ -196,7 +227,9 @@ export class BinanceFuturesLongShortRatioService {
       await this.cacheData(symbol, timeComponents, fetchedData);
     }
 
-    logger.info(`Fetched and cached new ratio data for ${symbol} (${interval}) - ${this.ratioType}`);
+    logger.info(
+      `Fetched and cached new ratio data for ${symbol} (${interval}) - ${this.ratioType}`
+    );
     return fetchedData.slice(0, limit || 500);
   }
 }

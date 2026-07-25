@@ -3,7 +3,11 @@
     <div class="p-4 border-b border-white/10 flex justify-between items-center bg-blue-600/20">
       <h5 class="text-lg font-semibold text-white mb-0">Histórico de Posições</h5>
       <div class="flex gap-2">
-        <select v-model="pageSize" @change="emitPagination" class="bg-gray-900/50 border border-gray-700 rounded-lg px-2 py-1 text-white text-sm focus:ring-2 focus:ring-blue-500/50 outline-none">
+        <select
+          v-model="pageSize"
+          class="bg-gray-900/50 border border-gray-700 rounded-lg px-2 py-1 text-white text-sm focus:ring-2 focus:ring-blue-500/50 outline-none"
+          @change="emitPagination"
+        >
           <option value="10">10</option>
           <option value="25">25</option>
           <option value="50">50</option>
@@ -28,42 +32,56 @@
             </tr>
           </thead>
           <tbody class="divide-y divide-white/5">
-            <tr v-for="position in positions" :key="position.positionId" class="hover:bg-white/5 transition-colors">
+            <tr
+              v-for="position in positions"
+              :key="position.positionId"
+              class="hover:bg-white/5 transition-colors"
+            >
               <td class="px-4 py-3">
-                <span class="px-2 py-1 bg-blue-600/20 text-blue-300 rounded text-xs font-bold">{{ position.symbol }}</span>
+                <span class="px-2 py-1 bg-blue-600/20 text-blue-300 rounded text-xs font-bold">{{
+                  position.symbol
+                }}</span>
               </td>
               <td class="px-4 py-3">
-                <span 
-                  class="px-2 py-1 rounded text-xs font-bold" 
-                  :class="position.positionSide === 'LONG' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'"
+                <span
+                  class="px-2 py-1 rounded text-xs font-bold"
+                  :class="
+                    position.positionSide === 'LONG'
+                      ? 'bg-green-500/20 text-green-400'
+                      : 'bg-red-500/20 text-red-400'
+                  "
                 >
                   {{ position.positionSide }}
                 </span>
               </td>
               <td class="px-4 py-3 font-mono">{{ position.closePositionAmt }}</td>
-              <td class="px-4 py-3 font-mono">${{ formatNumber(parseFloat(position.avgPrice)) }}</td>
+              <td class="px-4 py-3 font-mono">
+                ${{ formatNumber(parseFloat(position.avgPrice)) }}
+              </td>
               <td class="px-4 py-3 font-mono">${{ formatNumber(position.avgClosePrice) }}</td>
               <td class="px-4 py-3 font-mono">{{ position.leverage }}x</td>
               <td class="px-4 py-3">
-                <span 
-                  class="font-bold" 
+                <span
+                  class="font-bold"
                   :class="parseFloat(position.netProfit) >= 0 ? 'text-green-400' : 'text-red-400'"
                 >
                   ${{ formatNumber(parseFloat(position.netProfit)) }}
                 </span>
               </td>
               <td class="px-4 py-3 text-xs text-gray-400">{{ formatDate(position.openTime) }}</td>
-              <td class="px-4 py-3 text-xs text-gray-400">{{ formatDate(getEffectiveCloseTime(position)) }}</td>
+              <td class="px-4 py-3 text-xs text-gray-400">
+                {{ formatDate(getEffectiveCloseTime(position)) }}
+              </td>
             </tr>
           </tbody>
         </table>
       </div>
-      
+
       <!-- Paginação -->
       <nav v-if="pagination.total > 0" class="p-4 border-t border-white/10 flex justify-center">
         <ul class="flex gap-2">
           <li>
-            <button 
+            <button
               class="px-3 py-1 rounded bg-white/5 hover:bg-white/10 text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors border border-white/10"
               :disabled="pagination.pageIndex <= 1"
               @click.prevent="changePage(pagination.pageIndex - 1)"
@@ -73,11 +91,12 @@
           </li>
           <li>
             <span class="px-3 py-1 rounded bg-blue-600/20 text-blue-300 border border-blue-500/30">
-              Página {{ pagination.pageIndex }} de {{ Math.ceil(pagination.total / pagination.pageSize) }}
+              Página {{ pagination.pageIndex }} de
+              {{ Math.ceil(pagination.total / pagination.pageSize) }}
             </span>
           </li>
           <li>
-            <button 
+            <button
               class="px-3 py-1 rounded bg-white/5 hover:bg-white/10 text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors border border-white/10"
               :disabled="pagination.pageIndex >= Math.ceil(pagination.total / pagination.pageSize)"
               @click.prevent="changePage(pagination.pageIndex + 1)"
@@ -92,68 +111,68 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import type { PositionHistory } from '../types/positionHistory'
+import { ref, computed } from 'vue';
+import type { PositionHistory } from '../types/positionHistory';
 
 interface Pagination {
-  pageIndex: number
-  pageSize: number
-  total: number
+  pageIndex: number;
+  pageSize: number;
+  total: number;
 }
 
 interface Props {
-  positions: PositionHistory[]
-  pagination: Pagination
+  positions: PositionHistory[];
+  pagination: Pagination;
 }
 
-const props = defineProps<Props>()
+const props = defineProps<Props>();
 
 const emit = defineEmits<{
-  paginationChanged: [pagination: Pagination]
-}>()
+  paginationChanged: [pagination: Pagination];
+}>();
 
-const pageSize = ref(props.pagination.pageSize)
+const pageSize = ref(props.pagination.pageSize);
 
 const emitPagination = () => {
   emit('paginationChanged', {
     pageIndex: 1,
     pageSize: pageSize.value,
-    total: props.pagination.total
-  })
-}
+    total: props.pagination.total,
+  });
+};
 
 const changePage = (page: number) => {
   if (page >= 1 && page <= Math.ceil(props.pagination.total / props.pagination.pageSize)) {
     emit('paginationChanged', {
       pageIndex: page,
       pageSize: props.pagination.pageSize,
-      total: props.pagination.total
-    })
+      total: props.pagination.total,
+    });
   }
-}
+};
 
 const formatNumber = (value: number | undefined | null): string => {
   if (value === undefined || value === null || isNaN(value)) {
-    return '0.00'
+    return '0.00';
   }
   return value.toLocaleString('en-US', {
     minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  })
-}
+    maximumFractionDigits: 2,
+  });
+};
 
 const formatDate = (timestamp: number): string => {
-  return new Date(timestamp).toLocaleString('pt-BR')
-}
+  return new Date(timestamp).toLocaleString('pt-BR');
+};
 
 /**
  * Helper function to get the effective close time, using updateTime as fallback
  */
 const getEffectiveCloseTime = (position: PositionHistory): number => {
-  return position.closeTime || position.updateTime
-}
+  return position.closeTime || position.updateTime;
+};
 </script>
 
 <style scoped>
 /* Scoped styles removed */
-</style> 
+</style>
