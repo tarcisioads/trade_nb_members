@@ -44,6 +44,14 @@ export class PositionUpdateWebSocket {
 
     public connect(): void {
         try {
+            if (this.ws) {
+                this.ws.removeAllListeners();
+                try {
+                    this.ws.close();
+                } catch (_) {}
+                this.ws = null;
+            }
+
             this.ws = new WebSocket(this.baseUrl);
 
             this.ws.on('open', () => {
@@ -53,48 +61,7 @@ export class PositionUpdateWebSocket {
             });
 
             this.ws.on('message', (data: WebSocket.RawData) => {
-                try {
-                    const buffer = Buffer.from(data as Buffer);
-                    let decodedMsg: string;
-
-                    decodedMsg = buffer.toString('utf-8');
-
-                    if (decodedMsg === 'Ping') {
-                        this.ws?.send('Pong');
-                        this.lastPongTime = Date.now();
-                        return;
-                    }
-                    if (decodedMsg === 'Pong') {
-                        this.lastPongTime = Date.now();
-                        return;
-                    }
-
-                    let obj: any;
-                    try {
-                        obj = JSON.parse(decodedMsg);
-                    } catch (parseError) {
-                        try {
-                            const decompressed = zlib.gunzipSync(buffer).toString('utf-8');
-                            if (decompressed === 'Ping') {
-                                this.ws?.send('Pong');
-                                this.lastPongTime = Date.now();
-                                return;
-                            }
-                            if (decompressed === 'Pong') {
-                                this.lastPongTime = Date.now();
-                                return;
-                            }
-                            obj = JSON.parse(decompressed);
-                        } catch (decompressError) {
-                            console.error('Failed to parse or decompress message:', decompressError);
-                            return;
-                        }
-                    }
-
-                    this.handleMessage(obj);
-                } catch (error) {
-                    console.error('Error handling WebSocket message:', error);
-                }
+                this.handleRawMessage(data);
             });
 
             this.ws.on('error', (error: Error) => {
@@ -109,6 +76,56 @@ export class PositionUpdateWebSocket {
         } catch (error) {
             console.error('Error connecting to PositionUpdateWebSocket:', error);
             this.handleConnectionLoss();
+        }
+    }
+
+    private handleRawMessage(data: WebSocket.RawData): void {
+        try {
+            const buffer = Buffer.from(data as Buffer);
+            let decodedMsg: string;
+
+            if (buffer.length >= 2 && buffer[0] === 0x1f && buffer[1] === 0x8b) {
+                try {
+                    decodedMsg = zlib.gunzipSync(buffer).toString('utf-8');
+                } catch (decompressError) {
+                    console.error('Failed to decompress GZIP message:', decompressError);
+                    return;
+                }
+            } else {
+                decodedMsg = buffer.toString('utf-8');
+            }
+
+            if (decodedMsg === 'Ping') {
+                if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+                    this.ws.send('Pong');
+                }
+                this.lastPongTime = Date.now();
+                return;
+            }
+            if (decodedMsg === 'Pong') {
+                this.lastPongTime = Date.now();
+                return;
+            }
+
+            let obj: any;
+            try {
+                obj = JSON.parse(decodedMsg);
+            } catch (parseError) {
+                console.error('Failed to parse JSON message:', parseError);
+                return;
+            }
+
+            if (obj.pong !== undefined || obj.ping !== undefined) {
+                if (obj.ping !== undefined && this.ws && this.ws.readyState === WebSocket.OPEN) {
+                    this.ws.send(JSON.stringify({ pong: obj.ping }));
+                }
+                this.lastPongTime = Date.now();
+                return;
+            }
+
+            this.handleMessage(obj);
+        } catch (error) {
+            console.error('Error handling WebSocket message:', error);
         }
     }
 
@@ -137,6 +154,15 @@ export class PositionUpdateWebSocket {
 
         if (this.reconnectTimeout) {
             clearTimeout(this.reconnectTimeout);
+            this.reconnectTimeout = null;
+        }
+
+        if (this.ws) {
+            this.ws.removeAllListeners();
+            try {
+                this.ws.close();
+            } catch (_) {}
+            this.ws = null;
         }
 
         if (this.reconnectAttempts < this.maxReconnectAttempts) {
@@ -179,7 +205,10 @@ export class PositionUpdateWebSocket {
         }
 
         if (this.ws) {
-            this.ws.close();
+            this.ws.removeAllListeners();
+            try {
+                this.ws.close();
+            } catch (_) {}
             this.ws = null;
         }
     }

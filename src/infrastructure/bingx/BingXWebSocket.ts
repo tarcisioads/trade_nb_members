@@ -33,6 +33,15 @@ export class BingXWebSocket {
 
     public connect(): void {
         try {
+            // Clean up old socket if reconnecting
+            if (this.ws) {
+                this.ws.removeAllListeners();
+                try {
+                    this.ws.close();
+                } catch (_) {}
+                this.ws = null;
+            }
+
             this.ws = new WebSocket(this.baseUrl);
 
             this.ws.on('open', () => {
@@ -44,44 +53,7 @@ export class BingXWebSocket {
             });
 
             this.ws.on('message', (data: WebSocket.RawData) => {
-                try {
-                    // Convert RawData to Buffer
-                    const buffer = Buffer.from(data as Buffer);
-                    let decodedMsg: string;
-
-                    // First try to decode as plain text
-                    decodedMsg = buffer.toString('utf-8');
-                    
-                    // Handle plain text messages first (Ping/Pong)
-                    if (decodedMsg === "Ping" || decodedMsg === "Pong") {
-                        this.lastPongTime = Date.now();
-                        return;
-                    }
-
-                    // Try parsing as JSON
-                    let obj: any;
-                    try {
-                        obj = JSON.parse(decodedMsg);
-                    } catch (parseError) {
-                        // If direct parsing fails, try decompressing
-                        try {
-                            const decompressed = zlib.gunzipSync(buffer).toString('utf-8');
-                            // Check if decompressed message is Ping/Pong
-                            if (decompressed === "Ping" || decompressed === "Pong") {
-                                this.lastPongTime = Date.now();
-                                return;
-                            }
-                            obj = JSON.parse(decompressed);
-                        } catch (decompressError) {
-                            console.error('Failed to parse or decompress message:', decompressError);
-                            return;
-                        }
-                    }
-
-                    this.handleMessage(obj);
-                } catch (error) {
-                    console.error('Error handling WebSocket message:', error);
-                }
+                this.handleRawMessage(data);
             });
 
             this.ws.on('error', (error: Error) => {
@@ -97,6 +69,60 @@ export class BingXWebSocket {
         } catch (error) {
             console.error(`Error connecting to WebSocket for ${this.symbol}:`, error);
             this.handleConnectionLoss();
+        }
+    }
+
+    private handleRawMessage(data: WebSocket.RawData): void {
+        try {
+            const buffer = Buffer.from(data as Buffer);
+            let decodedMsg: string;
+
+            // Check for GZIP header magic bytes (0x1f 0x8b)
+            if (buffer.length >= 2 && buffer[0] === 0x1f && buffer[1] === 0x8b) {
+                try {
+                    decodedMsg = zlib.gunzipSync(buffer).toString('utf-8');
+                } catch (decompressError) {
+                    console.error('Failed to decompress GZIP message:', decompressError);
+                    return;
+                }
+            } else {
+                decodedMsg = buffer.toString('utf-8');
+            }
+
+            // Handle text Heartbeats
+            if (decodedMsg === "Ping") {
+                if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+                    this.ws.send("Pong");
+                }
+                this.lastPongTime = Date.now();
+                return;
+            }
+            if (decodedMsg === "Pong") {
+                this.lastPongTime = Date.now();
+                return;
+            }
+
+            // Parse JSON payload
+            let obj: any;
+            try {
+                obj = JSON.parse(decodedMsg);
+            } catch (parseError) {
+                console.error('Failed to parse JSON message:', parseError);
+                return;
+            }
+
+            // Handle JSON Heartbeats ({ "pong": ... } or { "ping": ... })
+            if (obj.pong !== undefined || obj.ping !== undefined) {
+                if (obj.ping !== undefined && this.ws && this.ws.readyState === WebSocket.OPEN) {
+                    this.ws.send(JSON.stringify({ pong: obj.ping }));
+                }
+                this.lastPongTime = Date.now();
+                return;
+            }
+
+            this.handleMessage(obj);
+        } catch (error) {
+            console.error('Error handling WebSocket message:', error);
         }
     }
 
@@ -117,11 +143,21 @@ export class BingXWebSocket {
                 // Check if we haven't received a pong in the last 2 ping intervals
                 const timeSinceLastPong = Date.now() - this.lastPongTime;
                 if (timeSinceLastPong > this.PING_INTERVAL * 2) {
-                    console.log(`No pong received for ${timeSinceLastPong}ms, reconnecting...`);
+                    console.log(`No pong received for ${timeSinceLastPong}ms for ${this.symbol}, reconnecting...`);
                     this.handleConnectionLoss();
                 }
             }
         }, this.PING_INTERVAL);
+    }
+
+    private lastInstabilityAlertTime: number = 0;
+    private readonly ALERT_COOLDOWN_MS = 3600000; // 1 hour cooldown per symbol
+
+    private calculateReconnectDelay(): number {
+        const baseDelay = 10000; // 10 seconds initial delay
+        const maxDelay = 300000;  // 5 minutes max delay
+        const exponentialDelay = baseDelay * Math.pow(2, Math.max(0, this.reconnectAttempts - 1));
+        return Math.min(exponentialDelay, maxDelay);
     }
 
     private handleConnectionLoss(): void {
@@ -134,22 +170,34 @@ export class BingXWebSocket {
         // Clear any existing reconnect timeout
         if (this.reconnectTimeout) {
             clearTimeout(this.reconnectTimeout);
+            this.reconnectTimeout = null;
+        }
+
+        if (this.ws) {
+            this.ws.removeAllListeners();
+            try {
+                this.ws.close();
+            } catch (_) {}
+            this.ws = null;
         }
 
         if (this.reconnectAttempts < this.maxReconnectAttempts) {
             this.reconnectAttempts++;
-            console.log(`Connection lost. Attempting to reconnect in 1 minute... (Attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
+            const reconnectDelay = this.calculateReconnectDelay();
+            console.log(`Connection lost for ${this.symbol}. Attempting to reconnect in ${reconnectDelay / 1000}s... (Attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
             
-            if (this.reconnectAttempts === 5) {
+            const now = Date.now();
+            if (this.reconnectAttempts % 5 === 0 && (now - this.lastInstabilityAlertTime > this.ALERT_COOLDOWN_MS)) {
+                this.lastInstabilityAlertTime = now;
                 TelegramService.getInstance().sendCustomMessage(
                     `⚠️ <b>Instabilidade no WebSocket</b>\n\n` +
-                    `O WebSocket do ativo <b>${this.symbol}</b> falhou 5 vezes seguidas e continua tentando reconectar.`
+                    `O WebSocket do ativo <b>${this.symbol}</b> falhou ${this.reconnectAttempts} vezes seguidas e continua tentando reconectar.`
                 ).catch(err => console.error('Error sending websocket instability notification', err));
             }
 
             this.reconnectTimeout = setTimeout(() => {
                 this.connect();
-            }, this.RECONNECT_DELAY);
+            }, reconnectDelay);
         } else {
             console.error(`Max reconnection attempts reached for ${this.symbol}`);
         }
@@ -159,8 +207,7 @@ export class BingXWebSocket {
         if (this.ws && this.ws.readyState === WebSocket.OPEN) {
             // Subscribe to ticker data for latest price
             const subscribeMessage = {
-                //id: Date.now(),
-                id: "24dd0e35-56a4-4f7a-af8a-394c7060909c",
+                id: `sub_${this.symbol}_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
                 reqType: "sub",
                 dataType: `${this.symbol}@lastPrice`,
                 symbol: `${this.symbol}`
@@ -187,7 +234,6 @@ export class BingXWebSocket {
                     timestamp: Date.now(),
                 };
 
-
                 // Call the callback if provided
                 if (this.onPriceUpdate) {
                     this.onPriceUpdate(priceData);
@@ -212,7 +258,10 @@ export class BingXWebSocket {
         }
 
         if (this.ws) {
-            this.ws.close();
+            this.ws.removeAllListeners();
+            try {
+                this.ws.close();
+            } catch (_) {}
             this.ws = null;
         }
     }

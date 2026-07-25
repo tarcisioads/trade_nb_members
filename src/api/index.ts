@@ -15,20 +15,44 @@ const server = createServer(app);
 // Create WebSocket server
 const wss = new WebSocketServer({ server });
 
+interface ExtWebSocket extends WebSocket {
+  isAlive?: boolean;
+}
+
 // Store all connected clients
-const clients = new Set<WebSocket>();
+const clients = new Set<ExtWebSocket>();
 
 // WebSocket connection handler
-wss.on('connection', (ws) => {
-  // Add new client to the set
+wss.on('connection', (ws: ExtWebSocket) => {
+  ws.isAlive = true;
   clients.add(ws);
   console.log('New client connected');
+
+  ws.on('pong', () => {
+    ws.isAlive = true;
+  });
 
   // Handle client disconnection
   ws.on('close', () => {
     clients.delete(ws);
     console.log('Client disconnected');
   });
+});
+
+// Periodic heartbeat interval to detect and prune dead connections
+const heartbeatInterval = setInterval(() => {
+  clients.forEach((ws) => {
+    if (ws.isAlive === false) {
+      clients.delete(ws);
+      return ws.terminate();
+    }
+    ws.isAlive = false;
+    ws.ping();
+  });
+}, 30000);
+
+wss.on('close', () => {
+  clearInterval(heartbeatInterval);
 });
 
 app.use(cors({

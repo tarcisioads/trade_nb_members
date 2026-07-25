@@ -29,6 +29,7 @@ const trades = ref<TradeNotification[]>([])
 const connectionStatus = ref('Connecting...')
 const connectionStatusClass = ref('bg-yellow-500/20 text-yellow-500')
 let ws: WebSocket | null = null
+let reconnectTimeout: ReturnType<typeof setTimeout> | null = null
 
 const alertSound = ref<HTMLAudioElement | null>(null)
 
@@ -46,8 +47,11 @@ const connectWebSocket = () => {
   ws.onclose = () => {
     connectionStatus.value = 'Disconnected'
     connectionStatusClass.value = 'bg-red-500/20 text-red-400'
+    if (reconnectTimeout) {
+      clearTimeout(reconnectTimeout)
+    }
     // Try to reconnect after 30 seconds
-    setTimeout(connectWebSocket, 30000)
+    reconnectTimeout = setTimeout(connectWebSocket, 30000)
   }
 
   ws.onerror = (error) => {
@@ -100,8 +104,14 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+  if (reconnectTimeout) {
+    clearTimeout(reconnectTimeout)
+    reconnectTimeout = null
+  }
   if (ws) {
+    ws.onclose = null
     ws.close()
+    ws = null
   }
 })
 </script>

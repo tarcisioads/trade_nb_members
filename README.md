@@ -1,282 +1,189 @@
 # Trade NB Members
 
-A TypeScript-based trading automation system that integrates with multiple cryptocurrency exchanges (Binance and BingX) to analyze and execute trades(BingX only) based on various market conditions and strategies.
+A TypeScript-based cryptocurrency trading automation system that integrates with Binance (market data & sentiment analysis) and BingX (market data, position tracking, and automated order execution). Includes a RESTful Express API server, WebSocket live event broadcaster, SQLite database persistence, background cron job monitoring, Telegram notification bot, and a Vue 3 + Vite + TailwindCSS 4 dashboard.
 
-## Features
+---
 
-- Multi-exchange support analyze (Binance and BingX) 
-- Automated trade analysis and execution
-- Volume analysis and position validation
-- Real-time order status monitoring
-- Real-time position monitoring with price updates
-- Automated stop-loss management
-- Leverage calculation and management
-- Console-based chart visualization
-- SQLite database for trade history and data persistence
-- Cron job scheduling for automated tasks
-- Modern web interface for trade management
-- RESTful API endpoints for trade operations
-- Real-time trade notifications
-- Trade history visualization
-- Responsive UI with modern CSS
+## 🚀 Quick Start with Docker (Recommended)
 
-## Prerequisites
+The easiest way to run the full application (API, Trading Bot, and Frontend) is using **Docker** and **Docker Compose**.
 
-- Node.js (v14 or higher)
-- npm or pnpm package manager
-- TypeScript
-- SQLite3
-
-## Installation
-
-1. Clone the repository:
+### 1. Clone the repository
 ```bash
-git clone [repository-url]
+git clone https://github.com/your-repo/trade_nb_members.git
 cd trade_nb_members
 ```
 
-2. Install dependencies:
+### 2. Configure Environment Variables
+Copy `.env.example` to `.env` and fill in your API credentials:
 ```bash
-npm install
-# or
-pnpm install
+cp .env.example .env
 ```
 
-3. Create a `.env` file in the root directory with your API credentials:
+Edit `.env` with your parameters:
 ```env
 BINGX_API_KEY=your_bingx_api_key
 BINGX_API_SECRET=your_bingx_api_secret
+BINGX_ORDER_PREFIX_CODE=DEF
+BINGX_MARGIN=500
+TELEGRAM_BOT_TOKEN=your_telegram_bot_token
+TELEGRAM_CHAT_ID=your_telegram_chat_id
 ```
 
-## Project Structure
-
-```
-├── src/
-│   ├── api/            # API endpoints and controllers
-│   │   ├── controllers/
-│   │   ├── routes/
-│   │   └── services/
-│   ├── frontend/       # Vue.js frontend application
-│   │   ├── src/
-│   │   │   ├── assets/
-│   │   │   │   └── styles/  # CSS styles
-│   │   │   ├── components/
-│   │   │   ├── router/
-│   │   │   └── views/
-│   │   └── index.html
-│   ├── utils/          # Utility functions
-│   ├── BingXDataService.ts
-│   ├── BinanceDataService.ts
-│   ├── ConsoleChartService.ts
-│   ├── DataServiceManager.ts
-│   ├── LeverageCalculator.ts
-│   ├── NotificationService.ts
-│   ├── OrderMonitor.ts
-│   ├── OrderStatusChecker.ts
-│   ├── PositionMonitor.ts
-│   ├── PositionMonitorCronJob.ts
-│   ├── PositionValidator.ts
-│   ├── TradeCronJob.ts
-│   ├── TradeDatabase.ts
-│   ├── TradeEntryAnalyzer.ts
-│   ├── TradeOrderProcessor.ts
-│   ├── TradeValidator.ts
-│   ├── VolumeAnalyzer.ts
-│   └── index.ts
-├── tests/              # Test files
-├── db/                 # Database files
-├── data/              # Data storage
-├── vite.config.ts     # Vite configuration
-└── package.json
-```
-
-## Usage
-
-1. Development mode:
+### 3. Launch with Docker Compose
 ```bash
+# Build and start all services in detached mode
+docker compose up -d --build
+
+# View container logs
+docker compose logs -f
+```
+
+This starts three container services:
+- **`trade-api`**: Express 5 REST API & WebSocket server running on port `3000`.
+- **`trade-bot`**: Background trading bot process running cron jobs and order execution.
+- **`trade-frontend`**: Nginx web server serving the Vue 3 dashboard on port `5173` (proxies `/api` requests to `trade-api`).
+
+To stop all containers:
+```bash
+docker compose down
+```
+
+---
+
+## 🛠 Local Development Setup
+
+If you prefer to run services locally without Docker:
+
+### Prerequisites
+- **Node.js**: v20 or higher
+- **Package Manager**: `npm` or `pnpm`
+- **Database**: SQLite3 (automatically initialized at `db/trades.db`)
+
+### Installation & Execution
+```bash
+# Install dependencies
+npm install
+
+# Run unit and integration test suite
+npm test
+
+# Run API + Frontend + Trading Bot concurrently
 npm run dev:all
-# or
-pnpm dev:all
+
+# Or run specific components individually:
+npm run api          # Starts API server on port 3000
+npm run frontend:dev # Starts Vite frontend dev server on port 5173
+npm run dev          # Starts Trading Bot background process
 ```
 
-2. Build the project: 
+### Production Build
 ```bash
+# Build frontend and compile TypeScript backend
 npm run build:all
-# or
-pnpm build:all
 ```
 
-3. Run tests:
-```bash
-npm test
-# or
-pnpm test
+---
+
+## 📁 Project Architecture
+
+The repository is structured following clean/hexagonal architecture principles:
+
+```
+trade_nb_members/
+├── src/
+│   ├── core/                  # Domain layer: entities, interfaces, validation & analysis services
+│   │   ├── entities/          # Core domain models (Trade)
+│   │   ├── interfaces/        # Interface abstractions (IDataProvider, IExchangeService, etc.)
+│   │   └── services/          # Domain services (LeverageCalculator, TradeValidator, VolumeAnalyzer, etc.)
+│   ├── infrastructure/        # External integrations layer
+│   │   ├── binance/           # Binance Futures API & market metrics providers
+│   │   ├── bingx/             # BingX REST client, Order Executor, WebSocket client
+│   │   ├── database/          # SQLite TradeDatabase schema & persistence repos
+│   │   └── telegram/          # Telegram bot notification integration
+│   ├── application/           # Application layer: orchestration, jobs & monitors
+│   │   ├── jobs/              # Cron jobs (TradeCronJob, PositionMonitorCronJob, PositionHistoryCronJob)
+│   │   └── services/          # Order execution, position monitors & history processors
+│   ├── api/                   # Presentation/API layer
+│   │   ├── controllers/       # Express HTTP controllers
+│   │   ├── routes/            # Express routes (/api/trades, /api/notifications, etc.)
+│   │   └── index.ts           # Express server setup & WebSocket broadcaster
+│   ├── frontend/              # Frontend presentation layer (Vue 3 + Vite + TailwindCSS 4 + Chart.js)
+│   │   ├── src/               # Views (Dashboard, TradeList, Forms), components, router, services
+│   │   └── index.html         # Main SPA entrypoint
+│   └── index.ts               # Main Trading Bot Composition Root
+├── tests/                     # Jest test suites
+├── db/                        # SQLite database storage (trades.db)
+├── data/                      # Data storage & alert media assets
+├── Dockerfile                 # Multi-stage Docker build file
+├── docker-compose.yml         # Multi-container orchestration specification
+└── package.json               # Node.js dependencies and operational scripts
 ```
 
-## Main Components
+---
 
-- **Data Services**: Integration with Binance and BingX exchanges
-- **Trade Analysis**: Volume analysis, position validation, and entry point analysis
-- **Order Processing**: Automated order execution and status monitoring (BingX only)
-- **Position Monitoring**: Real-time position tracking with price updates and stop-loss management
-- **Database**: SQLite-based storage for trade history and market data
-- **Scheduling**: Cron jobs for automated trading tasks
+## ⚡ Key Features
 
-## Position Monitoring System
+- **Multi-Exchange Data Integration:** Combines Binance Futures sentiment/metrics (Long/Short ratio, Open Interest) with BingX market data.
+- **Automated Execution on BingX:** Submits limit/market entry, stop-loss, and multi-tier take-profit orders (TP1 to TP6).
+- **Dynamic Risk & Leverage Management:** Dynamic leverage calculation based on timeframes and safety margins.
+- **Real-Time Position & Order Lifecycle Tracking:** Cron jobs and WebSockets monitor order fills, trailing stop adjustments, and position closures.
+- **Telegram Alert Dispatcher:** Real-time notifications for setup entries, order execution status, errors, and system status updates.
+- **Modern Web Dashboard:** Vue 3 dashboard displaying active positions, performance statistics, monthly analytics, setup distribution charts, and take-profit calculators.
 
-The system includes a comprehensive position monitoring solution that provides:
+---
 
-- Real-time position tracking with price updates
-- Automated stop-loss order management
-- Periodic position status updates via cron job
-- WebSocket-based price monitoring
-- Detailed position logging and status reporting
+## ⚙️ Environment Variables Reference
 
-To use the position monitoring system:
+| Variable | Purpose | Default |
+| :--- | :--- | :--- |
+| `BINGX_API_KEY` | BingX API Key (Required for trading) | - |
+| `BINGX_API_SECRET` | BingX API Secret (Required for trading) | - |
+| `BINGX_ORDER_PREFIX_CODE` | Order ID prefix string | `DEF` |
+| `BINGX_BASE_URL` | BingX REST API Endpoint | `https://open-api.bingx.com` |
+| `BINGX_WS_URL` | BingX WebSocket Market Endpoint | `wss://open-api-swap.bingx.com/swap-market` |
+| `BINGX_MARGIN` | Default position margin in USDT | `500` |
+| `BINGX_LIMIT_ORDER_FEE` | Fee percentage for limit orders | `0.02` |
+| `BINGX_MARKET_ORDER_FEE` | Fee percentage for market orders | `0.05` |
+| `VOLUME_MARGIN_PERCENTAGE` | Additional margin % for volume setups | `10` |
+| `SENTIMENT_MARGIN_PERCENTAGE` | Additional margin % for sentiment setups | `0` |
+| `MAX_LEVERAGE` | Maximum allowable leverage limit | `200` |
+| `LEVERAGE_SAFETY_FACTOR_PERCENT` | Default leverage safety margin % | `50` |
+| `MODIFY_TP1` | Adjust TP1 to 1:1 risk-reward ratio | `false` |
+| `VALIDATE_RISK_REWARD` | Minimum acceptable risk-reward ratio | `1.0` |
+| `TELEGRAM_BOT_TOKEN` | Telegram Bot Token for notification alerts | - |
+| `TELEGRAM_CHAT_ID` | Telegram Chat ID target | - |
 
-```typescript
-The monitor will automatically:
-- Track all open positions
-- Update prices in real-time
-- Manage stop-loss orders
-- Log position status every minute
-```
+---
 
-## Trade Entry Validation Rules
+## 📡 REST API & WebSocket Endpoints
 
-The system implements a comprehensive set of validation rules to ensure safe and profitable trade entries. A trade is only considered valid when it passes all applicable validation checks.
+### REST API (`http://localhost:3000/api`)
+- `GET /api/trades` - List all recorded trades
+- `POST /api/trades` - Add a new trade setup
+- `GET /api/trades/:id` - Fetch details for a specific trade
+- `PUT /api/trades/:id` - Update trade status or parameters
+- `DELETE /api/trades/:id` - Remove a trade entry
+- `GET /api/notifications` - Retrieve trade notification logs
+- `POST /api/trade/market` - Trigger market order execution from a notification
+- `GET /api/position-history` - Historical position analytics and risk metrics
+- `POST /api/takeprofit` - Compute take-profit target prices
+- `GET /api/bingx/contracts` - Fetch BingX contract specifications
 
-### Entry Price Validation
+### WebSocket (`ws://localhost:3000`)
+- Broadcasts real-time JSON trade notifications and position updates to connected web clients with automated 30-second heartbeat ping/pong pruning.
 
-1. **Entry Condition**
-   - For LONG positions:
-     - Current candle's close price must be above entry price
-     - Current candle's low price must be below or equal to entry price
-   - For SHORT positions:
-     - Current candle's close price must be below entry price
-     - Current candle's high price must be above or equal to entry price
+---
 
-2. **Price History Check**
-   - For LONG positions:
-     - Must have at least one previous candle with close price below entry price
-     - Cannot have any previous candle meeting entry conditions
-   - For SHORT positions:
-     - Must have at least one previous candle with close price above entry price
-     - Cannot have any previous candle meeting entry conditions
+## 🧪 Testing
 
-3. **Candle Wick Analysis**
-   - For LONG positions:
-     - Upper wick must not exceed 80% of total candle height
-   - For SHORT positions:
-     - Lower wick must not exceed 80% of total candle height
-
-4. **Risk-Reward Validation**
-   - Distance to TP1 must be at least 90% of distance to stop loss
-   - Formula: `|entry - tp1| / |entry - stop| >= 0.9`
-
-### Volume Analysis
-
-The system analyzes trading volume using standard deviation bars (stdBar) to categorize volume levels:
-
-1. **Volume Categories**
-   - RED: stdBar > 4.0 (Extremely high volume)
-   - ORANGE: 2.5 < stdBar ≤ 4.0 (Very high volume)
-   - YELLOW: 1.0 < stdBar ≤ 2.5 (High volume)
-   - WHITE: -0.5 < stdBar ≤ 1.0 (Normal volume)
-   - BLUE: stdBar ≤ -0.5 (Low volume)
-
-2. **Volume Validation**
-   - Trade is valid if volume is YELLOW, ORANGE, or RED
-   - Volume validation can be bypassed by setting `volume: false` in trade parameters
-   - Volume analysis is based on the last 5 candles
-
-### Trade Execution Requirements
-
-A trade is only executed when:
-1. All entry price validations pass
-2. Volume validation passes (unless bypassed)
-3. No existing position is open for the same symbol and direction
-4. Risk-reward ratio meets minimum requirements
-5. Candle wick analysis passes
-
-
-## Testing
-
-The project uses Jest for testing. Run the test suite with:
+Run the comprehensive unit and integration test suite:
 ```bash
 npm test
 ```
 
-## License
+---
 
-ISC
+## 📄 License
 
-## Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## Security
-
-- Never commit your API keys or secrets
-- Always use environment variables for sensitive data
-- Keep your dependencies up to date
-- Review and validate all trade operations before execution 
-
-## Web Interface
-
-The system now includes a modern web interface built with Vue.js and modern CSS, providing an intuitive way to manage trades and monitor positions.
-
-### Features
-
-- **Trade Management**
-  - Create and submit new trades
-  - View and manage existing positions
-  - Real-time trade notifications
-  - Trade history visualization
-
-- **User Interface**
-  - Responsive design with modern CSS
-  - Clean and intuitive interface
-  - Real-time updates
-  - Interactive trade forms
-  - Position monitoring dashboard
-
-### Running the Frontend
-
-1. Development mode:
-```bash
-pnpm dev
-```
-
-2. Build for production:
-```bash
-pnpm build
-```
-
-## API Endpoints
-
-The system provides RESTful API endpoints for trade operations and monitoring:
-
-### Trade Management
-
-- `POST /api/trades` - Create a new trade
-- `GET /api/trades` - List all trades
-- `GET /api/trades/:id` - Get trade details
-- `PUT /api/trades/:id` - Update trade status
-- `DELETE /api/trades/:id` - Cancel a trade
-
-## Notification System
-
-The system includes a comprehensive notification service that provides real-time updates about trade events:
-
-- Trade entry and exit notifications
-- Stop-loss triggers
-- Position updates
-- System alerts
-- Custom notification preferences
-
-Notifications are delivered through the web interface and can be configured based on user preferences. 
+This project is licensed under the [MIT License](LICENSE).

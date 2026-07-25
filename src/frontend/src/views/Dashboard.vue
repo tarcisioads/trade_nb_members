@@ -984,13 +984,47 @@ const formatDate = (timestamp: number): string => {
   return new Date(timestamp).toLocaleString('en-US')
 }
 
+const formatCSVNumber = (val: number | string | null | undefined): string => {
+  if (val === null || val === undefined || val === '') return ''
+  const num = typeof val === 'number' ? val : parseFloat(String(val))
+  if (isNaN(num)) return ''
+  return String(num)
+}
+
+const formatCSVText = (val: string | number | null | undefined): string => {
+  if (val === null || val === undefined) return '""'
+  let str = String(val).replace(/\r?\n|\r/g, ' ')
+  
+  // Prevent CSV Formula Injection in Google Sheets/Excel
+  if (/^[=+\-@\t\r]/.test(str)) {
+    str = "'" + str
+  }
+  
+  const escaped = str.replace(/"/g, '""')
+  return `"${escaped}"`
+}
+
+const formatCSVDate = (timestamp: number | string | null | undefined): string => {
+  if (!timestamp) return '""'
+  const date = new Date(timestamp)
+  if (isNaN(date.getTime())) return '""'
+  const pad = (n: number) => n.toString().padStart(2, '0')
+  const yyyy = date.getFullYear()
+  const mm = pad(date.getMonth() + 1)
+  const dd = pad(date.getDate())
+  const hh = pad(date.getHours())
+  const mi = pad(date.getMinutes())
+  const ss = pad(date.getSeconds())
+  return `"${yyyy}-${mm}-${dd} ${hh}:${mi}:${ss}"`
+}
+
 const exportToCSV = () => {
   if (positions.value.length === 0) {
     alert('No data to export')
     return
   }
 
-  // Define headers for the CSV - ensuring no grouped information
+  // Define headers for the CSV - properly escaped for Google Sheets
   const headers = [
     'Position ID',
     'Symbol',
@@ -1018,66 +1052,58 @@ const exportToCSV = () => {
     'Trade Sentiment',
     'Risk Amount',
     'Financial RR'
-  ]
+  ].map(h => formatCSVText(h))
 
-  // Map data to rows
+  // Map data to rows with numeric preservation
   const rows = positions.value.map((pos: PositionHistory) => {
     const trade = pos.tradeInfo?.trade
-    const openDate = pos.openTime ? new Date(pos.openTime).toISOString() : ''
-    const closeDate = pos.closeTime ? new Date(pos.closeTime).toISOString() : ''
-    const updateTime = pos.updateTime ? new Date(pos.updateTime).toISOString() : ''
-    
-    // Calculate cost percentage as seen in UI logic (roughly) if needed, 
-    // or just raw values. Let's strictly follow "separate info".
-    // I'll calculate percentage for convenience as a separate column.
     const commission = parseFloat(pos.positionCommission || '0')
     const funding = parseFloat(pos.totalFunding || '0')
     const netProfit = parseFloat(pos.netProfit || '0')
     const totalCost = commission + funding
-    let costPercentage = '0.0'
-    if (netProfit !== 0) {
-      costPercentage = ((Math.abs(totalCost) / Math.abs(netProfit)) * 100).toFixed(2)
+    let costPercentage: number | null = null
+    if (netProfit !== 0 && !isNaN(netProfit)) {
+      costPercentage = parseFloat(((Math.abs(totalCost) / Math.abs(netProfit)) * 100).toFixed(2))
     }
 
-    const safeString = (val: any) => {
-      if (val === null || val === undefined) return ''
-      return String(val).replace(/"/g, '""')
-    }
+    const riskAmount = calculateRiskAmount(pos)
+    const financialRRStr = calculateFinancialRR(pos)
+    const financialRR = parseFloat(financialRRStr)
 
     return [
-      pos.positionId,
-      pos.symbol,
-      pos.positionSide,
-      trade?.setup_description || '',
-      pos.positionAmt,
-      pos.closePositionAmt,
-      pos.avgPrice,
-      pos.avgClosePrice,
-      pos.leverage,
-      pos.netProfit,
-      pos.realisedProfit,
-      pos.positionCommission,
-      pos.totalFunding,
-      costPercentage,
-      openDate,
-      closeDate,
-      updateTime,
-      pos.tradeInfo?.found ? 'Yes' : 'No',
-      trade?.id || '',
-      trade?.entry || '',
-      trade?.stop || '',
-      trade?.tp1 || '',
-      trade?.volume || '',
-      trade?.sentiment || '',
-      calculateRiskAmount(pos).toFixed(2),
-      calculateFinancialRR(pos)
-    ].map(field => `"${safeString(field)}"`).join(',')
+      formatCSVText(pos.positionId),
+      formatCSVText(pos.symbol),
+      formatCSVText(pos.positionSide),
+      formatCSVText(trade?.setup_description || ''),
+      formatCSVNumber(pos.positionAmt),
+      formatCSVNumber(pos.closePositionAmt),
+      formatCSVNumber(pos.avgPrice),
+      formatCSVNumber(pos.avgClosePrice),
+      formatCSVNumber(pos.leverage),
+      formatCSVNumber(pos.netProfit),
+      formatCSVNumber(pos.realisedProfit),
+      formatCSVNumber(pos.positionCommission),
+      formatCSVNumber(pos.totalFunding),
+      formatCSVNumber(costPercentage),
+      formatCSVDate(pos.openTime),
+      formatCSVDate(pos.closeTime),
+      formatCSVDate(pos.updateTime),
+      formatCSVText(pos.tradeInfo?.found ? 'Yes' : 'No'),
+      formatCSVText(trade?.id),
+      formatCSVNumber(trade?.entry),
+      formatCSVNumber(trade?.stop),
+      formatCSVNumber(trade?.tp1),
+      formatCSVNumber(trade?.volume),
+      formatCSVText(trade?.sentiment),
+      formatCSVNumber(riskAmount),
+      formatCSVNumber(financialRR)
+    ].join(',')
   })
 
   // Combine headers and rows
   const csvContent = [headers.join(','), ...rows].join('\n')
   
-  // Create blob and download link
+  // Create blob and download link with UTF-8 BOM
   const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' })
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
