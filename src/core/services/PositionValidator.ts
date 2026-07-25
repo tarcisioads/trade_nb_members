@@ -7,126 +7,137 @@ import * as dotenv from 'dotenv';
 dotenv.config();
 
 export class PositionValidator {
-    private readonly apiClient: BingXApiClient;
-    private lastUpdate: number = 0;
-    private cachedPositions: Position[] = [];
-    private readonly CACHE_TTL = 10000; // 10 seconds cache
+  private readonly apiClient: BingXApiClient;
+  private lastUpdate: number = 0;
+  private cachedPositions: Position[] = [];
+  private readonly CACHE_TTL = 10000; // 10 seconds cache
 
-    constructor() {
-        this.apiClient = new BingXApiClient();
+  constructor() {
+    this.apiClient = new BingXApiClient();
+  }
+
+  public async getPositions(symbol: string, force: boolean = false): Promise<Position[]> {
+    const now = Date.now();
+    if (!force && symbol === 'ALL' && now - this.lastUpdate < this.CACHE_TTL) {
+      return this.cachedPositions;
     }
 
-    public async getPositions(symbol: string, force: boolean = false): Promise<Position[]> {
-        const now = Date.now();
-        if (!force && symbol === 'ALL' && now - this.lastUpdate < this.CACHE_TTL) {
-            return this.cachedPositions;
-        }
+    const normalizedSymbol = symbol === 'ALL' ? '' : normalizeSymbolBingX(symbol);
+    const path = '/openApi/swap/v2/user/positions';
+    const params: Record<string, string> = {};
 
-        const normalizedSymbol = symbol === 'ALL' ? '' : normalizeSymbolBingX(symbol);
-        const path = '/openApi/swap/v2/user/positions';
-        const params: Record<string, string> = {};
-
-        if (normalizedSymbol) {
-            params.symbol = normalizedSymbol;
-        }
-
-        try {
-            const response = await this.apiClient.get<BingXPositionResponse>(path, params);
-            if (response.code !== 0) {
-                throw new Error(`API returned non-zero code: ${response.code}, message: ${response.msg}`);
-            }
-            const positions = response.data || [];
-
-            if (symbol === 'ALL') {
-                this.cachedPositions = positions;
-                this.lastUpdate = now;
-            }
-
-            return positions;
-        } catch (error) {
-            throw new Error('Error fetching positions: ' + (error instanceof Error ? error.message : error));
-        }
+    if (normalizedSymbol) {
+      params.symbol = normalizedSymbol;
     }
 
-    public async hasOpenPosition(symbol: string, type: 'LONG' | 'SHORT'): Promise<{
-        hasPosition: boolean;
-        position?: Position;
-        message: string;
-    }> {
-        try {
-            const normalizedSymbol = normalizeSymbolBingX(symbol);
-            const now = Date.now();
-            let positions: Position[];
+    try {
+      const response = await this.apiClient.get<BingXPositionResponse>(path, params);
+      if (response.code !== 0) {
+        throw new Error(`API returned non-zero code: ${response.code}, message: ${response.msg}`);
+      }
+      const positions = response.data || [];
 
-            // Try to use cache if available and fresh
-            if (now - this.lastUpdate < this.CACHE_TTL && this.cachedPositions.length > 0) {
-                positions = this.cachedPositions.filter(p => normalizeSymbolBingX(p.symbol) === normalizedSymbol);
-            } else {
-                positions = await this.getPositions(normalizedSymbol);
-            }
+      if (symbol === 'ALL') {
+        this.cachedPositions = positions;
+        this.lastUpdate = now;
+      }
 
-            // Find position for the given symbol and type
-            const position = positions.find(p =>
-                normalizeSymbolBingX(p.symbol) === normalizedSymbol &&
-                p.positionSide === type &&
-                parseFloat(p.positionAmt) !== 0
-            );
-
-            if (position) {
-                return {
-                    hasPosition: true,
-                    position,
-                    message: `Found open ${type} position for ${normalizedSymbol} with amount ${position.positionAmt}`
-                };
-            }
-
-            return {
-                hasPosition: false,
-                message: `No open ${type} position found for ${normalizedSymbol}`
-            };
-        } catch (error) {
-            console.error(`Error checking position for ${symbol}:`, error);
-            throw error;
-        }
+      return positions;
+    } catch (error) {
+      throw new Error(
+        'Error fetching positions: ' + (error instanceof Error ? error.message : error)
+      );
     }
+  }
 
-    public async getPositionDetails(symbol: string, type: 'LONG' | 'SHORT'): Promise<{
-        hasPosition: boolean;
-        position?: Position;
-        message: string;
-        details?: {
-            entryPrice: number;
-            markPrice: number;
-            unrealizedPnL: number;
-            liquidationPrice: number;
-            leverage: number;
-            positionAmount: number;
+  public async hasOpenPosition(
+    symbol: string,
+    type: 'LONG' | 'SHORT'
+  ): Promise<{
+    hasPosition: boolean;
+    position?: Position;
+    message: string;
+  }> {
+    try {
+      const normalizedSymbol = normalizeSymbolBingX(symbol);
+      const now = Date.now();
+      let positions: Position[];
+
+      // Try to use cache if available and fresh
+      if (now - this.lastUpdate < this.CACHE_TTL && this.cachedPositions.length > 0) {
+        positions = this.cachedPositions.filter(
+          (p) => normalizeSymbolBingX(p.symbol) === normalizedSymbol
+        );
+      } else {
+        positions = await this.getPositions(normalizedSymbol);
+      }
+
+      // Find position for the given symbol and type
+      const position = positions.find(
+        (p) =>
+          normalizeSymbolBingX(p.symbol) === normalizedSymbol &&
+          p.positionSide === type &&
+          parseFloat(p.positionAmt) !== 0
+      );
+
+      if (position) {
+        return {
+          hasPosition: true,
+          position,
+          message: `Found open ${type} position for ${normalizedSymbol} with amount ${position.positionAmt}`,
         };
-    }> {
-        try {
-            const normalizedSymbol = normalizeSymbolBingX(symbol);
-            const { hasPosition, position, message } = await this.hasOpenPosition(normalizedSymbol, type);
+      }
 
-            if (!hasPosition || !position) {
-                return { hasPosition: false, message };
-            }
-
-            return {
-                hasPosition: true,
-                position,
-                message,
-                details: {
-                    entryPrice: parseFloat(position.avgPrice),
-                    markPrice: parseFloat(position.markPrice),
-                    unrealizedPnL: parseFloat(position.unRealizedProfit),
-                    liquidationPrice: parseFloat(position.liquidationPrice),
-                    leverage: parseFloat(position.leverage),
-                    positionAmount: parseFloat(position.positionAmt)
-                }
-            };
-        } catch (error) {
-            console.error(`Error getting position details for ${symbol}:`, error);
-            throw error;
-        }
+      return {
+        hasPosition: false,
+        message: `No open ${type} position found for ${normalizedSymbol}`,
+      };
+    } catch (error) {
+      console.error(`Error checking position for ${symbol}:`, error);
+      throw error;
     }
-} 
+  }
+
+  public async getPositionDetails(
+    symbol: string,
+    type: 'LONG' | 'SHORT'
+  ): Promise<{
+    hasPosition: boolean;
+    position?: Position;
+    message: string;
+    details?: {
+      entryPrice: number;
+      markPrice: number;
+      unrealizedPnL: number;
+      liquidationPrice: number;
+      leverage: number;
+      positionAmount: number;
+    };
+  }> {
+    try {
+      const normalizedSymbol = normalizeSymbolBingX(symbol);
+      const { hasPosition, position, message } = await this.hasOpenPosition(normalizedSymbol, type);
+
+      if (!hasPosition || !position) {
+        return { hasPosition: false, message };
+      }
+
+      return {
+        hasPosition: true,
+        position,
+        message,
+        details: {
+          entryPrice: parseFloat(position.avgPrice),
+          markPrice: parseFloat(position.markPrice),
+          unrealizedPnL: parseFloat(position.unRealizedProfit),
+          liquidationPrice: parseFloat(position.liquidationPrice),
+          leverage: parseFloat(position.leverage),
+          positionAmount: parseFloat(position.positionAmt),
+        },
+      };
+    } catch (error) {
+      console.error(`Error getting position details for ${symbol}:`, error);
+      throw error;
+    }
+  }
+}

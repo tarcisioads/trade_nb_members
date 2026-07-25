@@ -55,10 +55,12 @@ wss.on('close', () => {
   clearInterval(heartbeatInterval);
 });
 
-app.use(cors({
-  origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
-  credentials: true
-}));
+app.use(
+  cors({
+    origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
+    credentials: true,
+  })
+);
 app.use(express.json());
 
 // API Routes
@@ -71,7 +73,7 @@ app.use('/api', bingxRoutes);
 // Notification endpoint
 app.post('/api/notification', (req, res) => {
   const message = req.body;
-  
+
   // Broadcast message to all connected clients
   clients.forEach((client) => {
     if (client.readyState === WebSocket.OPEN) {
@@ -81,7 +83,6 @@ app.post('/api/notification', (req, res) => {
 
   res.json({ success: true, message: 'Notification broadcasted' });
 });
-
 
 // Serve static files in production
 if (process.env.NODE_ENV === 'production') {
@@ -93,6 +94,6 @@ if (process.env.NODE_ENV === 'production') {
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-    console.log(`WebSocket server is running on ws://localhost:${PORT}`);
-}); 
+  console.log(`Server is running on port ${PORT}`);
+  console.log(`WebSocket server is running on ws://localhost:${PORT}`);
+});

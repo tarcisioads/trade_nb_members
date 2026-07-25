@@ -7,7 +7,7 @@ const tradeController = new TradeController();
 
 // Serve alert.mp3 file
 router.get('/alert', (req, res) => {
-    res.sendFile(path.join(process.cwd(), 'data/alert.mp3'));
+  res.sendFile(path.join(process.cwd(), 'data/alert.mp3'));
 });
 
 router.get('/trades', (req, res) => tradeController.listTrades(req, res));
@@ -17,4 +17,4 @@ router.post('/trades', (req, res) => tradeController.addTrade(req, res));
 router.put('/trades/:index', (req, res) => tradeController.updateTrade(req, res));
 router.delete('/trades/:index', (req, res) => tradeController.deleteTrade(req, res));
 
-export default router; 
+export default router;

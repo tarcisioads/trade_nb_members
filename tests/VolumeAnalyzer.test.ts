@@ -7,10 +7,10 @@ function mockVolumes(volumes: number[]) {
     return {
       DataServiceManager: jest.fn().mockImplementation(() => ({
         getKlineDataVolume: jest.fn().mockResolvedValue({
-          data: volumes.map(v => ({ volume: v.toString() })),
-          source: 'binance'
-        })
-      }))
+          data: volumes.map((v) => ({ volume: v.toString() })),
+          source: 'binance',
+        }),
+      })),
     };
   });
 }
@@ -73,4 +73,4 @@ describe('VolumeAnalyzer', () => {
     const result = await analyzer.analyzeVolume('BTCUSDT', '1h');
     expect(result.color).toBe(VolumeColor.RED);
   });
-}); 
+});

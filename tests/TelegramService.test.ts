@@ -44,7 +44,9 @@ describe('TelegramService', () => {
 
     await service.sendCustomMessage('Hello World');
 
-    expect(mockSendMessage).toHaveBeenCalledWith('test_chat_id', 'Hello World', { parse_mode: 'HTML' });
+    expect(mockSendMessage).toHaveBeenCalledWith('test_chat_id', 'Hello World', {
+      parse_mode: 'HTML',
+    });
   });
 
   it('should format and send trade notification', async () => {
@@ -62,7 +64,7 @@ describe('TelegramService', () => {
       stop: 48000,
       takeProfits: { tp1: 52000 },
       validation: { isValid: true, message: 'Valid' },
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
 
     await service.sendTradeNotification(trade);

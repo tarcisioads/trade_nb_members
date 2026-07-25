@@ -25,9 +25,9 @@ describe('PositionValidator', () => {
           markPrice: '51000',
           unRealizedProfit: '100',
           liquidationPrice: '40000',
-          leverage: '10'
-        }
-      ]
+          leverage: '10',
+        },
+      ],
     });
 
     const result = await validator.hasOpenPosition('BTCUSDT', 'LONG');
@@ -40,7 +40,7 @@ describe('PositionValidator', () => {
   it('should return false when no open position exists', async () => {
     mockApiClient.get.mockResolvedValue({
       code: 0,
-      data: []
+      data: [],
     });
 
     const result = await validator.hasOpenPosition('BTCUSDT', 'LONG');
@@ -61,9 +61,9 @@ describe('PositionValidator', () => {
           markPrice: '51000',
           unRealizedProfit: '100',
           liquidationPrice: '40000',
-          leverage: '10'
-        }
-      ]
+          leverage: '10',
+        },
+      ],
     });
 
     const result = await validator.getPositionDetails('BTCUSDT', 'LONG');
@@ -75,16 +75,18 @@ describe('PositionValidator', () => {
       unrealizedPnL: 100,
       liquidationPrice: 40000,
       leverage: 10,
-      positionAmount: 0.1
+      positionAmount: 0.1,
     });
   });
 
   it('should throw error when API returns error code', async () => {
     mockApiClient.get.mockResolvedValue({
       code: 100001,
-      msg: 'Invalid API Key'
+      msg: 'Invalid API Key',
     });
 
-    await expect(validator.getPositions('BTCUSDT')).rejects.toThrow('API returned non-zero code: 100001');
+    await expect(validator.getPositions('BTCUSDT')).rejects.toThrow(
+      'API returned non-zero code: 100001'
+    );
   });
 });

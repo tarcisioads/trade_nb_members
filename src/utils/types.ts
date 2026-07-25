@@ -62,7 +62,7 @@ export interface BingXOrderResponse {
       stopPrice: string;
       quantity: string;
       status: string;
-    }
+    };
   };
 }
 
@@ -82,7 +82,7 @@ export interface Order {
 }
 
 export interface Orders {
-  orders: Order[]
+  orders: Order[];
 }
 
 export interface BingXOrdersResponse {
@@ -90,7 +90,6 @@ export interface BingXOrdersResponse {
   msg: string;
   data: Orders;
 }
-
 
 export interface TradeRecord extends Trade {
   id: number;
@@ -245,10 +244,7 @@ export interface TradeNotification {
   interval?: AllowedInterval | null;
   sentiment_required?: boolean | null;
   sentiment_adds_margin?: boolean | null;
-
 }
-
-
 
 export interface PositionHistory {
   symbol: string;
@@ -285,7 +281,7 @@ export interface BingXPositionHistoryResponse {
   msg: string;
   data: {
     positionHistory: PositionHistory[];
-  }
+  };
 }
 
 export interface Zone {
@@ -322,7 +318,7 @@ export interface RatioVariationResult {
     h1: number | null;
     h4: number | null;
     d1: number | null;
-  }
+  };
 }
 
 // Defines the structure for the variation calculation result
@@ -339,7 +335,7 @@ export interface OpenInterestVariationResult {
     h1: number | null;
     h4: number | null;
     d1: number | null;
-  }
+  };
 }
 
 export interface SentimentResult {
@@ -353,10 +349,8 @@ export interface SentimentResult {
       oiTrend: TrendAnalysis;
       lsrSignal: Signal;
       oiSignal: Signal;
-    }
+    };
   };
-
-
 }
 
 export enum VolumeColor {
@@ -364,7 +358,7 @@ export enum VolumeColor {
   ORANGE = 'orange',
   YELLOW = 'yellow',
   WHITE = 'white',
-  BLUE = 'blue'
+  BLUE = 'blue',
 }
 
 export interface AnalyzeVolumeResult {
@@ -373,6 +367,4 @@ export interface AnalyzeVolumeResult {
   mean: number;
   std: number;
   currentVolume: number;
-};
-
-
+}

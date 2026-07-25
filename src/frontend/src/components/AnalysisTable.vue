@@ -25,11 +25,19 @@
               <span class="px-2 py-1 bg-gray-700 rounded text-xs">{{ key }}</span>
             </td>
             <td class="px-4 py-3 text-right">{{ analysis.totalTrades }}</td>
-            <td class="px-4 py-3 text-right text-green-400">${{ formatNumber(analysis.totalProfit) }}</td>
-            <td class="px-4 py-3 text-right text-red-400">${{ formatNumber(analysis.totalLoss) }}</td>
-            <td class="px-4 py-3 text-right text-yellow-400">{{ formatNumber(analysis.avgRisk) }}</td>
+            <td class="px-4 py-3 text-right text-green-400">
+              ${{ formatNumber(analysis.totalProfit) }}
+            </td>
+            <td class="px-4 py-3 text-right text-red-400">
+              ${{ formatNumber(analysis.totalLoss) }}
+            </td>
+            <td class="px-4 py-3 text-right text-yellow-400">
+              {{ formatNumber(analysis.avgRisk) }}
+            </td>
             <td class="px-4 py-3 text-right text-blue-400">{{ formatNumber(analysis.avgRR) }}</td>
-            <td class="px-4 py-3 text-right text-purple-400">{{ formatNumber(analysis.avgLeverage) }}x</td>
+            <td class="px-4 py-3 text-right text-purple-400">
+              {{ formatNumber(analysis.avgLeverage) }}x
+            </td>
           </tr>
         </tbody>
       </table>
@@ -38,36 +46,36 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed } from 'vue';
 
 interface AnalysisData {
-  totalTrades: number
-  totalProfit: number
-  totalLoss: number
-  avgRisk: number
-  avgRR: number
-  avgLeverage: number
+  totalTrades: number;
+  totalProfit: number;
+  totalLoss: number;
+  avgRisk: number;
+  avgRR: number;
+  avgLeverage: number;
 }
 
 interface Props {
-  title: string
-  columnTitle: string
-  data: { [key: string]: AnalysisData }
+  title: string;
+  columnTitle: string;
+  data: { [key: string]: AnalysisData };
 }
 
-const props = defineProps<Props>()
+const props = defineProps<Props>();
 
 const formatNumber = (value: number | undefined | null): string => {
   if (value === undefined || value === null || isNaN(value)) {
-    return '0.00'
+    return '0.00';
   }
   return value.toLocaleString('en-US', {
     minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  })
-}
+    maximumFractionDigits: 2,
+  });
+};
 </script>
 
 <style scoped>
 /* Scoped styles removed */
-</style> 
+</style>

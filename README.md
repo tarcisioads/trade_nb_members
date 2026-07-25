@@ -9,18 +9,22 @@ A TypeScript-based cryptocurrency trading automation system that integrates with
 The easiest way to run the full application (API, Trading Bot, and Frontend) is using **Docker** and **Docker Compose**.
 
 ### 1. Clone the repository
+
 ```bash
 git clone https://github.com/your-repo/trade_nb_members.git
 cd trade_nb_members
 ```
 
 ### 2. Configure Environment Variables
+
 Copy `.env.example` to `.env` and fill in your API credentials:
+
 ```bash
 cp .env.example .env
 ```
 
 Edit `.env` with your parameters:
+
 ```env
 BINGX_API_KEY=your_bingx_api_key
 BINGX_API_SECRET=your_bingx_api_secret
@@ -31,6 +35,7 @@ TELEGRAM_CHAT_ID=your_telegram_chat_id
 ```
 
 ### 3. Launch with Docker Compose
+
 ```bash
 # Build and start all services in detached mode
 docker compose up -d --build
@@ -40,11 +45,13 @@ docker compose logs -f
 ```
 
 This starts three container services:
+
 - **`trade-api`**: Express 5 REST API & WebSocket server running on port `3000`.
 - **`trade-bot`**: Background trading bot process running cron jobs and order execution.
 - **`trade-frontend`**: Nginx web server serving the Vue 3 dashboard on port `5173` (proxies `/api` requests to `trade-api`).
 
 To stop all containers:
+
 ```bash
 docker compose down
 ```
@@ -56,11 +63,13 @@ docker compose down
 If you prefer to run services locally without Docker:
 
 ### Prerequisites
+
 - **Node.js**: v20 or higher
 - **Package Manager**: `npm` or `pnpm`
 - **Database**: SQLite3 (automatically initialized at `db/trades.db`)
 
 ### Installation & Execution
+
 ```bash
 # Install dependencies
 npm install
@@ -78,6 +87,7 @@ npm run dev          # Starts Trading Bot background process
 ```
 
 ### Production Build
+
 ```bash
 # Build frontend and compile TypeScript backend
 npm run build:all
@@ -135,30 +145,31 @@ trade_nb_members/
 
 ## ⚙️ Environment Variables Reference
 
-| Variable | Purpose | Default |
-| :--- | :--- | :--- |
-| `BINGX_API_KEY` | BingX API Key (Required for trading) | - |
-| `BINGX_API_SECRET` | BingX API Secret (Required for trading) | - |
-| `BINGX_ORDER_PREFIX_CODE` | Order ID prefix string | `DEF` |
-| `BINGX_BASE_URL` | BingX REST API Endpoint | `https://open-api.bingx.com` |
-| `BINGX_WS_URL` | BingX WebSocket Market Endpoint | `wss://open-api-swap.bingx.com/swap-market` |
-| `BINGX_MARGIN` | Default position margin in USDT | `500` |
-| `BINGX_LIMIT_ORDER_FEE` | Fee percentage for limit orders | `0.02` |
-| `BINGX_MARKET_ORDER_FEE` | Fee percentage for market orders | `0.05` |
-| `VOLUME_MARGIN_PERCENTAGE` | Additional margin % for volume setups | `10` |
-| `SENTIMENT_MARGIN_PERCENTAGE` | Additional margin % for sentiment setups | `0` |
-| `MAX_LEVERAGE` | Maximum allowable leverage limit | `200` |
-| `LEVERAGE_SAFETY_FACTOR_PERCENT` | Default leverage safety margin % | `50` |
-| `MODIFY_TP1` | Adjust TP1 to 1:1 risk-reward ratio | `false` |
-| `VALIDATE_RISK_REWARD` | Minimum acceptable risk-reward ratio | `1.0` |
-| `TELEGRAM_BOT_TOKEN` | Telegram Bot Token for notification alerts | - |
-| `TELEGRAM_CHAT_ID` | Telegram Chat ID target | - |
+| Variable                         | Purpose                                    | Default                                     |
+| :------------------------------- | :----------------------------------------- | :------------------------------------------ |
+| `BINGX_API_KEY`                  | BingX API Key (Required for trading)       | -                                           |
+| `BINGX_API_SECRET`               | BingX API Secret (Required for trading)    | -                                           |
+| `BINGX_ORDER_PREFIX_CODE`        | Order ID prefix string                     | `DEF`                                       |
+| `BINGX_BASE_URL`                 | BingX REST API Endpoint                    | `https://open-api.bingx.com`                |
+| `BINGX_WS_URL`                   | BingX WebSocket Market Endpoint            | `wss://open-api-swap.bingx.com/swap-market` |
+| `BINGX_MARGIN`                   | Default position margin in USDT            | `500`                                       |
+| `BINGX_LIMIT_ORDER_FEE`          | Fee percentage for limit orders            | `0.02`                                      |
+| `BINGX_MARKET_ORDER_FEE`         | Fee percentage for market orders           | `0.05`                                      |
+| `VOLUME_MARGIN_PERCENTAGE`       | Additional margin % for volume setups      | `10`                                        |
+| `SENTIMENT_MARGIN_PERCENTAGE`    | Additional margin % for sentiment setups   | `0`                                         |
+| `MAX_LEVERAGE`                   | Maximum allowable leverage limit           | `200`                                       |
+| `LEVERAGE_SAFETY_FACTOR_PERCENT` | Default leverage safety margin %           | `50`                                        |
+| `MODIFY_TP1`                     | Adjust TP1 to 1:1 risk-reward ratio        | `false`                                     |
+| `VALIDATE_RISK_REWARD`           | Minimum acceptable risk-reward ratio       | `1.0`                                       |
+| `TELEGRAM_BOT_TOKEN`             | Telegram Bot Token for notification alerts | -                                           |
+| `TELEGRAM_CHAT_ID`               | Telegram Chat ID target                    | -                                           |
 
 ---
 
 ## 📡 REST API & WebSocket Endpoints
 
 ### REST API (`http://localhost:3000/api`)
+
 - `GET /api/trades` - List all recorded trades
 - `POST /api/trades` - Add a new trade setup
 - `GET /api/trades/:id` - Fetch details for a specific trade
@@ -171,6 +182,7 @@ trade_nb_members/
 - `GET /api/bingx/contracts` - Fetch BingX contract specifications
 
 ### WebSocket (`ws://localhost:3000`)
+
 - Broadcasts real-time JSON trade notifications and position updates to connected web clients with automated 30-second heartbeat ping/pong pruning.
 
 ---
@@ -178,6 +190,7 @@ trade_nb_members/
 ## 🧪 Testing
 
 Run the comprehensive unit and integration test suite:
+
 ```bash
 npm test
 ```

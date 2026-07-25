@@ -18,7 +18,7 @@ describe('NotificationService', () => {
     mockTelegram = {
       sendTradeNotification: jest.fn().mockResolvedValue(undefined),
       sendCustomMessage: jest.fn().mockResolvedValue(undefined),
-      isConfigured: jest.fn().mockReturnValue(true)
+      isConfigured: jest.fn().mockReturnValue(true),
     } as any;
 
     service = new NotificationService('http://test-api.com', mockDb, mockTelegram);
@@ -33,13 +33,16 @@ describe('NotificationService', () => {
       entry: 50000,
       stop: 48000,
       takeProfits: { tp1: 52000 },
-      validation: { isValid: true, message: 'OK' }
+      validation: { isValid: true, message: 'OK' },
     };
 
     await service.sendTradeNotification(trade);
 
     expect(mockDb.saveTradeNotification).toHaveBeenCalled();
-    expect(axios.post).toHaveBeenCalledWith('http://test-api.com', expect.objectContaining({ symbol: 'BTCUSDT' }));
+    expect(axios.post).toHaveBeenCalledWith(
+      'http://test-api.com',
+      expect.objectContaining({ symbol: 'BTCUSDT' })
+    );
     expect(mockTelegram.sendTradeNotification).toHaveBeenCalled();
   });
 
@@ -48,13 +51,13 @@ describe('NotificationService', () => {
     const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
 
     const trade: any = {
-        symbol: 'BTCUSDT',
-        type: 'LONG',
-        entry: 50000,
-        stop: 48000,
-        takeProfits: { tp1: 52000 },
-        validation: { isValid: true, message: 'OK' }
-      };
+      symbol: 'BTCUSDT',
+      type: 'LONG',
+      entry: 50000,
+      stop: 48000,
+      takeProfits: { tp1: 52000 },
+      validation: { isValid: true, message: 'OK' },
+    };
 
     await service.sendTradeNotification(trade);
 

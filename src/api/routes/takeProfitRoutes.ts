@@ -6,4 +6,4 @@ const takeProfitController = new TakeProfitController();
 
 router.post('/takeprofit', (req, res) => takeProfitController.calculateTakeProfit(req, res));
 
-export default router; 
+export default router;

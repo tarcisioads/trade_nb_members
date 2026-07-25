@@ -8,9 +8,7 @@ import { AllowedInterval, RatioVariationResult } from '../../utils/types';
  * Calculates the percentage variation of the Global Long/Short ratio over different time frames.
  */
 export class LongShortRatioVariationService {
-
-  constructor() {
-  }
+  constructor() {}
 
   /**
    * Calculates the percentage variation between two numbers.
@@ -30,13 +28,20 @@ export class LongShortRatioVariationService {
    * @param symbol - The trading symbol to analyze (e.g., 'BTCUSDT').
    * @returns An object containing the current ratio and its variations.
    */
-  public async getRatioVariation(symbol: string, interval: AllowedInterval): Promise<RatioVariationResult> {
-
+  public async getRatioVariation(
+    symbol: string,
+    interval: AllowedInterval
+  ): Promise<RatioVariationResult> {
     const ratioService = await BinanceFuturesLongShortRatioService.create();
     // Fetch the last 25 hours of data to get points for current, 1h, 4h, and 24h ago.
-    const hourlyData = await ratioService.getGlobalLongShortAccountRatio(symbol, interval || '1h', 25);
+    const hourlyData = await ratioService.getGlobalLongShortAccountRatio(
+      symbol,
+      interval || '1h',
+      25
+    );
 
-    const getRatio = (data: GlobalLongShortRatio) => data ? parseFloat(data.longShortRatio) : null;
+    const getRatio = (data: GlobalLongShortRatio) =>
+      data ? parseFloat(data.longShortRatio) : null;
 
     // [0] is the current (incomplete) hour
     // [1] is the last completed hour (1h ago)
@@ -51,16 +56,16 @@ export class LongShortRatioVariationService {
       symbol: symbol,
       currentRatio: currentRatio,
       variation: {
-        vs1h: (currentRatio && h1Ratio) ? this.calculateVariation(currentRatio, h1Ratio) : null,
-        vs4h: (currentRatio && h4Ratio) ? this.calculateVariation(currentRatio, h4Ratio) : null,
-        vs24h: (currentRatio && d24Ratio) ? this.calculateVariation(currentRatio, d24Ratio) : null,
+        vs1h: currentRatio && h1Ratio ? this.calculateVariation(currentRatio, h1Ratio) : null,
+        vs4h: currentRatio && h4Ratio ? this.calculateVariation(currentRatio, h4Ratio) : null,
+        vs24h: currentRatio && d24Ratio ? this.calculateVariation(currentRatio, d24Ratio) : null,
       },
       timestamps: {
         current: hourlyData?.[0]?.timestamp || null,
         h1: hourlyData?.[1]?.timestamp || null,
         h4: hourlyData?.[4]?.timestamp || null,
         d1: hourlyData?.[24]?.timestamp || null,
-      }
+      },
     };
 
     return result;

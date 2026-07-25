@@ -17,7 +17,7 @@ export class StopLossUpdater {
     positionSide: 'LONG' | 'SHORT',
     marketOrderFee: number,
     limitOrderFee: number
-  ): { breakevenWithFees: number, totalFeeAmount: number, positionValue: number } | null {
+  ): { breakevenWithFees: number; totalFeeAmount: number; positionValue: number } | null {
     if (typeof entryPrice === 'undefined') {
       return null;
     }
@@ -31,9 +31,8 @@ export class StopLossUpdater {
 
     const feePriceImpact = totalFeeAmount / absPositionAmt;
 
-    const breakevenWithFees = positionSide === 'LONG'
-      ? entryPrice + feePriceImpact
-      : entryPrice - feePriceImpact;
+    const breakevenWithFees =
+      positionSide === 'LONG' ? entryPrice + feePriceImpact : entryPrice - feePriceImpact;
 
     return { breakevenWithFees, totalFeeAmount, positionValue };
   }
@@ -46,17 +45,16 @@ export class StopLossUpdater {
     positionSide: 'LONG' | 'SHORT',
     risk: number,
     reward: number,
-    breakevenData: { breakevenWithFees: number, totalFeeAmount: number, positionValue: number }
+    breakevenData: { breakevenWithFees: number; totalFeeAmount: number; positionValue: number }
   ): Promise<BingXOrderResponse | null> {
     const { breakevenWithFees, totalFeeAmount, positionValue } = breakevenData;
 
-    const isCurrentPriceBetter = positionSide === 'LONG'
-      ? currentPrice > breakevenWithFees
-      : currentPrice < breakevenWithFees;
+    const isCurrentPriceBetter =
+      positionSide === 'LONG' ? currentPrice > breakevenWithFees : currentPrice < breakevenWithFees;
 
-    const shouldUpdate = isCurrentPriceBetter && (positionSide === 'LONG'
-      ? currentStopPrice < entryPrice
-      : currentStopPrice > entryPrice);
+    const shouldUpdate =
+      isCurrentPriceBetter &&
+      (positionSide === 'LONG' ? currentStopPrice < entryPrice : currentStopPrice > entryPrice);
 
     if (shouldUpdate) {
       if (position.stopLossOrder) {
@@ -82,7 +80,7 @@ export class StopLossUpdater {
 
         position.stopLossOrder = {
           ...position.stopLossOrder!,
-          stopPrice: breakevenWithFees.toString()
+          stopPrice: breakevenWithFees.toString(),
         };
 
         await this.notificationService.sendTradeNotification({
@@ -96,7 +94,7 @@ export class StopLossUpdater {
             tp3: null,
             tp4: null,
             tp5: null,
-            tp6: null
+            tp6: null,
           },
           validation: {
             isValid: true,
@@ -106,24 +104,24 @@ export class StopLossUpdater {
               stdBar: 0,
               currentVolume: 0,
               mean: 0,
-              std: 0
+              std: 0,
             },
             entryAnalysis: {
               currentClose: currentPrice,
               canEnter: false,
               hasClosePriceBeforeEntry: true,
-              message: 'Stop loss moved to breakeven'
-            }
+              message: 'Stop loss moved to breakeven',
+            },
           },
           analysisUrl: '',
           volume_required: false,
           volume_adds_margin: false,
           setup_description: `Stop loss moved to breakeven for ${position.symbol} ${positionSide} position. Fees: ${((totalFeeAmount / positionValue) * 100).toFixed(4)}% of position value (${totalFeeAmount.toFixed(8)}). Risk/Reward: ${(reward / risk).toFixed(2)}:1`,
           interval: '1h',
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
 
-        return response
+        return response;
       } catch (error) {
         console.error(`Error updating stop loss for ${position.symbol} ${positionSide}:`, error);
         await this.notificationService.sendTradeNotification({
@@ -137,7 +135,7 @@ export class StopLossUpdater {
             tp3: null,
             tp4: null,
             tp5: null,
-            tp6: null
+            tp6: null,
           },
           validation: {
             isValid: false,
@@ -147,25 +145,25 @@ export class StopLossUpdater {
               stdBar: 0,
               currentVolume: 0,
               mean: 0,
-              std: 0
+              std: 0,
             },
             entryAnalysis: {
               currentClose: currentPrice,
               canEnter: false,
               hasClosePriceBeforeEntry: true,
-              message: '❌ Failed updating stop loss'
-            }
+              message: '❌ Failed updating stop loss',
+            },
           },
           analysisUrl: '',
           volume_required: false,
           volume_adds_margin: false,
           setup_description: `❌ Failed updating stop loss for ${position.symbol} ${positionSide}: ${error}`,
           interval: '1h',
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
-        return null
+        return null;
       }
     }
-    return null
+    return null;
   }
-} 
+}

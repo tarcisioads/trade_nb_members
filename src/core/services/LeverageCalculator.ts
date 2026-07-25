@@ -26,19 +26,28 @@ export class LeverageCalculator {
     this.apiClient = apiClient || new BingXApiClient();
     this.maxLeverage = Number(process.env.MAX_LEVERAGE) || 200; // Default to 200x max leverage
     // Convert percentage from .env to decimal (e.g., 50% -> 0.5)
-    const safetyFactorPercent_1h = Number(process.env.LEVERAGE_SAFETY_FACTOR_PERCENT_1H) || Number(process.env.LEVERAGE_SAFETY_FACTOR_PERCENT) || 50; // Default to 50% if not specified in .env
-    const safetyFactorPercent_15m = Number(process.env.LEVERAGE_SAFETY_FACTOR_PERCENT_15) || Number(process.env.LEVERAGE_SAFETY_FACTOR_PERCENT) || 50; // Default to 50% if not specified in .env
-    const safetyFactorPercent_5m = Number(process.env.LEVERAGE_SAFETY_FACTOR_PERCENT_5) || Number(process.env.LEVERAGE_SAFETY_FACTOR_PERCENT) || 50; // Default to 50% if not specified in .env
-    this.safetyFactor_1h = 1 - (safetyFactorPercent_1h / 100);
-    this.safetyFactor_15m = 1 - (safetyFactorPercent_15m / 100);
-    this.safetyFactor_5m = 1 - (safetyFactorPercent_5m / 100);
+    const safetyFactorPercent_1h =
+      Number(process.env.LEVERAGE_SAFETY_FACTOR_PERCENT_1H) ||
+      Number(process.env.LEVERAGE_SAFETY_FACTOR_PERCENT) ||
+      50; // Default to 50% if not specified in .env
+    const safetyFactorPercent_15m =
+      Number(process.env.LEVERAGE_SAFETY_FACTOR_PERCENT_15) ||
+      Number(process.env.LEVERAGE_SAFETY_FACTOR_PERCENT) ||
+      50; // Default to 50% if not specified in .env
+    const safetyFactorPercent_5m =
+      Number(process.env.LEVERAGE_SAFETY_FACTOR_PERCENT_5) ||
+      Number(process.env.LEVERAGE_SAFETY_FACTOR_PERCENT) ||
+      50; // Default to 50% if not specified in .env
+    this.safetyFactor_1h = 1 - safetyFactorPercent_1h / 100;
+    this.safetyFactor_15m = 1 - safetyFactorPercent_15m / 100;
+    this.safetyFactor_5m = 1 - safetyFactorPercent_5m / 100;
   }
 
   private async getPairInfo(pair: string): Promise<BingXPairInfo> {
     const normalizedPair = normalizeSymbolBingX(pair);
     const path = '/openApi/swap/v2/trade/leverage';
     const params = {
-      symbol: normalizedPair
+      symbol: normalizedPair,
     };
 
     try {
@@ -55,7 +64,13 @@ export class LeverageCalculator {
     return 1 / stopLossPercentage;
   }
 
-  public async calculateOptimalLeverage(pair: string, entry: number, stop: number, side: 'LONG' | 'SHORT', interval: AllowedInterval): Promise<{
+  public async calculateOptimalLeverage(
+    pair: string,
+    entry: number,
+    stop: number,
+    side: 'LONG' | 'SHORT',
+    interval: AllowedInterval
+  ): Promise<{
     optimalLeverage: number;
     theoreticalMaxLeverage: number;
     theoreticalRealMaxLeverage: number;
@@ -65,15 +80,15 @@ export class LeverageCalculator {
     try {
       // Get pair info to get max leverage
       const pairInfo = await this.getPairInfo(pair);
-      const exchangeMaxLeverage = Math.floor(side === 'LONG' ? pairInfo.data.maxLongLeverage : pairInfo.data.maxShortLeverage);
+      const exchangeMaxLeverage = Math.floor(
+        side === 'LONG' ? pairInfo.data.maxLongLeverage : pairInfo.data.maxShortLeverage
+      );
 
       // Calculate stop loss percentage
-      const stopLossPercentage = side === 'LONG'
-        ? ((entry - stop) / entry)
-        : ((stop - entry) / entry);
+      const stopLossPercentage = side === 'LONG' ? (entry - stop) / entry : (stop - entry) / entry;
 
       // Calculate theoretical max leverage based on risk
-      const theoreticalMaxLeverage = 1 / (stopLossPercentage);
+      const theoreticalMaxLeverage = 1 / stopLossPercentage;
 
       // Apply safety factor to theoretical max leverage to account for market volatility
       // and provide a buffer against liquidation. This makes the leverage more conservative
@@ -86,7 +101,7 @@ export class LeverageCalculator {
         theoreticalRealMaxLeverage = Math.floor(theoreticalMaxLeverage * this.safetyFactor_5m);
       }
       if (theoreticalRealMaxLeverage < 1) {
-        theoreticalRealMaxLeverage = 1
+        theoreticalRealMaxLeverage = 1;
       }
 
       // Use the minimum between theoretical max leverage, exchange max leverage, and configured max leverage
@@ -96,14 +111,14 @@ export class LeverageCalculator {
         this.maxLeverage
       );
 
-      console.log(`optimalLeverage:${optimalLeverage}`)
+      console.log(`optimalLeverage:${optimalLeverage}`);
 
       return {
         optimalLeverage,
         theoreticalMaxLeverage,
         theoreticalRealMaxLeverage,
         exchangeMaxLeverage,
-        stopLossPercentage
+        stopLossPercentage,
       };
     } catch (error) {
       console.error('Error calculating optimal leverage:', error);
@@ -116,13 +131,17 @@ export class LeverageCalculator {
     return side === 'LONG' ? pairInfo.data.longLeverage : pairInfo.data.shortLeverage;
   }
 
-  public async setLeverage(pair: string, leverage: number, positionSide: 'LONG' | 'SHORT'): Promise<void> {
+  public async setLeverage(
+    pair: string,
+    leverage: number,
+    positionSide: 'LONG' | 'SHORT'
+  ): Promise<void> {
     const normalizedPair = normalizeSymbolBingX(pair);
     const path = '/openApi/swap/v2/trade/leverage';
     const params = {
       symbol: normalizedPair,
       leverage: leverage.toString(),
-      side: positionSide
+      side: positionSide,
     };
 
     try {
@@ -133,4 +152,4 @@ export class LeverageCalculator {
       throw error;
     }
   }
-} 
+}

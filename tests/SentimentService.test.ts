@@ -20,12 +20,12 @@ describe('SentimentService', () => {
   it('should return Bullish sentiment when retail is shorting and OI is increasing for LONG', async () => {
     mockLsrService.getRatioVariation.mockResolvedValue({
       symbol: 'BTCUSDT',
-      variation: { vs1h: -2, vs4h: -1, vs24h: -1 } // Downward trend in LSR -> Bullish signal
+      variation: { vs1h: -2, vs4h: -1, vs24h: -1 }, // Downward trend in LSR -> Bullish signal
     } as any);
 
     mockOiService.getVariation.mockResolvedValue({
       symbol: 'BTCUSDT',
-      variation: { vs1h: 2, vs4h: 1, vs24h: 1 } // Upward trend in OI -> Confirmation
+      variation: { vs1h: 2, vs4h: 1, vs24h: 1 }, // Upward trend in OI -> Confirmation
     } as any);
 
     const result = await service.getSentiment('BTCUSDT', '1h', 'LONG');
@@ -38,12 +38,12 @@ describe('SentimentService', () => {
   it('should return Bearish sentiment when retail is longing and OI is increasing for SHORT', async () => {
     mockLsrService.getRatioVariation.mockResolvedValue({
       symbol: 'BTCUSDT',
-      variation: { vs1h: 2, vs4h: 1, vs24h: 1 } // Upward trend in LSR -> Bearish signal
+      variation: { vs1h: 2, vs4h: 1, vs24h: 1 }, // Upward trend in LSR -> Bearish signal
     } as any);
 
     mockOiService.getVariation.mockResolvedValue({
       symbol: 'BTCUSDT',
-      variation: { vs1h: 2, vs4h: 1, vs24h: 1 } // Upward trend in OI -> Confirmation for SHORT
+      variation: { vs1h: 2, vs4h: 1, vs24h: 1 }, // Upward trend in OI -> Confirmation for SHORT
     } as any);
 
     const result = await service.getSentiment('BTCUSDT', '1h', 'SHORT');
@@ -56,12 +56,12 @@ describe('SentimentService', () => {
   it('should return Neutral when signals do not align', async () => {
     mockLsrService.getRatioVariation.mockResolvedValue({
       symbol: 'BTCUSDT',
-      variation: { vs1h: -2, vs4h: -1, vs24h: -1 } // Bullish signal
+      variation: { vs1h: -2, vs4h: -1, vs24h: -1 }, // Bullish signal
     } as any);
 
     mockOiService.getVariation.mockResolvedValue({
       symbol: 'BTCUSDT',
-      variation: { vs1h: -2, vs4h: -1, vs24h: -1 } // Downward trend in OI -> Neutral signal
+      variation: { vs1h: -2, vs4h: -1, vs24h: -1 }, // Downward trend in OI -> Neutral signal
     } as any);
 
     const result = await service.getSentiment('BTCUSDT', '1h', 'LONG');

@@ -6,7 +6,7 @@ export default defineConfig({
   root: path.join(__dirname, 'src/frontend'),
   build: {
     outDir: path.join(__dirname, 'dist'),
-    emptyOutDir: true
+    emptyOutDir: true,
   },
   server: {
     host: '0.0.0.0',
@@ -16,7 +16,7 @@ export default defineConfig({
         target: 'http://localhost:3000',
         changeOrigin: true,
         //rewrite: (path) => path.replace(/^\/api/, '')
-      }
+      },
     },
-  }
-}); 
+  },
+});

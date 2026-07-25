@@ -23,11 +23,11 @@ export class PositionHistoryService {
   }
 
   public async getPositionHistory(
-    symbol: string, 
-    startTs?: number, 
-    endTs?: number, 
-    page: number = 1, 
-    pageSize: number = 100000, 
+    symbol: string,
+    startTs?: number,
+    endTs?: number,
+    page: number = 1,
+    pageSize: number = 100000,
     filterField: 'openTime' | 'closeTime' = 'closeTime'
   ): Promise<PositionHistory[]> {
     return this.dbService.getPositionHistory(symbol, startTs, endTs, page, pageSize, filterField);

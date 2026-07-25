@@ -7,7 +7,7 @@ services:
     command: node dist/src/api/index.js
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - '3000:3000'
     volumes:
       - ./db:/app/db
       - ./data:/app/data
@@ -33,7 +33,7 @@ services:
       target: frontend-runtime
     container_name: trade-frontend
     ports:
-      - "5173:80"
+      - '5173:80'
     restart: unless-stopped
     depends_on:
       - trade-api

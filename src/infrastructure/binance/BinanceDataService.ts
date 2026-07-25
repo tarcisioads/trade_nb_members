@@ -5,7 +5,6 @@ import * as path from 'path';
 import { KlineData, AllowedInterval } from '../../utils/types';
 import { logger } from '../../utils/logger';
 
-
 interface CacheKey {
   symbol: string;
   interval: AllowedInterval;
@@ -25,8 +24,7 @@ export class BinanceDataService implements IDataProvider {
   private readonly baseUrl: string = 'https://api.binance.com/api/v3';
   private db: any;
 
-  constructor() {
-  }
+  constructor() {}
 
   public static async create(): Promise<BinanceDataService> {
     const instance = new BinanceDataService();
@@ -34,13 +32,12 @@ export class BinanceDataService implements IDataProvider {
     return instance;
   }
 
-
   private async ensureDatabaseInitialized() {
     if (this.db) return;
     const dbPath = path.join(process.cwd(), 'db/binance_cache.db');
     this.db = await open({
       filename: dbPath,
-      driver: sqlite3.Database
+      driver: sqlite3.Database,
     });
 
     await this.db.exec(`
@@ -78,7 +75,7 @@ export class BinanceDataService implements IDataProvider {
       day: now.getDate(),
       month: now.getMonth() + 1, // getMonth() returns 0-11
       year: now.getFullYear(),
-      minutes: minuteGroup
+      minutes: minuteGroup,
     };
   }
 
@@ -92,7 +89,7 @@ export class BinanceDataService implements IDataProvider {
         if (error && error.code === 'SQLITE_BUSY') {
           lastError = error;
           if (i < retries - 1) {
-            await new Promise(res => setTimeout(res, delayMs * Math.pow(2, i)));
+            await new Promise((res) => setTimeout(res, delayMs * Math.pow(2, i)));
             continue;
           }
         }
@@ -102,15 +99,35 @@ export class BinanceDataService implements IDataProvider {
     throw lastError;
   }
 
-  private async getCachedData(symbol: string, timeComponents: CacheKey): Promise<KlineData[] | null> {
+  private async getCachedData(
+    symbol: string,
+    timeComponents: CacheKey
+  ): Promise<KlineData[] | null> {
     await this.ensureDatabaseInitialized();
-    const query = timeComponents.interval === '1h'
-      ? 'SELECT data FROM kline_cache WHERE symbol = ? AND interval = ? AND hour = ? AND day = ? AND month = ? AND year = ? AND minutes = 0'
-      : 'SELECT data FROM kline_cache WHERE symbol = ? AND interval = ? AND hour = ? AND day = ? AND month = ? AND year = ? AND minutes = ?';
+    const query =
+      timeComponents.interval === '1h'
+        ? 'SELECT data FROM kline_cache WHERE symbol = ? AND interval = ? AND hour = ? AND day = ? AND month = ? AND year = ? AND minutes = 0'
+        : 'SELECT data FROM kline_cache WHERE symbol = ? AND interval = ? AND hour = ? AND day = ? AND month = ? AND year = ? AND minutes = ?';
 
-    const params = timeComponents.interval === '1h'
-      ? [symbol, timeComponents.interval, timeComponents.hour, timeComponents.day, timeComponents.month, timeComponents.year]
-      : [symbol, timeComponents.interval, timeComponents.hour, timeComponents.day, timeComponents.month, timeComponents.year, timeComponents.minutes];
+    const params =
+      timeComponents.interval === '1h'
+        ? [
+            symbol,
+            timeComponents.interval,
+            timeComponents.hour,
+            timeComponents.day,
+            timeComponents.month,
+            timeComponents.year,
+          ]
+        : [
+            symbol,
+            timeComponents.interval,
+            timeComponents.hour,
+            timeComponents.day,
+            timeComponents.month,
+            timeComponents.year,
+            timeComponents.minutes,
+          ];
 
     const result = await this.withRetry(() => this.db.get(query, params));
 
@@ -120,7 +137,11 @@ export class BinanceDataService implements IDataProvider {
     return null;
   }
 
-  private async cacheData(symbol: string, timeComponents: CacheKey, data: KlineData[]): Promise<void> {
+  private async cacheData(
+    symbol: string,
+    timeComponents: CacheKey,
+    data: KlineData[]
+  ): Promise<void> {
     await this.ensureDatabaseInitialized();
     const query = `
             INSERT OR REPLACE INTO kline_cache 
@@ -128,17 +149,19 @@ export class BinanceDataService implements IDataProvider {
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
 
-    await this.withRetry(() => this.db.run(query, [
-      symbol,
-      timeComponents.interval,
-      timeComponents.hour,
-      timeComponents.day,
-      timeComponents.month,
-      timeComponents.year,
-      timeComponents.minutes,
-      JSON.stringify(data),
-      Date.now()
-    ]));
+    await this.withRetry(() =>
+      this.db.run(query, [
+        symbol,
+        timeComponents.interval,
+        timeComponents.hour,
+        timeComponents.day,
+        timeComponents.month,
+        timeComponents.year,
+        timeComponents.minutes,
+        JSON.stringify(data),
+        Date.now(),
+      ])
+    );
   }
 
   private parseKlineData(kline: any[]): KlineData {
@@ -153,11 +176,16 @@ export class BinanceDataService implements IDataProvider {
       quoteAssetVolume: kline[7],
       numberOfTrades: kline[8],
       takerBuyBaseAssetVolume: kline[9],
-      takerBuyQuoteAssetVolume: kline[10]
+      takerBuyQuoteAssetVolume: kline[10],
     };
   }
 
-  public async getKlineData(symbol: string, interval: AllowedInterval = '1h', limit: number = 56, noCache: boolean = false): Promise<KlineData[]> {
+  public async getKlineData(
+    symbol: string,
+    interval: AllowedInterval = '1h',
+    limit: number = 56,
+    noCache: boolean = false
+  ): Promise<KlineData[]> {
     await this.ensureDatabaseInitialized();
     const timeComponents = this.getCurrentTimeComponents(interval);
     timeComponents.symbol = symbol;
@@ -166,7 +194,9 @@ export class BinanceDataService implements IDataProvider {
     if (!noCache) {
       const cachedData = await this.getCachedData(symbol, timeComponents);
       if (cachedData) {
-        logger.info(`Returning cached data for ${symbol} (${interval}) at ${timeComponents.hour}:${timeComponents.minutes} on ${timeComponents.day}/${timeComponents.month}/${timeComponents.year}`);
+        logger.info(
+          `Returning cached data for ${symbol} (${interval}) at ${timeComponents.hour}:${timeComponents.minutes} on ${timeComponents.day}/${timeComponents.month}/${timeComponents.year}`
+        );
         return cachedData.slice(0, limit);
       }
     }
@@ -176,8 +206,8 @@ export class BinanceDataService implements IDataProvider {
         params: {
           symbol: symbol,
           interval: interval,
-          limit: limit
-        }
+          limit: limit,
+        },
       });
 
       const klineData = response.data.map(this.parseKlineData);
@@ -187,11 +217,13 @@ export class BinanceDataService implements IDataProvider {
         await this.cacheData(symbol, timeComponents, klineData);
       }
 
-      logger.info(`Fetched and cached new data for ${symbol} (${interval}) at ${timeComponents.hour}:${timeComponents.minutes} on ${timeComponents.day}/${timeComponents.month}/${timeComponents.year}`);
+      logger.info(
+        `Fetched and cached new data for ${symbol} (${interval}) at ${timeComponents.hour}:${timeComponents.minutes} on ${timeComponents.day}/${timeComponents.month}/${timeComponents.year}`
+      );
       return klineData.slice(0, limit);
     } catch (error) {
       logger.error(`Error fetching data for ${symbol} (${interval}):`, error);
       throw error;
     }
   }
-} 
+}

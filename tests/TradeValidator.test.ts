@@ -8,20 +8,20 @@ import { VolumeColor } from '../src/utils/types';
 jest.mock('../src/core/services/TradeEntryAnalyzer', () => ({
   TradeEntryAnalyzer: jest.fn().mockImplementation(() => ({
     analyzeEntry: jest.fn(),
-    getRecentCloses: jest.fn().mockResolvedValue([])
-  }))
+    getRecentCloses: jest.fn().mockResolvedValue([]),
+  })),
 }));
 
 jest.mock('../src/core/services/VolumeAnalyzer', () => ({
   VolumeAnalyzer: jest.fn().mockImplementation(() => ({
-    analyzeVolume: jest.fn()
-  }))
+    analyzeVolume: jest.fn(),
+  })),
 }));
 
 jest.mock('../src/core/services/SentimentService', () => ({
   SentimentService: jest.fn().mockImplementation(() => ({
-    getSentiment: jest.fn()
-  }))
+    getSentiment: jest.fn(),
+  })),
 }));
 
 describe('TradeValidator', () => {
@@ -35,15 +35,15 @@ describe('TradeValidator', () => {
 
     mockTradeEntryAnalyzer = {
       analyzeEntry: jest.fn(),
-      getRecentCloses: jest.fn().mockResolvedValue([])
+      getRecentCloses: jest.fn().mockResolvedValue([]),
     } as unknown as jest.Mocked<TradeEntryAnalyzer>;
 
     mockVolumeAnalyzer = {
-      analyzeVolume: jest.fn()
+      analyzeVolume: jest.fn(),
     } as unknown as jest.Mocked<VolumeAnalyzer>;
 
     mockSentimentService = {
-      getSentiment: jest.fn()
+      getSentiment: jest.fn(),
     } as unknown as jest.Mocked<SentimentService>;
 
     // Setup default mock implementations
@@ -62,14 +62,14 @@ describe('TradeValidator', () => {
       currentClose: 100,
       hasClosePriceBeforeEntry: true,
       message: 'Entry valid',
-      warning: false
+      warning: false,
     };
     const mockVolumeAnalysis = {
       color: VolumeColor.YELLOW,
       stdBar: 0,
       mean: 100,
       std: 10,
-      currentVolume: 100
+      currentVolume: 100,
     };
     const mockSentimentAnalysis = {
       sentiment: 'bullish',
@@ -79,11 +79,11 @@ describe('TradeValidator', () => {
           lsrTrend: { score: 1 },
           oiTrend: { score: 1 },
           lsrSignal: 'bullish',
-          oiSignal: 'bullish'
+          oiSignal: 'bullish',
         },
         longShortRatio: { variation: { vs1h: 1, vs4h: 1, vs24h: 1 } },
-        openInterest: { variation: { vs1h: 1, vs4h: 1, vs24h: 1 } }
-      }
+        openInterest: { variation: { vs1h: 1, vs4h: 1, vs24h: 1 } },
+      },
     };
 
     mockTradeEntryAnalyzer.analyzeEntry.mockResolvedValue(mockEntryAnalysis);
@@ -99,7 +99,7 @@ describe('TradeValidator', () => {
       tp1: 105,
       volume_required: true,
       sentiment_required: true,
-      interval: '1h'
+      interval: '1h',
     };
 
     const result = await validator.validateTrade(trade as any);
@@ -116,14 +116,14 @@ describe('TradeValidator', () => {
       currentClose: 100,
       hasClosePriceBeforeEntry: true,
       message: 'Entry valid',
-      warning: false
+      warning: false,
     };
     const mockVolumeAnalysis = {
       color: VolumeColor.BLUE,
       stdBar: -1,
       mean: 10,
       std: 2,
-      currentVolume: 5
+      currentVolume: 5,
     };
     const mockSentimentAnalysis = {
       sentiment: 'bullish',
@@ -133,11 +133,11 @@ describe('TradeValidator', () => {
           lsrTrend: { score: 1 },
           oiTrend: { score: 1 },
           lsrSignal: 'bullish',
-          oiSignal: 'bullish'
+          oiSignal: 'bullish',
         },
         longShortRatio: { variation: { vs1h: 1, vs4h: 1, vs24h: 1 } },
-        openInterest: { variation: { vs1h: 1, vs4h: 1, vs24h: 1 } }
-      }
+        openInterest: { variation: { vs1h: 1, vs4h: 1, vs24h: 1 } },
+      },
     };
 
     mockTradeEntryAnalyzer.analyzeEntry.mockResolvedValue(mockEntryAnalysis);
@@ -153,7 +153,7 @@ describe('TradeValidator', () => {
       tp1: 105,
       volume_required: false,
       sentiment_required: true,
-      interval: '1h'
+      interval: '1h',
     };
 
     const result = await validator.validateTrade(trade as any);
@@ -171,14 +171,14 @@ describe('TradeValidator', () => {
       currentClose: 100,
       hasClosePriceBeforeEntry: true,
       message: 'Entry invalid',
-      warning: false
+      warning: false,
     };
     const mockVolumeAnalysis = {
       color: VolumeColor.WHITE,
       stdBar: 0,
       mean: 100,
       std: 10,
-      currentVolume: 100
+      currentVolume: 100,
     };
     const mockSentimentAnalysis = {
       sentiment: 'bullish',
@@ -188,11 +188,11 @@ describe('TradeValidator', () => {
           lsrTrend: { score: 1 },
           oiTrend: { score: 1 },
           lsrSignal: 'bullish',
-          oiSignal: 'bullish'
+          oiSignal: 'bullish',
         },
         longShortRatio: { variation: { vs1h: 1, vs4h: 1, vs24h: 1 } },
-        openInterest: { variation: { vs1h: 1, vs4h: 1, vs24h: 1 } }
-      }
+        openInterest: { variation: { vs1h: 1, vs4h: 1, vs24h: 1 } },
+      },
     };
 
     mockTradeEntryAnalyzer.analyzeEntry.mockResolvedValue(mockEntryAnalysis);
@@ -208,7 +208,7 @@ describe('TradeValidator', () => {
       tp1: 105,
       volume_required: true,
       sentiment_required: true,
-      interval: '1h'
+      interval: '1h',
     };
 
     const result = await validator.validateTrade(trade as any);
@@ -225,14 +225,14 @@ describe('TradeValidator', () => {
       currentClose: 100,
       hasClosePriceBeforeEntry: true,
       message: 'Entry valid',
-      warning: false
+      warning: false,
     };
     const mockVolumeAnalysis = {
       color: VolumeColor.BLUE, // Invalid volume
       stdBar: -1,
       mean: 100,
       std: 10,
-      currentVolume: 90
+      currentVolume: 90,
     };
     const mockSentimentAnalysis = {
       sentiment: 'bullish',
@@ -242,11 +242,11 @@ describe('TradeValidator', () => {
           lsrTrend: { score: 1 },
           oiTrend: { score: 1 },
           lsrSignal: 'bullish',
-          oiSignal: 'bullish'
+          oiSignal: 'bullish',
         },
         longShortRatio: { variation: { vs1h: 1, vs4h: 1, vs24h: 1 } },
-        openInterest: { variation: { vs1h: 1, vs4h: 1, vs24h: 1 } }
-      }
+        openInterest: { variation: { vs1h: 1, vs4h: 1, vs24h: 1 } },
+      },
     };
 
     mockTradeEntryAnalyzer.analyzeEntry.mockResolvedValue(mockEntryAnalysis);
@@ -262,7 +262,7 @@ describe('TradeValidator', () => {
       tp1: 105,
       volume_required: true,
       sentiment_required: true,
-      interval: '1h'
+      interval: '1h',
     };
 
     const result = await validator.validateTrade(trade as any);
@@ -280,14 +280,14 @@ describe('TradeValidator', () => {
       currentClose: 100,
       hasClosePriceBeforeEntry: true,
       message: 'Entry valid',
-      warning: false
+      warning: false,
     };
     const mockVolumeAnalysis = {
       color: VolumeColor.BLUE, // Invalid volume
       stdBar: -1,
       mean: 100,
       std: 10,
-      currentVolume: 90
+      currentVolume: 90,
     };
     const mockSentimentAnalysis = {
       sentiment: 'bullish',
@@ -297,11 +297,11 @@ describe('TradeValidator', () => {
           lsrTrend: { score: 1 },
           oiTrend: { score: 1 },
           lsrSignal: 'bullish',
-          oiSignal: 'bullish'
+          oiSignal: 'bullish',
         },
         longShortRatio: { variation: { vs1h: 1, vs4h: 1, vs24h: 1 } },
-        openInterest: { variation: { vs1h: 1, vs4h: 1, vs24h: 1 } }
-      }
+        openInterest: { variation: { vs1h: 1, vs4h: 1, vs24h: 1 } },
+      },
     };
 
     mockTradeEntryAnalyzer.analyzeEntry.mockResolvedValue(mockEntryAnalysis);
@@ -317,7 +317,7 @@ describe('TradeValidator', () => {
       tp1: 105,
       volume_required: false, // Not required
       sentiment_required: true,
-      interval: '1h'
+      interval: '1h',
     };
 
     const result = await validator.validateTrade(trade as any);
@@ -334,14 +334,14 @@ describe('TradeValidator', () => {
       currentClose: 100,
       hasClosePriceBeforeEntry: true,
       message: 'Entry invalid',
-      warning: false
+      warning: false,
     };
     const mockVolumeAnalysis = {
       color: VolumeColor.BLUE, // Invalid volume
       stdBar: -1,
       mean: 100,
       std: 10,
-      currentVolume: 90
+      currentVolume: 90,
     };
     const mockSentimentAnalysis = {
       sentiment: 'bullish',
@@ -351,11 +351,11 @@ describe('TradeValidator', () => {
           lsrTrend: { score: 1 },
           oiTrend: { score: 1 },
           lsrSignal: 'bullish',
-          oiSignal: 'bullish'
+          oiSignal: 'bullish',
         },
         longShortRatio: { variation: { vs1h: 1, vs4h: 1, vs24h: 1 } },
-        openInterest: { variation: { vs1h: 1, vs4h: 1, vs24h: 1 } }
-      }
+        openInterest: { variation: { vs1h: 1, vs4h: 1, vs24h: 1 } },
+      },
     };
 
     mockTradeEntryAnalyzer.analyzeEntry.mockResolvedValue(mockEntryAnalysis);
@@ -371,7 +371,7 @@ describe('TradeValidator', () => {
       tp1: 105,
       volume_required: true,
       sentiment_required: true,
-      interval: '1h'
+      interval: '1h',
     };
 
     const result = await validator.validateTrade(trade as any);
@@ -383,7 +383,8 @@ describe('TradeValidator', () => {
   });
 
   it('should return invalid gracefully when the market is closed/paused on weekends', async () => {
-    const errorMsg = 'BingX API error 109415: NCCOGASOLINE2USD-USDT is pause currently,all validted symbols in api:/openApi/swap/v2/quote/contracts, please verify it';
+    const errorMsg =
+      'BingX API error 109415: NCCOGASOLINE2USD-USDT is pause currently,all validted symbols in api:/openApi/swap/v2/quote/contracts, please verify it';
     mockTradeEntryAnalyzer.analyzeEntry.mockRejectedValue(new Error(errorMsg));
 
     const trade = {
@@ -394,7 +395,7 @@ describe('TradeValidator', () => {
       tp1: 105,
       volume_required: true,
       sentiment_required: true,
-      interval: '1h'
+      interval: '1h',
     };
 
     const result = await validator.validateTrade(trade as any);

@@ -1,7 +1,13 @@
 import sqlite3 from 'sqlite3';
 import { open } from 'sqlite';
 import * as path from 'path';
-import { Trade, TradeRecord, BingXOrderResponse, OrderDetails, TradeNotification } from '../../utils/types';
+import {
+  Trade,
+  TradeRecord,
+  BingXOrderResponse,
+  OrderDetails,
+  TradeNotification,
+} from '../../utils/types';
 import * as dotenv from 'dotenv';
 
 // Load environment variables
@@ -21,7 +27,7 @@ export class TradeDatabase implements ITradeDatabase {
   private async initializeDatabase() {
     this.db = await open({
       filename: this.dbPath,
-      driver: sqlite3.Database
+      driver: sqlite3.Database,
     });
 
     await this.db.exec(`
@@ -68,7 +74,7 @@ export class TradeDatabase implements ITradeDatabase {
 
     // Adiciona a coluna positionId se não existir
     try {
-      const columns = await this.db.all("PRAGMA table_info(trades)");
+      const columns = await this.db.all('PRAGMA table_info(trades)');
       const hasPositionId = columns.some((col: any) => col.name === 'positionId');
       if (!hasPositionId) {
         await this.db.exec('ALTER TABLE trades ADD COLUMN positionId TEXT');
@@ -79,7 +85,7 @@ export class TradeDatabase implements ITradeDatabase {
 
     // Add sentiment columns if they don't exist
     try {
-      const columns = await this.db.all("PRAGMA table_info(trades)");
+      const columns = await this.db.all('PRAGMA table_info(trades)');
       const sentimentColumns = ['sentiment', 'lsrtrend', 'oitrend', 'lsrsignal', 'oisignal'];
       for (const colName of sentimentColumns) {
         const hasColumn = columns.some((col: any) => col.name === colName);
@@ -93,7 +99,7 @@ export class TradeDatabase implements ITradeDatabase {
 
     // Adiciona a coluna sentiment_adds_margin se não existir
     try {
-      const columns = await this.db.all("PRAGMA table_info(trades)");
+      const columns = await this.db.all('PRAGMA table_info(trades)');
       const has = columns.some((col: any) => col.name === 'sentiment_adds_margin');
       if (!has) {
         await this.db.exec('ALTER TABLE trades ADD COLUMN sentiment_adds_margin BOOLEAN DEFAULT 0');
@@ -104,7 +110,7 @@ export class TradeDatabase implements ITradeDatabase {
 
     // Adiciona a coluna sentiment_adds_margin se não existir
     try {
-      const columns = await this.db.all("PRAGMA table_info(trades)");
+      const columns = await this.db.all('PRAGMA table_info(trades)');
       const has = columns.some((col: any) => col.name === 'volume');
       if (!has) {
         await this.db.exec('ALTER TABLE trades ADD COLUMN volume TEXT');
@@ -112,7 +118,6 @@ export class TradeDatabase implements ITradeDatabase {
     } catch (error) {
       // Se der erro (ex: coluna já existe), ignora
     }
-
 
     await this.db.exec(`
             CREATE TABLE IF NOT EXISTS order_details (
@@ -197,11 +202,12 @@ export class TradeDatabase implements ITradeDatabase {
       tpOrders: BingXOrderResponse[];
     },
     quantity: number,
-    leverage: number,
+    leverage: number
   ): Promise<TradeRecord> {
     const now = new Date().toISOString();
 
-    const result = await this.db.run(`
+    const result = await this.db.run(
+      `
             INSERT INTO trades (
                 symbol,
                 type,
@@ -240,44 +246,46 @@ export class TradeDatabase implements ITradeDatabase {
                 sentiment_adds_margin,
                 volume
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `, [
-      trade.symbol,
-      trade.type,
-      trade.interval,
-      trade.entry,
-      trade.stop,
-      trade.tp1,
-      trade.tp2,
-      trade.tp3,
-      trade.tp4,
-      trade.tp5,
-      trade.tp6,
-      orders.entryOrder.data.order.orderId,
-      orders.stopOrder.data.order.orderId,
-      orders.tpOrders[0]?.data.order.orderId || null,
-      orders.tpOrders[1]?.data.order.orderId || null,
-      orders.tpOrders[2]?.data.order.orderId || null,
-      orders.tpOrders[3]?.data.order.orderId || null,
-      orders.tpOrders[4]?.data.order.orderId || null,
-      orders.tpOrders[5]?.data.order.orderId || null,
-      orders.tpOrders[6]?.data.order.orderId || null,
-      quantity,
-      leverage,
-      'OPEN',
-      trade.volume_adds_margin ? 1 : 0,
-      trade.setup_description,
-      trade.volume_required ? 1 : 0,
-      now,
-      now,
-      trade.positionId || null,
-      trade?.sentiment || null,
-      trade?.lsrtrend || null,
-      trade?.oitrend || null,
-      trade?.lsrsignal || null,
-      trade?.oisignal || null,
-      trade?.sentiment_adds_margin || null,
-      trade?.volume || null
-    ]);
+        `,
+      [
+        trade.symbol,
+        trade.type,
+        trade.interval,
+        trade.entry,
+        trade.stop,
+        trade.tp1,
+        trade.tp2,
+        trade.tp3,
+        trade.tp4,
+        trade.tp5,
+        trade.tp6,
+        orders.entryOrder.data.order.orderId,
+        orders.stopOrder.data.order.orderId,
+        orders.tpOrders[0]?.data.order.orderId || null,
+        orders.tpOrders[1]?.data.order.orderId || null,
+        orders.tpOrders[2]?.data.order.orderId || null,
+        orders.tpOrders[3]?.data.order.orderId || null,
+        orders.tpOrders[4]?.data.order.orderId || null,
+        orders.tpOrders[5]?.data.order.orderId || null,
+        orders.tpOrders[6]?.data.order.orderId || null,
+        quantity,
+        leverage,
+        'OPEN',
+        trade.volume_adds_margin ? 1 : 0,
+        trade.setup_description,
+        trade.volume_required ? 1 : 0,
+        now,
+        now,
+        trade.positionId || null,
+        trade?.sentiment || null,
+        trade?.lsrtrend || null,
+        trade?.oitrend || null,
+        trade?.lsrsignal || null,
+        trade?.oisignal || null,
+        trade?.sentiment_adds_margin || null,
+        trade?.volume || null,
+      ]
+    );
 
     return this.getTradeById(result.lastID);
   }
@@ -291,7 +299,9 @@ export class TradeDatabase implements ITradeDatabase {
   }
 
   public async getOpenTradesSymbols(): Promise<string[]> {
-    const result = await this.db.all('SELECT DISTINCT symbol FROM trades WHERE status = ?', ['OPEN']);
+    const result = await this.db.all('SELECT DISTINCT symbol FROM trades WHERE status = ?', [
+      'OPEN',
+    ]);
     return result.map((row: { symbol: string }) => row.symbol);
   }
 
@@ -305,10 +315,11 @@ export class TradeDatabase implements ITradeDatabase {
 
   public async updateTradeStatus(id: number, status: 'OPEN' | 'CLOSED'): Promise<void> {
     const now = new Date().toISOString();
-    await this.db.run(
-      'UPDATE trades SET status = ?, updatedAt = ? WHERE id = ?',
-      [status, now, id]
-    );
+    await this.db.run('UPDATE trades SET status = ?, updatedAt = ? WHERE id = ?', [
+      status,
+      now,
+      id,
+    ]);
   }
 
   public async updateOrderIds(
@@ -381,7 +392,6 @@ export class TradeDatabase implements ITradeDatabase {
         updates.push('trailingStopOrderId = ?');
         values.push(BigInt(orderIds.trailingStopOrderId).toString());
       }
-
     }
 
     if (updates.length > 0) {
@@ -390,19 +400,17 @@ export class TradeDatabase implements ITradeDatabase {
       values.push(now);
       values.push(id);
 
-      await this.db.run(
-        `UPDATE trades SET ${updates.join(', ')} WHERE id = ?`,
-        values
-      );
+      await this.db.run(`UPDATE trades SET ${updates.join(', ')} WHERE id = ?`, values);
     }
   }
 
   public async updateLeverage(id: number, leverage: number): Promise<void> {
     const now = new Date().toISOString();
-    await this.db.run(
-      'UPDATE trades SET leverage = ?, updatedAt = ? WHERE id = ?',
-      [leverage, now, id]
-    );
+    await this.db.run('UPDATE trades SET leverage = ?, updatedAt = ? WHERE id = ?', [
+      leverage,
+      now,
+      id,
+    ]);
   }
 
   public async saveOrderDetails(
@@ -425,7 +433,8 @@ export class TradeDatabase implements ITradeDatabase {
   ): Promise<void> {
     const now = new Date().toISOString();
 
-    await this.db.run(`
+    await this.db.run(
+      `
             INSERT INTO order_details (
                 tradeId,
                 orderId,
@@ -443,23 +452,25 @@ export class TradeDatabase implements ITradeDatabase {
                 result,
                 createdAt
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `, [
-      tradeId,
-      orderId,
-      details.status,
-      details.executedQuantity,
-      details.averagePrice,
-      details.createTime.toISOString(),
-      details.updateTime.toISOString(),
-      details.isFilled ? 1 : 0,
-      details.isCanceled ? 1 : 0,
-      details.isOpen ? 1 : 0,
-      details.pnl || null,
-      details.fee || null,
-      details.feeType || null,
-      details.result || null,
-      now
-    ]);
+        `,
+      [
+        tradeId,
+        orderId,
+        details.status,
+        details.executedQuantity,
+        details.averagePrice,
+        details.createTime.toISOString(),
+        details.updateTime.toISOString(),
+        details.isFilled ? 1 : 0,
+        details.isCanceled ? 1 : 0,
+        details.isOpen ? 1 : 0,
+        details.pnl || null,
+        details.fee || null,
+        details.feeType || null,
+        details.result || null,
+        now,
+      ]
+    );
   }
 
   public async hasOrderDetails(orderId: string): Promise<boolean> {
@@ -483,7 +494,8 @@ export class TradeDatabase implements ITradeDatabase {
   ): Promise<void> {
     const now = new Date().toISOString();
 
-    await this.db.run(`
+    await this.db.run(
+      `
             INSERT INTO trade_logs (
                 tradeId,
                 timestamp,
@@ -497,29 +509,34 @@ export class TradeDatabase implements ITradeDatabase {
                 orderResponse,
                 createdAt
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `, [
-      tradeId,
-      now,
-      pair,
-      side,
-      positionSide,
-      type,
-      price,
-      stopPrice,
-      quantity,
-      JSON.stringify(orderResponse),
-      now
-    ]);
+        `,
+      [
+        tradeId,
+        now,
+        pair,
+        side,
+        positionSide,
+        type,
+        price,
+        stopPrice,
+        quantity,
+        JSON.stringify(orderResponse),
+        now,
+      ]
+    );
   }
 
   public async getTradeLogs(tradeId: number): Promise<any[]> {
-    return await this.db.all('SELECT * FROM trade_logs WHERE tradeId = ? ORDER BY timestamp DESC', [tradeId]);
+    return await this.db.all('SELECT * FROM trade_logs WHERE tradeId = ? ORDER BY timestamp DESC', [
+      tradeId,
+    ]);
   }
 
   public async saveTradeNotification(notification: TradeNotification): Promise<void> {
     const now = new Date().toISOString();
 
-    await this.db.run(`
+    await this.db.run(
+      `
             INSERT INTO trade_notifications (
                 symbol,
                 type,
@@ -542,28 +559,30 @@ export class TradeDatabase implements ITradeDatabase {
                 timestamp,
                 createdAt
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `, [
-      notification.symbol,
-      notification.type,
-      notification.interval,
-      notification.entry,
-      notification.stop,
-      notification.takeProfits.tp1,
-      notification.takeProfits.tp2,
-      notification.takeProfits.tp3,
-      notification.takeProfits.tp4,
-      notification.takeProfits.tp5,
-      notification.takeProfits.tp6,
-      notification.validation.isValid ? 1 : 0,
-      notification.isWarning ? 1 : 0,
-      notification.executionError || null,
-      notification.volume_required ? 1 : 0,
-      notification.volume_adds_margin ? 1 : 0,
-      notification.setup_description,
-      JSON.stringify(notification),
-      notification.timestamp,
-      now
-    ]);
+        `,
+      [
+        notification.symbol,
+        notification.type,
+        notification.interval,
+        notification.entry,
+        notification.stop,
+        notification.takeProfits.tp1,
+        notification.takeProfits.tp2,
+        notification.takeProfits.tp3,
+        notification.takeProfits.tp4,
+        notification.takeProfits.tp5,
+        notification.takeProfits.tp6,
+        notification.validation.isValid ? 1 : 0,
+        notification.isWarning ? 1 : 0,
+        notification.executionError || null,
+        notification.volume_required ? 1 : 0,
+        notification.volume_adds_margin ? 1 : 0,
+        notification.setup_description,
+        JSON.stringify(notification),
+        notification.timestamp,
+        now,
+      ]
+    );
   }
 
   public async getTradeNotifications(
@@ -617,7 +636,7 @@ export class TradeDatabase implements ITradeDatabase {
     }
 
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
-    
+
     // Adiciona LIMIT e OFFSET
     const query = `SELECT notification_data FROM trade_notifications ${whereClause} ORDER BY timestamp DESC LIMIT ? OFFSET ?`;
     values.push(limit);
@@ -625,7 +644,7 @@ export class TradeDatabase implements ITradeDatabase {
 
     const rows = (await this.db.all(query, values)) as { notification_data: string }[];
 
-    return rows.map(row => JSON.parse(row.notification_data));
+    return rows.map((row) => JSON.parse(row.notification_data));
   }
 
   public async getDistinctSymbols(): Promise<string[]> {
@@ -640,15 +659,21 @@ export class TradeDatabase implements ITradeDatabase {
     return result.map((row: { symbol: string }) => row.symbol);
   }
 
-  public async upsertMonitoredSymbol(symbol: string, status: 'ACTIVE' | 'INVALID' | 'INACTIVE'): Promise<void> {
+  public async upsertMonitoredSymbol(
+    symbol: string,
+    status: 'ACTIVE' | 'INVALID' | 'INACTIVE'
+  ): Promise<void> {
     const now = new Date().toISOString();
-    await this.db.run(`
+    await this.db.run(
+      `
             INSERT INTO monitored_symbols (symbol, status, lastUpdated)
             VALUES (?, ?, ?)
             ON CONFLICT(symbol) DO UPDATE SET
                 status = excluded.status,
                 lastUpdated = excluded.lastUpdated
-        `, [symbol, status, now]);
+        `,
+      [symbol, status, now]
+    );
   }
 
   public async getActiveSymbols(): Promise<string[]> {
@@ -668,14 +693,19 @@ export class TradeDatabase implements ITradeDatabase {
 
     for (const symbol of symbols) {
       // Check if symbol already exists
-      const existing = await this.db.get('SELECT status FROM monitored_symbols WHERE symbol = ?', [symbol]);
-      
+      const existing = await this.db.get('SELECT status FROM monitored_symbols WHERE symbol = ?', [
+        symbol,
+      ]);
+
       if (!existing) {
         // New symbol, add as ACTIVE
-        await this.db.run(`
+        await this.db.run(
+          `
                     INSERT INTO monitored_symbols (symbol, status, lastUpdated)
                     VALUES (?, ?, ?)
-                `, [symbol, 'ACTIVE', now]);
+                `,
+          [symbol, 'ACTIVE', now]
+        );
       } else if (existing.status === 'INVALID' && openTradesSymbols.includes(symbol)) {
         // Re-activate if it has an open trade in our database
         await this.upsertMonitoredSymbol(symbol, 'ACTIVE');
@@ -685,19 +715,23 @@ export class TradeDatabase implements ITradeDatabase {
 
   public async updatePositionId(id: number, positionId: string): Promise<void> {
     const now = new Date().toISOString();
-    await this.db.run(
-      'UPDATE trades SET positionId = ?, updatedAt = ? WHERE id = ?',
-      [positionId, now, id]
-    );
+    await this.db.run('UPDATE trades SET positionId = ?, updatedAt = ? WHERE id = ?', [
+      positionId,
+      now,
+      id,
+    ]);
   }
 
-  public async updateTradeSentiment(id: number, sentimentData: {
-    sentiment: string;
-    lsrtrend: string;
-    oitrend: string;
-    lsrsignal: string;
-    oisignal: string;
-  }): Promise<void> {
+  public async updateTradeSentiment(
+    id: number,
+    sentimentData: {
+      sentiment: string;
+      lsrtrend: string;
+      oitrend: string;
+      lsrsignal: string;
+      oisignal: string;
+    }
+  ): Promise<void> {
     const now = new Date().toISOString();
     await this.db.run(
       `UPDATE trades SET 
@@ -715,8 +749,8 @@ export class TradeDatabase implements ITradeDatabase {
         sentimentData.lsrsignal,
         sentimentData.oisignal,
         now,
-        id
+        id,
       ]
     );
   }
-} 
+}

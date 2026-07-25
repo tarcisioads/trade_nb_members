@@ -1,9 +1,9 @@
-import { createRouter, createWebHistory } from 'vue-router'
-import TradeList from '../views/TradeList.vue'
-import TradeForm from '../views/TradeForm.vue'
-import NotificationsHistory from '../views/NotificationsHistory.vue'
-import Dashboard from '../views/Dashboard.vue'
-import PositionHistoryForm from '../views/PositionHistoryForm.vue'
+import { createRouter, createWebHistory } from 'vue-router';
+import TradeList from '../views/TradeList.vue';
+import TradeForm from '../views/TradeForm.vue';
+import NotificationsHistory from '../views/NotificationsHistory.vue';
+import Dashboard from '../views/Dashboard.vue';
+import PositionHistoryForm from '../views/PositionHistoryForm.vue';
 
 const router = createRouter({
   history: createWebHistory(),
@@ -11,39 +11,39 @@ const router = createRouter({
     {
       path: '/',
       name: 'home',
-      component: TradeList
+      component: TradeList,
     },
     {
       path: '/dashboard',
       name: 'dashboard',
-      component: Dashboard
+      component: Dashboard,
     },
     {
       path: '/trade/new',
       name: 'new-trade',
-      component: TradeForm
+      component: TradeForm,
     },
     {
       path: '/trade/:id/edit',
       name: 'edit-trade',
-      component: TradeForm
+      component: TradeForm,
     },
     {
       path: '/notifications',
       name: 'notifications',
-      component: NotificationsHistory
+      component: NotificationsHistory,
     },
     {
       path: '/position-history/edit/:id',
       name: 'edit-position-history',
-      component: PositionHistoryForm
+      component: PositionHistoryForm,
     },
     {
       path: '/position-history/new',
       name: 'new-position-history',
-      component: PositionHistoryForm
-    }
-  ]
-})
+      component: PositionHistoryForm,
+    },
+  ],
+});
 
-export default router 
+export default router;

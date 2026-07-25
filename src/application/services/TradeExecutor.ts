@@ -27,24 +27,25 @@ export class TradeExecutor {
 
     // Validate take profit order for LONG trades
     if (trade.type === 'LONG') {
-      const takeProfits = [trade.tp1, trade.tp2, trade.tp3, trade.tp4, trade.tp5, trade.tp6]
-        .filter((tp): tp is number => tp !== null && tp > 0);
+      const takeProfits = [trade.tp1, trade.tp2, trade.tp3, trade.tp4, trade.tp5, trade.tp6].filter(
+        (tp): tp is number => tp !== null && tp > 0
+      );
 
       // Check if take profits are in ascending order
       for (let i = 1; i < takeProfits.length; i++) {
         if (takeProfits[i] <= takeProfits[i - 1]) {
           return {
             isValid: false,
-            message: `Take profit ${i + 1} must be greater than take profit ${i} for LONG trades`
+            message: `Take profit ${i + 1} must be greater than take profit ${i} for LONG trades`,
           };
         }
       }
 
       // Check if all take profits are above entry
-      if (takeProfits.some(tp => tp <= trade.entry)) {
+      if (takeProfits.some((tp) => tp <= trade.entry)) {
         return {
           isValid: false,
-          message: 'All take profits must be above entry price for LONG trades'
+          message: 'All take profits must be above entry price for LONG trades',
         };
       }
 
@@ -52,31 +53,32 @@ export class TradeExecutor {
       if (trade.stop >= trade.entry) {
         return {
           isValid: false,
-          message: 'Stop loss must be below entry price for LONG trades'
+          message: 'Stop loss must be below entry price for LONG trades',
         };
       }
     }
 
     // Validate take profit order for SHORT trades
     if (trade.type === 'SHORT') {
-      const takeProfits = [trade.tp1, trade.tp2, trade.tp3, trade.tp4, trade.tp5, trade.tp6]
-        .filter((tp): tp is number => tp !== null && tp > 0);
+      const takeProfits = [trade.tp1, trade.tp2, trade.tp3, trade.tp4, trade.tp5, trade.tp6].filter(
+        (tp): tp is number => tp !== null && tp > 0
+      );
 
       // Check if take profits are in descending order
       for (let i = 1; i < takeProfits.length; i++) {
         if (takeProfits[i] >= takeProfits[i - 1]) {
           return {
             isValid: false,
-            message: `Take profit ${i + 1} must be less than take profit ${i} for SHORT trades`
+            message: `Take profit ${i + 1} must be less than take profit ${i} for SHORT trades`,
           };
         }
       }
-      console.log(takeProfits)
+      console.log(takeProfits);
       // Check if all take profits are below entry
-      if (takeProfits.some(tp => tp >= trade.entry)) {
+      if (takeProfits.some((tp) => tp >= trade.entry)) {
         return {
           isValid: false,
-          message: 'All take profits must be below entry price for SHORT trades'
+          message: 'All take profits must be below entry price for SHORT trades',
         };
       }
 
@@ -84,7 +86,7 @@ export class TradeExecutor {
       if (trade.stop <= trade.entry) {
         return {
           isValid: false,
-          message: 'Stop loss must be above entry price for SHORT trades'
+          message: 'Stop loss must be above entry price for SHORT trades',
         };
       }
     }
@@ -99,7 +101,7 @@ export class TradeExecutor {
       if (!validation.isValid) {
         return {
           success: false,
-          message: validation.message
+          message: validation.message,
         };
       }
 
@@ -114,7 +116,7 @@ export class TradeExecutor {
         volumeMarginInfo = {
           percentage: this.volumeMarginPercentage,
           baseMargin,
-          totalMargin: baseMargin + marginAddition
+          totalMargin: baseMargin + marginAddition,
         };
         console.log(`Volume Margin Added: ${this.volumeMarginPercentage}%`);
         console.log(`Base Margin: ${baseMargin.toFixed(2)}`);
@@ -128,13 +130,12 @@ export class TradeExecutor {
         sentimentMarginInfo = {
           percentage: this.sentimentMarginPercentage,
           baseMargin,
-          totalMargin: baseMargin + marginAddition
+          totalMargin: baseMargin + marginAddition,
         };
         console.log(`Sentiment Margin Added: ${this.sentimentMarginPercentage}%`);
         console.log(`Base Margin: ${baseMargin.toFixed(2)}`);
         console.log(`Total Margin: ${(baseMargin + marginAddition).toFixed(2)}`);
       }
-
 
       return {
         success: true,
@@ -142,14 +143,15 @@ export class TradeExecutor {
         data: {
           ...executionResult,
           volumeMarginAdded: volumeMarginInfo,
-          sentimentMarginAdded: sentimentMarginInfo
-        }
+          sentimentMarginAdded: sentimentMarginInfo,
+        },
       };
     } catch (error) {
       console.error('Error executing trade:', error);
       return {
         success: false,
-        message: error instanceof Error ? error.message : 'Unknown error occurred during trade execution'
+        message:
+          error instanceof Error ? error.message : 'Unknown error occurred during trade execution',
       };
     }
   }
@@ -169,4 +171,4 @@ export class TradeExecutor {
       return false;
     }
   }
-} 
+}

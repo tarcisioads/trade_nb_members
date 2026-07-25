@@ -5,65 +5,69 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
-import { Chart, registerables } from 'chart.js'
-import 'chartjs-adapter-date-fns'
+import { ref, onMounted, watch } from 'vue';
+import { Chart, registerables } from 'chart.js';
+import 'chartjs-adapter-date-fns';
 
-Chart.register(...registerables)
+Chart.register(...registerables);
 
 interface Props {
   positions: Array<{
-    closeTime: number
-    updateTime: number
-    netProfit: string
-    symbol: string
-  }>
+    closeTime: number;
+    updateTime: number;
+    netProfit: string;
+    symbol: string;
+  }>;
 }
 
-const props = defineProps<Props>()
-const chartCanvas = ref<HTMLCanvasElement>()
-let chart: Chart | null = null
+const props = defineProps<Props>();
+const chartCanvas = ref<HTMLCanvasElement>();
+let chart: Chart | null = null;
 
 /**
  * Helper function to get the effective close time, using updateTime as fallback
  */
 const getEffectiveCloseTime = (position: { closeTime: number; updateTime: number }): number => {
-  return position.closeTime || position.updateTime
-}
+  return position.closeTime || position.updateTime;
+};
 
 const createChart = () => {
-  if (!chartCanvas.value) return
+  if (!chartCanvas.value) return;
 
   // Process data for cumulative profit
-  const sortedPositions = [...props.positions].sort((a, b) => getEffectiveCloseTime(a) - getEffectiveCloseTime(b))
-  const cumulativeData: Array<{ x: number; y: number }> = []
-  let cumulativeProfit = 0
+  const sortedPositions = [...props.positions].sort(
+    (a, b) => getEffectiveCloseTime(a) - getEffectiveCloseTime(b)
+  );
+  const cumulativeData: Array<{ x: number; y: number }> = [];
+  let cumulativeProfit = 0;
 
   for (const position of sortedPositions) {
-    cumulativeProfit += parseFloat(position.netProfit || '0')
+    cumulativeProfit += parseFloat(position.netProfit || '0');
     cumulativeData.push({
       x: getEffectiveCloseTime(position),
-      y: cumulativeProfit
-    })
+      y: cumulativeProfit,
+    });
   }
 
-  const ctx = chartCanvas.value.getContext('2d')
-  if (!ctx) return
+  const ctx = chartCanvas.value.getContext('2d');
+  if (!ctx) return;
 
   chart = new Chart(ctx, {
     type: 'line',
     data: {
-      datasets: [{
-        label: 'Cumulative Profit',
-        data: cumulativeData,
-        borderColor: '#28a745',
-        backgroundColor: 'rgba(40, 167, 69, 0.1)',
-        borderWidth: 2,
-        fill: true,
-        tension: 0.4,
-        pointRadius: 3,
-        pointHoverRadius: 6
-      }]
+      datasets: [
+        {
+          label: 'Cumulative Profit',
+          data: cumulativeData,
+          borderColor: '#28a745',
+          backgroundColor: 'rgba(40, 167, 69, 0.1)',
+          borderWidth: 2,
+          fill: true,
+          tension: 0.4,
+          pointRadius: 3,
+          pointHoverRadius: 6,
+        },
+      ],
     },
     options: {
       responsive: true,
@@ -74,9 +78,9 @@ const createChart = () => {
           labels: {
             color: '#ffffff',
             font: {
-              size: 12
-            }
-          }
+              size: 12,
+            },
+          },
         },
         tooltip: {
           mode: 'index',
@@ -85,11 +89,11 @@ const createChart = () => {
           titleColor: '#ffffff',
           bodyColor: '#ffffff',
           callbacks: {
-            label: function(context) {
-              return `Profit: $${(context.parsed.y as number).toFixed(2)}`
-            }
-          }
-        }
+            label: function (context) {
+              return `Profit: $${(context.parsed.y as number).toFixed(2)}`;
+            },
+          },
+        },
       },
       scales: {
         x: {
@@ -97,57 +101,61 @@ const createChart = () => {
           time: {
             unit: 'day',
             displayFormats: {
-              day: 'MMM dd'
-            }
+              day: 'MMM dd',
+            },
           },
           grid: {
-            color: 'rgba(255, 255, 255, 0.1)'
+            color: 'rgba(255, 255, 255, 0.1)',
           },
           ticks: {
             color: '#ffffff',
             font: {
-              size: 10
-            }
-          }
+              size: 10,
+            },
+          },
         },
         y: {
           grid: {
-            color: 'rgba(255, 255, 255, 0.1)'
+            color: 'rgba(255, 255, 255, 0.1)',
           },
           ticks: {
             color: '#ffffff',
             font: {
-              size: 10
+              size: 10,
             },
-            callback: function(value) {
-              return '$' + (value as number).toFixed(0)
-            }
-          }
-        }
+            callback: function (value) {
+              return '$' + (value as number).toFixed(0);
+            },
+          },
+        },
       },
       interaction: {
         mode: 'nearest',
         axis: 'x',
-        intersect: false
-      }
-    }
-  })
-}
+        intersect: false,
+      },
+    },
+  });
+};
 
 const updateChart = () => {
   if (chart) {
-    chart.destroy()
+    chart.destroy();
   }
-  createChart()
-}
+  createChart();
+};
 
 onMounted(() => {
-  createChart()
-})
+  createChart();
+});
 
-watch(() => props.positions, () => {
-  updateChart()
-}, { deep: true })
+watch(
+  () => props.positions,
+  () => {
+    updateChart();
+  },
+  { deep: true }
+);
 </script>
 
 <style scoped>
@@ -156,4 +164,4 @@ watch(() => props.positions, () => {
   height: 300px;
   width: 100%;
 }
-</style> 
+</style>

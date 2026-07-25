@@ -4,15 +4,11 @@ import {
 } from '../../infrastructure/binance/BinanceFuturesOpenInterestService';
 import { AllowedInterval, OpenInterestVariationResult } from '../../utils/types';
 
-
-
 /**
  * Calculates the percentage variation of the Open Interest value over different time frames.
  */
 export class OpenInterestVariationService {
-
-  constructor() {
-  }
+  constructor() {}
 
   /**
    * Calculates the percentage variation between two numbers.
@@ -32,7 +28,10 @@ export class OpenInterestVariationService {
    * @param symbol - The trading symbol to analyze (e.g., 'BTCUSDT').
    * @returns An object containing the current open interest value and its variations.
    */
-  public async getVariation(symbol: string, interval: AllowedInterval): Promise<OpenInterestVariationResult> {
+  public async getVariation(
+    symbol: string,
+    interval: AllowedInterval
+  ): Promise<OpenInterestVariationResult> {
     const openInterestService = await BinanceFuturesOpenInterestService.create();
     // Fetch the last 25 hours of data to get points for current, 1h, 4h, and 24h ago.
     const hourlyData = await openInterestService.getOpenInterestHistory(
@@ -41,7 +40,7 @@ export class OpenInterestVariationService {
       25
     );
 
-    const getValue = (data: OpenInterest) => data ? parseFloat(data.sumOpenInterestValue) : null;
+    const getValue = (data: OpenInterest) => (data ? parseFloat(data.sumOpenInterestValue) : null);
 
     // [0] is the current (incomplete) hour
     // [1] is the last completed hour (1h ago)
@@ -56,16 +55,16 @@ export class OpenInterestVariationService {
       symbol: symbol,
       currentOpenInterestValue: currentValue,
       variation: {
-        vs1h: (currentValue && h1Value) ? this.calculateVariation(currentValue, h1Value) : null,
-        vs4h: (currentValue && h4Value) ? this.calculateVariation(currentValue, h4Value) : null,
-        vs24h: (currentValue && d24Value) ? this.calculateVariation(currentValue, d24Value) : null,
+        vs1h: currentValue && h1Value ? this.calculateVariation(currentValue, h1Value) : null,
+        vs4h: currentValue && h4Value ? this.calculateVariation(currentValue, h4Value) : null,
+        vs24h: currentValue && d24Value ? this.calculateVariation(currentValue, d24Value) : null,
       },
       timestamps: {
         current: hourlyData?.[0]?.timestamp || null,
         h1: hourlyData?.[1]?.timestamp || null,
         h4: hourlyData?.[4]?.timestamp || null,
         d1: hourlyData?.[24]?.timestamp || null,
-      }
+      },
     };
 
     return result;

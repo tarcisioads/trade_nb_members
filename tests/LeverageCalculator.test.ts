@@ -11,21 +11,21 @@ describe('LeverageCalculator', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    process.env = { 
-      ...OLD_ENV, 
-      BINGX_API_KEY: 'key', 
-      BINGX_API_SECRET: 'secret', 
+    process.env = {
+      ...OLD_ENV,
+      BINGX_API_KEY: 'key',
+      BINGX_API_SECRET: 'secret',
       BINGX_BASE_URL: 'http://mock',
       LEVERAGE_SAFETY_FACTOR_PERCENT: '30',
       LEVERAGE_SAFETY_FACTOR_PERCENT_1H: undefined,
       LEVERAGE_SAFETY_FACTOR_PERCENT_15: undefined,
-      LEVERAGE_SAFETY_FACTOR_PERCENT_5: undefined
+      LEVERAGE_SAFETY_FACTOR_PERCENT_5: undefined,
     };
 
     mockApiClient = new BingXApiClient() as jest.Mocked<BingXApiClient>;
     mockApiClient.get = jest.fn();
     mockApiClient.post = jest.fn();
-    
+
     calc = new LeverageCalculator(mockApiClient);
   });
 
@@ -67,8 +67,8 @@ describe('LeverageCalculator', () => {
         maxLongLeverage: 20,
         maxShortLeverage: 20,
         longLeverage: 20,
-        shortLeverage: 20
-      }
+        shortLeverage: 20,
+      },
     });
 
     const result = await calc.calculateOptimalLeverage('BTCUSDT', 100, 90, 'LONG', '1h');
@@ -88,7 +88,9 @@ describe('LeverageCalculator', () => {
   it('should throw error if API fails in calculateOptimalLeverage', async () => {
     mockApiClient.get.mockRejectedValue(new Error('API error'));
 
-    await expect(calc.calculateOptimalLeverage('BTCUSDT', 100, 90, 'LONG', '1h')).rejects.toThrow('API error');
+    await expect(calc.calculateOptimalLeverage('BTCUSDT', 100, 90, 'LONG', '1h')).rejects.toThrow(
+      'API error'
+    );
   });
 
   it('should throw error if API fails in setLeverage', async () => {

@@ -5,140 +5,160 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
-import { Chart, registerables } from 'chart.js'
-import 'chartjs-adapter-date-fns'
+import { ref, onMounted, watch } from 'vue';
+import { Chart, registerables } from 'chart.js';
+import 'chartjs-adapter-date-fns';
 
-Chart.register(...registerables)
+Chart.register(...registerables);
 
 interface Props {
   positions: Array<{
-    closeTime: number
-    updateTime: number
-    netProfit: string
-  }>
+    closeTime: number;
+    updateTime: number;
+    netProfit: string;
+  }>;
 }
 
-const props = defineProps<Props>()
-const chartCanvas = ref<HTMLCanvasElement>()
-let chart: Chart | null = null
+const props = defineProps<Props>();
+const chartCanvas = ref<HTMLCanvasElement>();
+let chart: Chart | null = null;
 
 /**
  * Helper function to get the effective close time, using updateTime as fallback
  */
 const getEffectiveCloseTime = (position: { closeTime: number; updateTime: number }): number => {
-  return position.closeTime || position.updateTime
-}
+  return position.closeTime || position.updateTime;
+};
 
 const createChart = () => {
-  if (!chartCanvas.value) return
+  if (!chartCanvas.value) return;
 
   // Process data for monthly performance
-  const monthlyData: { [key: string]: number } = {}
-  
-  props.positions.forEach(position => {
-    const date = new Date(getEffectiveCloseTime(position))
-    const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
-    const profit = parseFloat(position.netProfit || '0')
-    
+  const monthlyData: { [key: string]: number } = {};
+
+  props.positions.forEach((position) => {
+    const date = new Date(getEffectiveCloseTime(position));
+    const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+    const profit = parseFloat(position.netProfit || '0');
+
     if (!monthlyData[monthKey]) {
-      monthlyData[monthKey] = 0
+      monthlyData[monthKey] = 0;
     }
-    monthlyData[monthKey] += profit
-  })
+    monthlyData[monthKey] += profit;
+  });
 
   // Sort months chronologically
-  const sortedMonths = Object.keys(monthlyData).sort()
-  const labels = sortedMonths.map(month => {
-    const [year, monthNum] = month.split('-')
-    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
-                       'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-    return `${monthNames[parseInt(monthNum) - 1]} ${year}`
-  })
-  const data = sortedMonths.map(month => monthlyData[month])
+  const sortedMonths = Object.keys(monthlyData).sort();
+  const labels = sortedMonths.map((month) => {
+    const [year, monthNum] = month.split('-');
+    const monthNames = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    return `${monthNames[parseInt(monthNum) - 1]} ${year}`;
+  });
+  const data = sortedMonths.map((month) => monthlyData[month]);
 
-  const ctx = chartCanvas.value.getContext('2d')
-  if (!ctx) return
+  const ctx = chartCanvas.value.getContext('2d');
+  if (!ctx) return;
 
   chart = new Chart(ctx, {
     type: 'bar',
     data: {
       labels: labels,
-      datasets: [{
-        label: 'Monthly Profit/Loss',
-        data: data,
-        backgroundColor: data.map(value => value >= 0 ? 'rgba(40, 167, 69, 0.8)' : 'rgba(220, 53, 69, 0.8)'),
-        borderColor: data.map(value => value >= 0 ? '#28a745' : '#dc3545'),
-        borderWidth: 1,
-        borderRadius: 4,
-        borderSkipped: false
-      }]
+      datasets: [
+        {
+          label: 'Monthly Profit/Loss',
+          data: data,
+          backgroundColor: data.map((value) =>
+            value >= 0 ? 'rgba(40, 167, 69, 0.8)' : 'rgba(220, 53, 69, 0.8)'
+          ),
+          borderColor: data.map((value) => (value >= 0 ? '#28a745' : '#dc3545')),
+          borderWidth: 1,
+          borderRadius: 4,
+          borderSkipped: false,
+        },
+      ],
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
         legend: {
-          display: false
+          display: false,
         },
         tooltip: {
           backgroundColor: 'rgba(0, 0, 0, 0.8)',
           titleColor: '#ffffff',
           bodyColor: '#ffffff',
           callbacks: {
-            label: function(context) {
-              const value = context.parsed.y as number
-              return `Profit/Loss: $${value.toFixed(2)}`
-            }
-          }
-        }
+            label: function (context) {
+              const value = context.parsed.y as number;
+              return `Profit/Loss: $${value.toFixed(2)}`;
+            },
+          },
+        },
       },
       scales: {
         x: {
           grid: {
-            color: 'rgba(255, 255, 255, 0.1)'
+            color: 'rgba(255, 255, 255, 0.1)',
           },
           ticks: {
             color: '#ffffff',
             font: {
-              size: 10
+              size: 10,
             },
-            maxRotation: 45
-          }
+            maxRotation: 45,
+          },
         },
         y: {
           grid: {
-            color: 'rgba(255, 255, 255, 0.1)'
+            color: 'rgba(255, 255, 255, 0.1)',
           },
           ticks: {
             color: '#ffffff',
             font: {
-              size: 10
+              size: 10,
             },
-            callback: function(value) {
-              return '$' + (value as number).toFixed(0)
-            }
-          }
-        }
-      }
-    }
-  })
-}
+            callback: function (value) {
+              return '$' + (value as number).toFixed(0);
+            },
+          },
+        },
+      },
+    },
+  });
+};
 
 const updateChart = () => {
   if (chart) {
-    chart.destroy()
+    chart.destroy();
   }
-  createChart()
-}
+  createChart();
+};
 
 onMounted(() => {
-  createChart()
-})
+  createChart();
+});
 
-watch(() => props.positions, () => {
-  updateChart()
-}, { deep: true })
+watch(
+  () => props.positions,
+  () => {
+    updateChart();
+  },
+  { deep: true }
+);
 </script>
 
 <style scoped>
@@ -147,4 +167,4 @@ watch(() => props.positions, () => {
   height: 300px;
   width: 100%;
 }
-</style> 
+</style>

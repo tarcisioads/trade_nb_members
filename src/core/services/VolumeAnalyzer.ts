@@ -1,8 +1,6 @@
 import { DataServiceManager } from './DataServiceManager';
 import { KlineData, AllowedInterval, VolumeColor, AnalyzeVolumeResult } from '../../utils/types';
 
-
-
 export class VolumeAnalyzer {
   private readonly dataServiceManager: DataServiceManager;
   private readonly thresholdExtraHigh: number = 4;
@@ -19,7 +17,7 @@ export class VolumeAnalyzer {
   }
 
   private calculateStd(volumes: number[], mean: number): number {
-    const squaredDifferences = volumes.map(volume => Math.pow(volume - mean, 2));
+    const squaredDifferences = volumes.map((volume) => Math.pow(volume - mean, 2));
     const variance = squaredDifferences.reduce((sum, diff) => sum + diff, 0) / volumes.length;
     return Math.sqrt(variance);
   }
@@ -36,31 +34,35 @@ export class VolumeAnalyzer {
     return VolumeColor.BLUE;
   }
 
-  public async analyzeVolume(symbol: string, interval: AllowedInterval | undefined): Promise<AnalyzeVolumeResult> {
+  public async analyzeVolume(
+    symbol: string,
+    interval: AllowedInterval | undefined
+  ): Promise<AnalyzeVolumeResult> {
     try {
       // Get data from either Binance or BingX using DataServiceManager
-      const { data: klineData, source } = await this.dataServiceManager.getKlineDataVolume(symbol, interval);
+      const { data: klineData, source } = await this.dataServiceManager.getKlineDataVolume(
+        symbol,
+        interval
+      );
 
       // Convert volumes to numbers and calculate statistics
-      const volumes = klineData.map(kline => parseFloat(kline.volume))
+      const volumes = klineData.map((kline) => parseFloat(kline.volume));
       const currentVolume = volumes[0];
       const mean = this.calculateMean(volumes);
       const std = this.calculateStd(volumes, mean);
       const stdBar = this.calculateStdBar(currentVolume, mean, std);
       const color = this.getVolumeColor(stdBar);
 
-
-
       return {
         color,
         stdBar,
         mean,
         std,
-        currentVolume
+        currentVolume,
       };
     } catch (error: any) {
       console.error(`Error analyzing volume for ${symbol}:`, error);
       throw new Error(`Failed to analyze volume for ${symbol}: ${error.message}`);
     }
   }
-} 
+}

@@ -22,8 +22,8 @@ dotenv.config();
 
 // Check if BingX API credentials are set
 if (!process.env.BINGX_API_KEY || !process.env.BINGX_API_SECRET) {
-    console.error('Error: BINGX_API_KEY and BINGX_API_SECRET must be set in .env file');
-    process.exit(1);
+  console.error('Error: BINGX_API_KEY and BINGX_API_SECRET must be set in .env file');
+  process.exit(1);
 }
 
 // --- Composition Root ---
@@ -46,42 +46,36 @@ const orderMonitor = new OrderMonitor();
 const orderStatusChecker = new OrderStatusChecker();
 
 const tradeOrderProcessor = new TradeOrderProcessor(
-    tradeDatabase,
-    orderStatusChecker,
-    bingXOrderExecutor,
-    bingXDataService,
-    notificationService,
-    positionValidator
+  tradeDatabase,
+  orderStatusChecker,
+  bingXOrderExecutor,
+  bingXDataService,
+  notificationService,
+  positionValidator
 );
 
 const positionMonitor = new PositionMonitor(
-    undefined, // onPriceUpdate callback (handled inside PositionMonitorCronJob if needed, or passed here)
-    positionValidator,
-    tradeDatabase,
-    orderMonitor,
-    bingXOrderExecutor,
-    notificationService
+  undefined, // onPriceUpdate callback (handled inside PositionMonitorCronJob if needed, or passed here)
+  positionValidator,
+  tradeDatabase,
+  orderMonitor,
+  bingXOrderExecutor,
+  notificationService
 );
 
 const positionHistory = new PositionHistory(); // Needs refactoring to accept dependencies if we want full DI, but for now it instantiates them internally or we can update it.
 
 // 4. Jobs
 const tradeCronJob = new TradeCronJob(
-    tradeRepository,
-    tradeValidator,
-    notificationService,
-    tradeExecutor
+  tradeRepository,
+  tradeValidator,
+  notificationService,
+  tradeExecutor
 );
 
-const positionMonitorCronJob = new PositionMonitorCronJob(
-    positionMonitor,
-    tradeOrderProcessor
-);
+const positionMonitorCronJob = new PositionMonitorCronJob(positionMonitor, tradeOrderProcessor);
 
-const positionHistoryCronJob = new PositionHistoryCronJob(
-    positionHistory,
-    tradeDatabase
-);
+const positionHistoryCronJob = new PositionHistoryCronJob(positionHistory, tradeDatabase);
 
 // Start the application
 console.log('Starting Trade Automation System...');
@@ -93,13 +87,13 @@ positionHistoryCronJob.start();
 
 // Send Startup Notification
 async function sendStartupNotification() {
-    try {
-        const trades = await tradeRepository.readTrades();
-        const tradeCount = trades.length;
+  try {
+    const trades = await tradeRepository.readTrades();
+    const tradeCount = trades.length;
 
-        const checkEnv = (key: string) => process.env[key] ? '✅ OK' : '❌ Ausente';
+    const checkEnv = (key: string) => (process.env[key] ? '✅ OK' : '❌ Ausente');
 
-        const message = `
+    const message = `
 <b>🚀 Trade Bot Iniciado</b>
 
 📊 <b>Trades Cadastrados:</b> ${tradeCount}
@@ -114,28 +108,28 @@ async function sendStartupNotification() {
 Status: Operacional e monitorando...
         `.trim();
 
-        await telegramService.sendCustomMessage(message);
-        console.log('Startup notification sent to Telegram');
-    } catch (error) {
-        console.error('Error sending startup notification:', error);
-    }
+    await telegramService.sendCustomMessage(message);
+    console.log('Startup notification sent to Telegram');
+  } catch (error) {
+    console.error('Error sending startup notification:', error);
+  }
 }
 
 sendStartupNotification();
 
 // Handle graceful shutdown
 process.on('SIGINT', () => {
-    console.log('Stopping Trade Automation System...');
-    tradeCronJob.stop();
-    positionMonitorCronJob.stop();
-    positionHistoryCronJob.stop();
-    process.exit(0);
+  console.log('Stopping Trade Automation System...');
+  tradeCronJob.stop();
+  positionMonitorCronJob.stop();
+  positionHistoryCronJob.stop();
+  process.exit(0);
 });
 
 process.on('SIGTERM', () => {
-    console.log('Stopping Trade Automation System...');
-    tradeCronJob.stop();
-    positionMonitorCronJob.stop();
-    positionHistoryCronJob.stop();
-    process.exit(0);
+  console.log('Stopping Trade Automation System...');
+  tradeCronJob.stop();
+  positionMonitorCronJob.stop();
+  positionHistoryCronJob.stop();
+  process.exit(0);
 });

@@ -4,21 +4,20 @@ import { PositionHistory } from '../../utils/types';
 import * as path from 'path';
 
 export class DatabasePositionHistoryService {
-    private db: Database | null = null;
+  private db: Database | null = null;
 
-    constructor() {
-        this.initializeDatabase();
-    }
+  constructor() {
+    this.initializeDatabase();
+  }
 
+  public async initializeDatabase() {
+    const dbPath = path.join(process.cwd(), 'db/position_history.db');
+    this.db = await open({
+      filename: dbPath,
+      driver: sqlite3.Database,
+    });
 
-    public async initializeDatabase() {
-        const dbPath = path.join(process.cwd(), 'db/position_history.db');
-        this.db = await open({
-            filename: dbPath,
-            driver: sqlite3.Database
-        });
-
-        await this.db.exec(`
+    await this.db.exec(`
                 CREATE TABLE IF NOT EXISTS position_history (
                     positionId TEXT PRIMARY KEY,
                     symbol TEXT NOT NULL,
@@ -40,18 +39,18 @@ export class DatabasePositionHistoryService {
                 )
             `);
 
-        // Add updateTime column if it doesn't exist (for existing databases)
-        try {
-            await this.db.exec('ALTER TABLE position_history ADD COLUMN updateTime INTEGER');
-        } catch (error) {
-            // Column already exists, ignore error
-        }
+    // Add updateTime column if it doesn't exist (for existing databases)
+    try {
+      await this.db.exec('ALTER TABLE position_history ADD COLUMN updateTime INTEGER');
+    } catch (error) {
+      // Column already exists, ignore error
     }
+  }
 
-    public async savePositionHistory(positions: PositionHistory[]): Promise<void> {
-        if (!this.db) throw new Error('Database not initialized');
+  public async savePositionHistory(positions: PositionHistory[]): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
 
-        const stmt = await this.db.prepare(`
+    const stmt = await this.db.prepare(`
             INSERT OR REPLACE INTO position_history (
                 positionId, symbol, positionSide, isolated, closeAllPositions,
                 positionAmt, closePositionAmt, realisedProfit, netProfit,
@@ -60,77 +59,81 @@ export class DatabasePositionHistoryService {
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `);
 
-        try {
-            for (const position of positions) {
-                await stmt.run(
-                    position.positionId,
-                    position.symbol,
-                    position.positionSide,
-                    position.isolated,
-                    position.closeAllPositions,
-                    position.positionAmt,
-                    position.closePositionAmt,
-                    position.realisedProfit,
-                    position.netProfit,
-                    position.avgClosePrice,
-                    position.avgPrice,
-                    position.leverage,
-                    position.positionCommission,
-                    position.totalFunding,
-                    position.openTime,
-                    position.closeTime,
-                    position.updateTime
-                );
-            }
-        } finally {
-            await stmt.finalize();
-        }
+    try {
+      for (const position of positions) {
+        await stmt.run(
+          position.positionId,
+          position.symbol,
+          position.positionSide,
+          position.isolated,
+          position.closeAllPositions,
+          position.positionAmt,
+          position.closePositionAmt,
+          position.realisedProfit,
+          position.netProfit,
+          position.avgClosePrice,
+          position.avgPrice,
+          position.leverage,
+          position.positionCommission,
+          position.totalFunding,
+          position.openTime,
+          position.closeTime,
+          position.updateTime
+        );
+      }
+    } finally {
+      await stmt.finalize();
     }
+  }
 
-    public async getPositionHistory(
-        symbol: string,
-        startTs?: number,
-        endTs?: number,
-        pageIndex: number = 1,
-        pageSize: number = 100,
-        filterField: 'openTime' | 'closeTime' = 'closeTime'
-    ): Promise<PositionHistory[]> {
-        if (!this.db) throw new Error('Database not initialized');
+  public async getPositionHistory(
+    symbol: string,
+    startTs?: number,
+    endTs?: number,
+    pageIndex: number = 1,
+    pageSize: number = 100,
+    filterField: 'openTime' | 'closeTime' = 'closeTime'
+  ): Promise<PositionHistory[]> {
+    if (!this.db) throw new Error('Database not initialized');
 
-        const offset = (pageIndex - 1) * pageSize;
-        let query = `
+    const offset = (pageIndex - 1) * pageSize;
+    let query = `
             SELECT * FROM position_history 
         `;
-        const params: any[] = [];
+    const params: any[] = [];
 
-        // Only filter by symbol if it's not "ALL"
-        if (symbol !== 'ALL') {
-            query += ' WHERE symbol = ?';
-            params.push(symbol);
-        } else {
-            query += ' WHERE 1=1';
-        }
-
-        const timeColumn = filterField === 'openTime' ? 'openTime' : 'CASE WHEN closeTime = 0 OR closeTime IS NULL THEN updateTime ELSE closeTime END';
-
-        if (startTs) {
-            query += ` AND ${timeColumn} >= ?`;
-            params.push(startTs);
-        }
-        if (endTs) {
-            query += ` AND ${timeColumn} <= ?`;
-            params.push(endTs);
-        }
-
-        // Use CASE to fallback to updateTime when closeTime is 0 or null
-        query += ' ORDER BY CASE WHEN closeTime = 0 OR closeTime IS NULL THEN updateTime ELSE closeTime END DESC LIMIT ? OFFSET ?';
-        params.push(pageSize, offset);
-
-        return this.db.all<PositionHistory[]>(query, params);
+    // Only filter by symbol if it's not "ALL"
+    if (symbol !== 'ALL') {
+      query += ' WHERE symbol = ?';
+      params.push(symbol);
+    } else {
+      query += ' WHERE 1=1';
     }
 
-    public async clearCache(): Promise<void> {
-        if (!this.db) throw new Error('Database not initialized');
-        await this.db.run('DELETE FROM position_history');
+    const timeColumn =
+      filterField === 'openTime'
+        ? 'openTime'
+        : 'CASE WHEN closeTime = 0 OR closeTime IS NULL THEN updateTime ELSE closeTime END';
+
+    if (startTs) {
+      query += ` AND ${timeColumn} >= ?`;
+      params.push(startTs);
     }
-} 
+    if (endTs) {
+      query += ` AND ${timeColumn} <= ?`;
+      params.push(endTs);
+    }
+
+    // Use CASE to fallback to updateTime when closeTime is 0 or null
+    query +=
+      ' ORDER BY CASE WHEN closeTime = 0 OR closeTime IS NULL THEN updateTime ELSE closeTime END DESC LIMIT ? OFFSET ?';
+    params.push(pageSize, offset);
+
+    return this.db.all<PositionHistory[]>(query, params);
+  }
+
+  public async clearCache(): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+    await this.db.run('DELETE FROM position_history');
+  }
+}

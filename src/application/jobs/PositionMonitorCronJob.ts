@@ -8,13 +8,9 @@ export class PositionMonitorCronJob {
   private isRunning: boolean = false;
   private isUpdating: boolean = false;
 
-  constructor(
-    positionMonitor?: PositionMonitor,
-    tradeOrderProcessor?: TradeOrderProcessor
-  ) {
+  constructor(positionMonitor?: PositionMonitor, tradeOrderProcessor?: TradeOrderProcessor) {
     // Create PositionMonitor with a callback to log price updates
-    this.positionMonitor = positionMonitor || new PositionMonitor((position) => {
-    });
+    this.positionMonitor = positionMonitor || new PositionMonitor((position) => {});
     this.tradeOrderProcessor = tradeOrderProcessor || new TradeOrderProcessor();
   }
 
@@ -22,7 +18,7 @@ export class PositionMonitorCronJob {
     const positions = this.positionMonitor.getMonitoredPositions();
     if (positions.length > 0) {
       console.log('\nCurrent monitored positions:');
-      positions.forEach(pos => {
+      positions.forEach((pos) => {
         console.log(`- ${pos.symbol} ${pos.positionSide}`);
         console.log(`  Entry: ${pos.entryPrice}`);
         console.log(`  Current Price: ${pos.lastPrice}`);
@@ -44,7 +40,9 @@ export class PositionMonitorCronJob {
     // Initial execution after 30 seconds
     setTimeout(async () => {
       if (this.isUpdating) {
-        console.log(`\n[${new Date().toLocaleString()}] Skipping initial position update as another update is in progress...`);
+        console.log(
+          `\n[${new Date().toLocaleString()}] Skipping initial position update as another update is in progress...`
+        );
         return;
       }
       this.isUpdating = true;
@@ -56,7 +54,7 @@ export class PositionMonitorCronJob {
         await this.tradeOrderProcessor.processTrades(monitoredPositions);
 
         // Log current monitored positions
-        await this.logMonitoredPositions()
+        await this.logMonitoredPositions();
       } catch (error) {
         console.error('Error updating positions:', error);
       } finally {
@@ -64,12 +62,12 @@ export class PositionMonitorCronJob {
       }
     }, 10000);
 
-
-
     // Schedule the job to run every minute
     cron.schedule('* * * * *', async () => {
       if (this.isUpdating) {
-        console.log(`\n[${new Date().toLocaleString()}] Skipping scheduled position update as another update is in progress...`);
+        console.log(
+          `\n[${new Date().toLocaleString()}] Skipping scheduled position update as another update is in progress...`
+        );
         return;
       }
       this.isUpdating = true;
@@ -103,4 +101,4 @@ export class PositionMonitorCronJob {
     this.isRunning = false;
     console.log('PositionMonitorCronJob stopped');
   }
-} 
+}

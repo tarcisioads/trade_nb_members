@@ -3,48 +3,48 @@
     <div class="p-4 border-b border-white/10">
       <h5 class="text-lg font-semibold text-white mb-0">{{ title }}</h5>
     </div>
-    <div class="p-4 flex-grow" style="min-height: 300px;">
+    <div class="p-4 flex-grow" style="min-height: 300px">
       <canvas ref="chartCanvas" :height="height"></canvas>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch } from 'vue'
-import { Chart, registerables } from 'chart.js'
+import { ref, onMounted, onUnmounted, watch } from 'vue';
+import { Chart, registerables } from 'chart.js';
 
-Chart.register(...registerables)
+Chart.register(...registerables);
 
 interface Props {
-  title: string
-  type: 'bar' | 'line' | 'doughnut' | 'pie'
+  title: string;
+  type: 'bar' | 'line' | 'doughnut' | 'pie';
   data: {
-    labels: string[]
+    labels: string[];
     datasets: {
-      label: string
-      data: number[]
-      backgroundColor?: string | string[]
-      borderColor?: string | string[]
-      borderWidth?: number
-    }[]
-  }
-  options?: any
-  height?: number
+      label: string;
+      data: number[];
+      backgroundColor?: string | string[];
+      borderColor?: string | string[];
+      borderWidth?: number;
+    }[];
+  };
+  options?: any;
+  height?: number;
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  height: 300
-})
+  height: 300,
+});
 
-const chartCanvas = ref<HTMLCanvasElement>()
-let chart: Chart | null = null
+const chartCanvas = ref<HTMLCanvasElement>();
+let chart: Chart | null = null;
 
 const createChart = () => {
-  if (!chartCanvas.value) return
+  if (!chartCanvas.value) return;
 
   // Destruir chart anterior se existir
   if (chart) {
-    chart.destroy()
+    chart.destroy();
   }
 
   chart = new Chart(chartCanvas.value, {
@@ -53,31 +53,31 @@ const createChart = () => {
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      ...props.options
-    }
-  })
-}
+      ...props.options,
+    },
+  });
+};
 
 const updateChart = () => {
   if (chart) {
-    chart.data = props.data
-    chart.update()
+    chart.data = props.data;
+    chart.update();
   }
-}
+};
 
 onMounted(() => {
-  createChart()
-})
+  createChart();
+});
 
 onUnmounted(() => {
   if (chart) {
-    chart.destroy()
+    chart.destroy();
   }
-})
+});
 
-watch(() => props.data, updateChart, { deep: true })
+watch(() => props.data, updateChart, { deep: true });
 </script>
 
 <style scoped>
 /* Scoped styles removed */
-</style> 
+</style>

@@ -1,6 +1,14 @@
 import { LongShortRatioVariationService } from './LongShortRatioVariationService';
 import { OpenInterestVariationService } from './OpenInterestVariationService';
-import { Sentiment, Trend, TradeType, Signal, TrendAnalysis, SentimentResult, AllowedInterval } from '../../utils/types';
+import {
+  Sentiment,
+  Trend,
+  TradeType,
+  Signal,
+  TrendAnalysis,
+  SentimentResult,
+  AllowedInterval,
+} from '../../utils/types';
 
 /**
  * Analyzes long/short ratio and open interest variations to determine market sentiment.
@@ -14,14 +22,18 @@ export class SentimentService {
     this.oiService = new OpenInterestVariationService();
   }
 
-  private _determineTrend(variation: { vs1h: number | null, vs4h: number | null, vs24h: number | null }): TrendAnalysis {
+  private _determineTrend(variation: {
+    vs1h: number | null;
+    vs4h: number | null;
+    vs24h: number | null;
+  }): TrendAnalysis {
     const { vs1h, vs4h, vs24h } = variation;
 
     if (vs1h === null || vs4h === null || vs24h === null) {
       return { trend: 'Neutral', score: 0 };
     }
 
-    const score = (vs1h * 3) + (vs4h * 2) + (vs24h * 1);
+    const score = vs1h * 3 + vs4h * 2 + vs24h * 1;
     const TREND_SCORE_THRESHOLD = 2;
 
     let trend: Trend = 'Neutral';
@@ -34,7 +46,11 @@ export class SentimentService {
     return { trend, score };
   }
 
-  public async getSentiment(symbol: string, interval: AllowedInterval, side: TradeType): Promise<SentimentResult> {
+  public async getSentiment(
+    symbol: string,
+    interval: AllowedInterval,
+    side: TradeType
+  ): Promise<SentimentResult> {
     let lsRatioData: any = null;
     try {
       lsRatioData = await this.lsRatioService.getRatioVariation(symbol, interval);
@@ -57,20 +73,34 @@ export class SentimentService {
         sentiment: 'Neutral',
         details: {
           side,
-          longShortRatio: { symbol, currentRatio: null, variation: nullVariation, timestamps: nullTimestamps },
-          openInterest: { symbol, currentOpenInterestValue: null, variation: nullVariation, timestamps: nullTimestamps },
+          longShortRatio: {
+            symbol,
+            currentRatio: null,
+            variation: nullVariation,
+            timestamps: nullTimestamps,
+          },
+          openInterest: {
+            symbol,
+            currentOpenInterestValue: null,
+            variation: nullVariation,
+            timestamps: nullTimestamps,
+          },
           analysis: {
             lsrTrend: { trend: 'Neutral', score: 0 },
             oiTrend: { trend: 'Neutral', score: 0 },
             lsrSignal: 'Neutral',
-            oiSignal: 'Neutral'
-          }
-        }
+            oiSignal: 'Neutral',
+          },
+        },
       };
     }
 
-    const lsrTrend: TrendAnalysis = lsRatioData ? this._determineTrend(lsRatioData.variation) : { trend: 'Neutral', score: 0 };
-    const oiTrend: TrendAnalysis = oiData ? this._determineTrend(oiData.variation) : { trend: 'Neutral', score: 0 };
+    const lsrTrend: TrendAnalysis = lsRatioData
+      ? this._determineTrend(lsRatioData.variation)
+      : { trend: 'Neutral', score: 0 };
+    const oiTrend: TrendAnalysis = oiData
+      ? this._determineTrend(oiData.variation)
+      : { trend: 'Neutral', score: 0 };
 
     // Determine Long/Short Ratio Signal (Contrarian)
     let lsrSignal: Signal = 'Neutral';
@@ -80,7 +110,7 @@ export class SentimentService {
       lsrSignal = 'Bearish'; // Retail is piling into longs, which is bearish.
     }
 
-    // Determine Open Interest Signal (Confirmation, contextualized by side)  
+    // Determine Open Interest Signal (Confirmation, contextualized by side)
     let oiSignal: Signal = 'Neutral';
     if (oiTrend.trend === 'Up') {
       oiSignal = side === 'LONG' ? 'Bullish' : 'Bearish';
@@ -102,15 +132,25 @@ export class SentimentService {
       sentiment,
       details: {
         side,
-        longShortRatio: lsRatioData || { symbol, currentRatio: null, variation: nullVariation, timestamps: nullTimestamps },
-        openInterest: oiData || { symbol, currentOpenInterestValue: null, variation: nullVariation, timestamps: nullTimestamps },
+        longShortRatio: lsRatioData || {
+          symbol,
+          currentRatio: null,
+          variation: nullVariation,
+          timestamps: nullTimestamps,
+        },
+        openInterest: oiData || {
+          symbol,
+          currentOpenInterestValue: null,
+          variation: nullVariation,
+          timestamps: nullTimestamps,
+        },
         analysis: {
           lsrTrend,
           oiTrend,
           lsrSignal,
-          oiSignal
-        }
-      }
+          oiSignal,
+        },
+      },
     };
   }
 }

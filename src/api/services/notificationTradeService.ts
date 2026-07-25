@@ -38,21 +38,22 @@ export class NotificationTradeService {
       sentiment_adds_margin: notification.sentiment_adds_margin,
       sentiment_required: notification.sentiment_required,
       modify_tp1: false,
-      interval: notification.interval
+      interval: notification.interval,
     };
   }
 
-
   private async executeTrade(trade: Trade, tradeNotification: TradeNotification) {
-    console.log(tradeNotification)
-    console.log(trade)
+    console.log(tradeNotification);
+    console.log(trade);
     // Check if BingX API credentials are available
     const bingxApiKey = process.env.BINGX_API_KEY;
     const bingxApiSecret = process.env.BINGX_API_SECRET;
 
     if (!bingxApiKey || !bingxApiSecret) {
       console.log('\nTrade Execution Skipped:');
-      console.log('BingX API credentials not configured. Please set bingx_api_key and bingx_api_secret environment variables.');
+      console.log(
+        'BingX API credentials not configured. Please set bingx_api_key and bingx_api_secret environment variables.'
+      );
       console.log('----------------------------------------');
 
       // Send notification about skipped execution
@@ -67,15 +68,14 @@ export class NotificationTradeService {
           tp3: trade.tp3,
           tp4: trade.tp4,
           tp5: trade.tp5,
-          tp6: trade.tp6
+          tp6: trade.tp6,
         },
         validation: {
           isValid: true,
           message: 'Trade forced by user but skipped: Missing BingX API credentials',
           volumeAnalysis: tradeNotification.validation.volumeAnalysis,
           entryAnalysis: tradeNotification.validation.entryAnalysis,
-        }
-        ,
+        },
         analysisUrl: tradeNotification.analysisUrl,
         executionError: 'BingX API credentials not configured',
         volume_adds_margin: trade.volume_adds_margin,
@@ -85,7 +85,7 @@ export class NotificationTradeService {
         sentiment_required: trade.sentiment_required,
         isWarning: false,
         manually_generated: true,
-        interval: trade.interval
+        interval: trade.interval,
       });
       return;
     }
@@ -109,7 +109,7 @@ export class NotificationTradeService {
         sentiment_adds_margin: trade.volume_adds_margin,
         sentiment_required: trade.volume_required,
         modify_tp1: false,
-        interval: trade.interval
+        interval: trade.interval,
       });
 
       if (executionResult.success) {
@@ -121,14 +121,24 @@ export class NotificationTradeService {
         // Volume margin info is now handled by TradeExecutor
         if (executionResult.data?.volumeMarginAdded) {
           console.log(`Volume Margin Added: ${executionResult.data.volumeMarginAdded.percentage}%`);
-          console.log(`Base Margin: ${executionResult.data.volumeMarginAdded.baseMargin.toFixed(2)}`);
-          console.log(`Total Margin: ${executionResult.data.volumeMarginAdded.totalMargin.toFixed(2)}`);
+          console.log(
+            `Base Margin: ${executionResult.data.volumeMarginAdded.baseMargin.toFixed(2)}`
+          );
+          console.log(
+            `Total Margin: ${executionResult.data.volumeMarginAdded.totalMargin.toFixed(2)}`
+          );
         }
         // Sentiment margin info is now handled by TradeExecutor
         if (executionResult.data?.sentimentMarginAdded) {
-          console.log(`Sentiment Margin Added: ${executionResult.data.sentimentMarginAdded.percentage}%`);
-          console.log(`Base Margin: ${executionResult.data.sentimentMarginAdded.baseMargin.toFixed(2)}`);
-          console.log(`Total Margin: ${executionResult.data.sentimentMarginAdded.totalMargin.toFixed(2)}`);
+          console.log(
+            `Sentiment Margin Added: ${executionResult.data.sentimentMarginAdded.percentage}%`
+          );
+          console.log(
+            `Base Margin: ${executionResult.data.sentimentMarginAdded.baseMargin.toFixed(2)}`
+          );
+          console.log(
+            `Total Margin: ${executionResult.data.sentimentMarginAdded.totalMargin.toFixed(2)}`
+          );
         }
 
         console.log('----------------------------------------');
@@ -145,11 +155,13 @@ export class NotificationTradeService {
             tp3: trade.tp3,
             tp4: trade.tp4,
             tp5: trade.tp5,
-            tp6: trade.tp6
+            tp6: trade.tp6,
           },
           validation: {
             isValid: true,
-            message: trade.modify_tp1 ? 'Trade forced by user (TP1 adjusted)' : 'Trade forced by user',
+            message: trade.modify_tp1
+              ? 'Trade forced by user (TP1 adjusted)'
+              : 'Trade forced by user',
             volumeAnalysis: tradeNotification.validation.volumeAnalysis,
             entryAnalysis: tradeNotification.validation.entryAnalysis,
           },
@@ -159,18 +171,21 @@ export class NotificationTradeService {
           volume_required: trade.volume_required,
           sentiment_adds_margin: trade.volume_adds_margin,
           sentiment_required: trade.volume_required,
-          executionResult: executionResult.success && executionResult.data ? {
-            leverage: executionResult.data.leverage.optimalLeverage,
-            quantity: executionResult.data.quantity,
-            entryOrderId: executionResult.data.entryOrder.data.order.orderId,
-            stopOrderId: executionResult.data.stopOrder.data.order.orderId,
-            volumeMarginAdded: executionResult.data.volumeMarginAdded,
-            sentimentMarginAdded: executionResult.data.sentimentMarginAdded
-          } : undefined,
+          executionResult:
+            executionResult.success && executionResult.data
+              ? {
+                  leverage: executionResult.data.leverage.optimalLeverage,
+                  quantity: executionResult.data.quantity,
+                  entryOrderId: executionResult.data.entryOrder.data.order.orderId,
+                  stopOrderId: executionResult.data.stopOrder.data.order.orderId,
+                  volumeMarginAdded: executionResult.data.volumeMarginAdded,
+                  sentimentMarginAdded: executionResult.data.sentimentMarginAdded,
+                }
+              : undefined,
           executionError: !executionResult.success ? executionResult.message : undefined,
           isWarning: false,
           manually_generated: true,
-          interval: trade.interval
+          interval: trade.interval,
         });
       } else {
         console.error('\nTrade Execution Failed:');
@@ -191,11 +206,13 @@ export class NotificationTradeService {
           tp3: trade.tp3,
           tp4: trade.tp4,
           tp5: trade.tp5,
-          tp6: trade.tp6
+          tp6: trade.tp6,
         },
         validation: {
           isValid: true,
-          message: trade.modify_tp1 ? 'Trade forced by user (TP1 adjusted)' : 'Trade forced by user',
+          message: trade.modify_tp1
+            ? 'Trade forced by user (TP1 adjusted)'
+            : 'Trade forced by user',
           volumeAnalysis: tradeNotification.validation.volumeAnalysis,
           entryAnalysis: tradeNotification.validation.entryAnalysis,
         },
@@ -208,12 +225,10 @@ export class NotificationTradeService {
         sentiment_required: trade.volume_required,
         isWarning: false,
         manually_generated: true,
-        interval: trade.interval
+        interval: trade.interval,
       });
     }
-
   }
-
 
   async handleMarketTrade(tradeNotification: TradeNotification): Promise<TradeNotification> {
     // Store the original notification first
@@ -227,7 +242,9 @@ export class NotificationTradeService {
     return tradeNotification;
   }
 
-  async handleTpAdjustedMarketTrade(tradeNotification: TradeNotification): Promise<TradeNotification> {
+  async handleTpAdjustedMarketTrade(
+    tradeNotification: TradeNotification
+  ): Promise<TradeNotification> {
     // Store the original notification first
     await this.tradeDatabase.saveTradeNotification(tradeNotification);
 
@@ -238,6 +255,5 @@ export class NotificationTradeService {
     await this.executeTrade(trade, tradeNotification);
 
     return tradeNotification;
-
   }
-} 
+}

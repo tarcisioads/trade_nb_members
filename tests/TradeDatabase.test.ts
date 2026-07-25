@@ -29,17 +29,17 @@ describe('TradeDatabase', () => {
       tp6: null,
       volume_adds_margin: false,
       volume_required: false,
-      setup_description: 'Test Setup'
+      setup_description: 'Test Setup',
     };
 
     const orders = {
       entryOrder: { data: { order: { orderId: 'entry_1' } } } as any,
       stopOrder: { data: { order: { orderId: 'stop_1' } } } as any,
-      tpOrders: [{ data: { order: { orderId: 'tp_1' } } } as any]
+      tpOrders: [{ data: { order: { orderId: 'tp_1' } } } as any],
     };
 
     const savedTrade = await db.saveTrade(trade, orders, 0.1, 10);
-    
+
     expect(savedTrade).toBeDefined();
     expect(savedTrade.symbol).toBe('BTCUSDT');
     expect(savedTrade.entryOrderId).toBe('entry_1');
@@ -61,18 +61,18 @@ describe('TradeDatabase', () => {
       tp6: null,
       volume_adds_margin: false,
       volume_required: false,
-      setup_description: null
+      setup_description: null,
     };
 
     const orders = {
       entryOrder: { data: { order: { orderId: 'entry_2' } } } as any,
       stopOrder: { data: { order: { orderId: 'stop_2' } } } as any,
-      tpOrders: []
+      tpOrders: [],
     };
 
     const savedTrade = await db.saveTrade(trade, orders, 1, 5);
     await db.updateTradeStatus(savedTrade.id, 'CLOSED');
-    
+
     const updatedTrade = await db.getTradeById(savedTrade.id);
     expect(updatedTrade.status).toBe('CLOSED');
   });
@@ -92,12 +92,12 @@ describe('TradeDatabase', () => {
       tp6: null,
       volume_adds_margin: false,
       volume_required: false,
-      setup_description: null
+      setup_description: null,
     };
     const orders: any = {
-        entryOrder: { data: { order: { orderId: 'e' } } },
-        stopOrder: { data: { order: { orderId: 's' } } },
-        tpOrders: []
+      entryOrder: { data: { order: { orderId: 'e' } } },
+      stopOrder: { data: { order: { orderId: 's' } } },
+      tpOrders: [],
     };
 
     await db.saveTrade(trade, orders, 1, 10);

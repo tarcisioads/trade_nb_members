@@ -8,6 +8,8 @@ router.get('/notifications', (req, res) => notificationController.getNotificatio
 
 router.post('/trade/market', (req, res) => notificationController.handleMarketTrade(req, res));
 
-router.post('/trade/market/tp_adjusted', (req, res) => notificationController.handleTpAdjustedMarketTrade(req, res));
+router.post('/trade/market/tp_adjusted', (req, res) =>
+  notificationController.handleTpAdjustedMarketTrade(req, res)
+);
 
-export default router; 
+export default router;

@@ -29,7 +29,7 @@ describe('TradeOrderProcessor', () => {
     // Create mock instances directly or use the auto-mocked class instances
     // Since we are mocking the modules, we can just instantiate them and they should be mocks
     // However, to be safe and explicit, let's cast them properly
-    
+
     mockTradeDatabase = new TradeDatabase() as jest.Mocked<TradeDatabase>;
     // Ensure methods are mocks
     mockTradeDatabase.hasOrderDetails = jest.fn();
@@ -41,12 +41,14 @@ describe('TradeOrderProcessor', () => {
     mockOrderStatusChecker.getOrderStatus = jest.fn();
     mockOrderStatusChecker.getOrderStatusWithDetails = jest.fn();
 
-    mockOrderExecutor = new BingXOrderExecutor(mockTradeDatabase) as jest.Mocked<BingXOrderExecutor>;
-    
+    mockOrderExecutor = new BingXOrderExecutor(
+      mockTradeDatabase
+    ) as jest.Mocked<BingXOrderExecutor>;
+
     mockDataService = new BingXDataService() as jest.Mocked<BingXDataService>;
-    
+
     mockNotificationService = new NotificationService() as jest.Mocked<NotificationService>;
-    
+
     mockPositionValidator = new PositionValidator() as jest.Mocked<PositionValidator>;
 
     // Setup default mock implementations
@@ -55,18 +57,21 @@ describe('TradeOrderProcessor', () => {
     mockTradeDatabase.updateTradeStatus.mockResolvedValue(undefined);
     mockTradeDatabase.getOpenTrades.mockResolvedValue([]);
 
-    mockOrderStatusChecker.getOrderStatus.mockResolvedValue({ status: 'FILLED', type: 'LIMIT' } as any);
+    mockOrderStatusChecker.getOrderStatus.mockResolvedValue({
+      status: 'FILLED',
+      type: 'LIMIT',
+    } as any);
     mockOrderStatusChecker.getOrderStatusWithDetails.mockResolvedValue({
       status: { status: 'FILLED', type: 'LIMIT' },
       executionDetails: {
         executedQuantity: 1,
         averagePrice: 100,
         createTime: Date.now(),
-        updateTime: Date.now()
+        updateTime: Date.now(),
       },
       isFilled: true,
       isCanceled: false,
-      isOpen: false
+      isOpen: false,
     } as any);
 
     processor = new TradeOrderProcessor(
@@ -110,7 +115,7 @@ describe('TradeOrderProcessor', () => {
       type: 'LONG' as 'LONG' | 'SHORT',
       volume_adds_margin: false,
       setup_description: '',
-      volume_required: false
+      volume_required: false,
     };
 
     await processor['processTrade'](trade as any);
@@ -122,7 +127,10 @@ describe('TradeOrderProcessor', () => {
   });
 
   it('should skip orders with status NEW', async () => {
-    mockOrderStatusChecker.getOrderStatus.mockResolvedValue({ status: 'NEW', type: 'LIMIT' } as any);
+    mockOrderStatusChecker.getOrderStatus.mockResolvedValue({
+      status: 'NEW',
+      type: 'LIMIT',
+    } as any);
 
     const trade = {
       id: 2,
@@ -150,7 +158,7 @@ describe('TradeOrderProcessor', () => {
       type: 'LONG' as 'LONG' | 'SHORT',
       volume_adds_margin: false,
       setup_description: '',
-      volume_required: false
+      volume_required: false,
     };
 
     // Não deve chamar getOrderStatusWithDetails nem saveOrderDetails
@@ -161,13 +169,21 @@ describe('TradeOrderProcessor', () => {
   });
 
   it('should process canceled orders correctly', async () => {
-    mockOrderStatusChecker.getOrderStatus.mockResolvedValue({ status: 'CANCELED', type: 'LIMIT' } as any);
+    mockOrderStatusChecker.getOrderStatus.mockResolvedValue({
+      status: 'CANCELED',
+      type: 'LIMIT',
+    } as any);
     mockOrderStatusChecker.getOrderStatusWithDetails.mockResolvedValue({
       status: { status: 'CANCELED', type: 'LIMIT' },
-      executionDetails: { executedQuantity: 0, averagePrice: 0, createTime: new Date(), updateTime: new Date() },
+      executionDetails: {
+        executedQuantity: 0,
+        averagePrice: 0,
+        createTime: new Date(),
+        updateTime: new Date(),
+      },
       isFilled: false,
       isCanceled: true,
-      isOpen: false
+      isOpen: false,
     } as any);
 
     const trade = {
@@ -176,7 +192,7 @@ describe('TradeOrderProcessor', () => {
       entryOrderId: '1234567890123456',
       stopOrderId: '6789012345678901',
       status: 'OPEN',
-      type: 'LONG'
+      type: 'LONG',
     };
 
     await processor['processTrade'](trade as any);
@@ -189,18 +205,23 @@ describe('TradeOrderProcessor', () => {
   });
 
   it('should close trade if no monitored position is found', async () => {
-    mockTradeDatabase.getOpenTrades.mockResolvedValue([{
-      id: 4,
-      symbol: 'BTC/USDT',
-      type: 'LONG',
-      status: 'OPEN'
-    }] as any);
+    mockTradeDatabase.getOpenTrades.mockResolvedValue([
+      {
+        id: 4,
+        symbol: 'BTC/USDT',
+        type: 'LONG',
+        status: 'OPEN',
+      },
+    ] as any);
 
-    mockPositionValidator.hasOpenPosition.mockResolvedValue({ hasPosition: false, message: 'No position' });
+    mockPositionValidator.hasOpenPosition.mockResolvedValue({
+      hasPosition: false,
+      message: 'No position',
+    });
 
     const monitoredPositions = new Map();
     // We add something to monitoredPositions so the size is not 0
-    monitoredPositions.set('OTHER_LONG', {}); 
+    monitoredPositions.set('OTHER_LONG', {});
 
     await processor.processTrades(monitoredPositions);
 
@@ -208,22 +229,24 @@ describe('TradeOrderProcessor', () => {
   });
 
   it('should send notification on processing error', async () => {
-    mockTradeDatabase.getOpenTrades.mockResolvedValue([{
-      id: 5,
-      symbol: 'BTC/USDT',
-      type: 'LONG',
-      status: 'OPEN',
-      entry: 50000,
-      stop: 48000,
-      entryOrderId: '1234567890123456'
-    }] as any);
+    mockTradeDatabase.getOpenTrades.mockResolvedValue([
+      {
+        id: 5,
+        symbol: 'BTC/USDT',
+        type: 'LONG',
+        status: 'OPEN',
+        entry: 50000,
+        stop: 48000,
+        entryOrderId: '1234567890123456',
+      },
+    ] as any);
 
     // Make hasOpenPosition throw to trigger the catch block in processTrades
     mockPositionValidator.hasOpenPosition.mockRejectedValue(new Error('Validation Error'));
 
     const monitoredPositions = new Map();
     // monitoredPositions.size must be > 0 to enter the logic that calls positionValidator
-    monitoredPositions.set('OTHER_LONG', {}); 
+    monitoredPositions.set('OTHER_LONG', {});
 
     await processor.processTrades(monitoredPositions);
 
@@ -236,17 +259,25 @@ describe('TradeOrderProcessor', () => {
       symbol: 'BTC/USDT',
       type: 'LONG',
       status: 'OPEN',
-      tp1OrderId: '1111111111111111'
+      tp1OrderId: '1111111111111111',
     };
 
     mockTradeDatabase.getOpenTrades.mockResolvedValue([trade] as any);
-    
+
     // Setup processTrade to return true (TP1 filled)
-    mockOrderStatusChecker.getOrderStatus.mockResolvedValue({ status: 'FILLED', type: 'LIMIT' } as any);
+    mockOrderStatusChecker.getOrderStatus.mockResolvedValue({
+      status: 'FILLED',
+      type: 'LIMIT',
+    } as any);
     mockOrderStatusChecker.getOrderStatusWithDetails.mockResolvedValue({
       status: { status: 'FILLED' },
-      executionDetails: { executedQuantity: 1, averagePrice: 100, createTime: new Date(), updateTime: new Date() },
-      isFilled: true
+      executionDetails: {
+        executedQuantity: 1,
+        averagePrice: 100,
+        createTime: new Date(),
+        updateTime: new Date(),
+      },
+      isFilled: true,
     } as any);
 
     mockPositionValidator.hasOpenPosition.mockResolvedValue({ hasPosition: true, message: 'Open' });
@@ -256,7 +287,7 @@ describe('TradeOrderProcessor', () => {
       symbol: 'BTC/USDT',
       positionSide: 'LONG',
       entryPrice: 100,
-      position: { positionSide: 'LONG', avgPrice: '100', positionAmt: '1' }
+      position: { positionSide: 'LONG', avgPrice: '100', positionAmt: '1' },
     };
 
     const monitoredPositions = new Map();

@@ -11,7 +11,6 @@ import { logger } from '../../utils/logger';
 // Load environment variables
 dotenv.config();
 
-
 interface CacheKey {
   symbol: string;
   interval: AllowedInterval;
@@ -47,13 +46,12 @@ export class BingXDataService implements IDataProvider {
     return instance;
   }
 
-
   private async ensureDatabaseInitialized() {
     if (this.db) return;
     const dbPath = path.join(process.cwd(), 'db/bingx_cache.db');
     this.db = await open({
       filename: dbPath,
-      driver: sqlite3.Database
+      driver: sqlite3.Database,
     });
 
     await this.db.exec(`
@@ -91,7 +89,7 @@ export class BingXDataService implements IDataProvider {
       day: now.getDate(),
       month: now.getMonth() + 1, // getMonth() returns 0-11
       year: now.getFullYear(),
-      minute: interval === '1h' ? 0 : minuteBlock
+      minute: interval === '1h' ? 0 : minuteBlock,
     };
   }
 
@@ -105,7 +103,7 @@ export class BingXDataService implements IDataProvider {
         if (error && error.code === 'SQLITE_BUSY') {
           lastError = error;
           if (i < retries - 1) {
-            await new Promise(res => setTimeout(res, delayMs * Math.pow(2, i)));
+            await new Promise((res) => setTimeout(res, delayMs * Math.pow(2, i)));
             continue;
           }
         }
@@ -115,12 +113,25 @@ export class BingXDataService implements IDataProvider {
     throw lastError;
   }
 
-  private async getCachedData(symbol: string, timeComponents: CacheKey): Promise<KlineData[] | null> {
+  private async getCachedData(
+    symbol: string,
+    timeComponents: CacheKey
+  ): Promise<KlineData[] | null> {
     await this.ensureDatabaseInitialized();
-    const result = await this.withRetry(() => this.db.get(
-      'SELECT data FROM kline_cache WHERE symbol = ? AND interval = ? AND hour = ? AND day = ? AND month = ? AND year = ? AND minute = ?',
-      [symbol, timeComponents.interval, timeComponents.hour, timeComponents.day, timeComponents.month, timeComponents.year, timeComponents.minute]
-    ));
+    const result = await this.withRetry(() =>
+      this.db.get(
+        'SELECT data FROM kline_cache WHERE symbol = ? AND interval = ? AND hour = ? AND day = ? AND month = ? AND year = ? AND minute = ?',
+        [
+          symbol,
+          timeComponents.interval,
+          timeComponents.hour,
+          timeComponents.day,
+          timeComponents.month,
+          timeComponents.year,
+          timeComponents.minute,
+        ]
+      )
+    );
 
     if (result && typeof (result as { data?: string }).data === 'string') {
       return JSON.parse((result as { data: string }).data);
@@ -128,12 +139,28 @@ export class BingXDataService implements IDataProvider {
     return null;
   }
 
-  private async cacheData(symbol: string, timeComponents: CacheKey, data: KlineData[]): Promise<void> {
+  private async cacheData(
+    symbol: string,
+    timeComponents: CacheKey,
+    data: KlineData[]
+  ): Promise<void> {
     await this.ensureDatabaseInitialized();
-    await this.withRetry(() => this.db.run(
-      'INSERT OR REPLACE INTO kline_cache (symbol, interval, hour, day, month, year, minute, data, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      [symbol, timeComponents.interval, timeComponents.hour, timeComponents.day, timeComponents.month, timeComponents.year, timeComponents.minute, JSON.stringify(data), Date.now()]
-    ));
+    await this.withRetry(() =>
+      this.db.run(
+        'INSERT OR REPLACE INTO kline_cache (symbol, interval, hour, day, month, year, minute, data, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        [
+          symbol,
+          timeComponents.interval,
+          timeComponents.hour,
+          timeComponents.day,
+          timeComponents.month,
+          timeComponents.year,
+          timeComponents.minute,
+          JSON.stringify(data),
+          Date.now(),
+        ]
+      )
+    );
   }
 
   private parseKlineData(kline: any): KlineData {
@@ -145,15 +172,19 @@ export class BingXDataService implements IDataProvider {
       close: kline.close,
       volume: kline.volume,
       closeTime: kline.time,
-      quoteAssetVolume: "0",
+      quoteAssetVolume: '0',
       numberOfTrades: 0,
-      takerBuyBaseAssetVolume: "0",
-      takerBuyQuoteAssetVolume: "0"
-
+      takerBuyBaseAssetVolume: '0',
+      takerBuyQuoteAssetVolume: '0',
     };
   }
 
-  public async getKlineData(symbol: string, interval: AllowedInterval = '1h', limit: number = 56, noCache: boolean = false): Promise<KlineData[]> {
+  public async getKlineData(
+    symbol: string,
+    interval: AllowedInterval = '1h',
+    limit: number = 56,
+    noCache: boolean = false
+  ): Promise<KlineData[]> {
     await this.ensureDatabaseInitialized();
     const normalizedSymbol = normalizeSymbolBingX(symbol);
     const timeComponents = this.getCurrentTimeComponents(interval);
@@ -162,7 +193,9 @@ export class BingXDataService implements IDataProvider {
     if (!noCache) {
       const cachedData = await this.getCachedData(normalizedSymbol, timeComponents);
       if (cachedData) {
-        logger.info(`Returning cached data for ${normalizedSymbol} (${interval}) at ${timeComponents.hour}:${timeComponents.minute.toString().padStart(2, '0')} on ${timeComponents.day}/${timeComponents.month}/${timeComponents.year}`);
+        logger.info(
+          `Returning cached data for ${normalizedSymbol} (${interval}) at ${timeComponents.hour}:${timeComponents.minute.toString().padStart(2, '0')} on ${timeComponents.day}/${timeComponents.month}/${timeComponents.year}`
+        );
         return cachedData.slice(0, limit);
       }
     }
@@ -173,7 +206,7 @@ export class BingXDataService implements IDataProvider {
         symbol: normalizedSymbol,
         interval: interval,
         limit: limit, // More data points for smaller intervals
-        timestamp: Date.now().toString()
+        timestamp: Date.now().toString(),
       };
 
       const response = await this.apiClient.get<any>(path, params);
@@ -187,7 +220,9 @@ export class BingXDataService implements IDataProvider {
         await this.cacheData(normalizedSymbol, timeComponents, klineData);
       }
 
-      logger.info(`Fetched and cached new data for ${normalizedSymbol} (${interval}) at ${timeComponents.hour}:${timeComponents.minute.toString().padStart(2, '0')} on ${timeComponents.day}/${timeComponents.month}/${timeComponents.year}`);
+      logger.info(
+        `Fetched and cached new data for ${normalizedSymbol} (${interval}) at ${timeComponents.hour}:${timeComponents.minute.toString().padStart(2, '0')} on ${timeComponents.day}/${timeComponents.month}/${timeComponents.year}`
+      );
       return klineData.slice(0, limit);
     } catch (error) {
       logger.error(`Error fetching data for ${normalizedSymbol} (${interval}):`, error);
@@ -201,7 +236,7 @@ export class BingXDataService implements IDataProvider {
       const path = '/openApi/swap/v2/quote/ticker';
       const params = {
         symbol: normalizedSymbol,
-        timestamp: Date.now().toString()
+        timestamp: Date.now().toString(),
       };
 
       const response = await this.apiClient.get<any>(path, params);
@@ -226,7 +261,7 @@ export class BingXDataService implements IDataProvider {
       const path = '/openApi/swap/v2/quote/contract';
       const params = {
         symbol: normalizedSymbol,
-        timestamp: Date.now().toString()
+        timestamp: Date.now().toString(),
       };
 
       const response = await this.apiClient.get<any>(path, params);
@@ -241,24 +276,27 @@ export class BingXDataService implements IDataProvider {
   }
 
   public async getContracts(): Promise<any[]> {
-    if (this.cachedContracts && (Date.now() - this.contractsCacheTimestamp < this.CONTRACTS_CACHE_DURATION)) {
+    if (
+      this.cachedContracts &&
+      Date.now() - this.contractsCacheTimestamp < this.CONTRACTS_CACHE_DURATION
+    ) {
       return this.cachedContracts;
     }
-    
+
     try {
       const path = '/openApi/swap/v2/quote/contracts';
       const params = {
-        timestamp: Date.now().toString()
+        timestamp: Date.now().toString(),
       };
-      
-      const response = await this.apiClient.get<{ code: number, data: any[] }>(path, params);
-      
+
+      const response = await this.apiClient.get<{ code: number; data: any[] }>(path, params);
+
       if (response && response.code === 0 && response.data) {
         this.cachedContracts = response.data;
         this.contractsCacheTimestamp = Date.now();
         return this.cachedContracts;
       }
-      
+
       throw new Error(`Invalid response format from BingX: ${JSON.stringify(response)}`);
     } catch (error) {
       logger.error('Error fetching contracts from BingX:', error);
@@ -269,4 +307,4 @@ export class BingXDataService implements IDataProvider {
       throw error;
     }
   }
-} 
+}

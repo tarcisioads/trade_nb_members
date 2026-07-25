@@ -26,7 +26,7 @@ export class NotificationService implements INotificationService {
       const notificationWithTimestamp = {
         ...trade,
         interval: trade.interval || '1h',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
 
       // Save notification to database
@@ -46,4 +46,4 @@ export class NotificationService implements INotificationService {
   public async sendCustomTelegramMessage(message: string): Promise<void> {
     await this.telegramService.sendCustomMessage(message);
   }
-} 
+}

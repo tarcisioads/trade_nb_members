@@ -26,7 +26,6 @@ interface Order {
   order: OrderStatus;
 }
 
-
 interface BingXOrderStatusResponse {
   code: number;
   msg: string;
@@ -50,18 +49,20 @@ export class OrderStatusChecker {
       throw new Error(`orderId inválido para BigInt: ${orderId}`);
     }
     const path = '/openApi/swap/v2/trade/order';
-    const _orderId = BigInt(orderId)
+    const _orderId = BigInt(orderId);
     const normalizedSymbol = normalizeSymbolBingX(symbol);
     const params = {
       orderId: _orderId,
-      symbol: normalizedSymbol
+      symbol: normalizedSymbol,
     };
 
     try {
       const response = await this.apiClient.get<BingXOrderStatusResponse>(path, params);
 
       if (response.code !== 0) {
-        throw new Error(`Error fetching order status: ${response.msg}, params: ${JSON.stringify(params)}`);
+        throw new Error(
+          `Error fetching order status: ${response.msg}, params: ${JSON.stringify(params)}`
+        );
       }
 
       return response.data;
@@ -71,7 +72,10 @@ export class OrderStatusChecker {
     }
   }
 
-  public async getOrderStatusWithDetails(orderId: string, symbol: string): Promise<{
+  public async getOrderStatusWithDetails(
+    orderId: string,
+    symbol: string
+  ): Promise<{
     status: OrderStatus;
     isFilled: boolean;
     isCanceled: boolean;
@@ -94,12 +98,14 @@ export class OrderStatusChecker {
         executedQuantity: parseFloat(orderStatus.order.executedQty),
         averagePrice: parseFloat(orderStatus.order.avgPrice),
         createTime: new Date(orderStatus.order.time),
-        updateTime: new Date(orderStatus.order.updateTime)
-      }
+        updateTime: new Date(orderStatus.order.updateTime),
+      },
     };
   }
 
-  public async getMultipleOrderStatus(orderInfos: { orderId: string, symbol: string }[]): Promise<Map<string, OrderStatus>> {
+  public async getMultipleOrderStatus(
+    orderInfos: { orderId: string; symbol: string }[]
+  ): Promise<Map<string, OrderStatus>> {
     const orderStatuses = new Map<string, OrderStatus>();
 
     await Promise.all(
@@ -116,4 +122,4 @@ export class OrderStatusChecker {
 
     return orderStatuses;
   }
-} 
+}

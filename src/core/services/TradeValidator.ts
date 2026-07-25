@@ -4,7 +4,6 @@ import { VolumeAnalyzer } from './VolumeAnalyzer';
 import { Trade, SentimentResult, VolumeColor } from '../../utils/types';
 import { isVolumeValid, isSentimentValid } from '../../utils/utils';
 
-
 export class TradeValidator {
   private readonly tradeEntryAnalyzer: TradeEntryAnalyzer;
   private readonly volumeAnalyzer: VolumeAnalyzer;
@@ -19,7 +18,6 @@ export class TradeValidator {
     this.volumeAnalyzer = volumeAnalyzer || new VolumeAnalyzer();
     this.sentimentService = sentimentService || new SentimentService();
   }
-
 
   public async validateTrade(trade: Trade): Promise<{
     isValid: boolean;
@@ -47,7 +45,7 @@ export class TradeValidator {
       const [entryAnalysis, volumeAnalysis, sentimentAnalysis] = await Promise.all([
         this.tradeEntryAnalyzer.analyzeEntry(trade),
         this.volumeAnalyzer.analyzeVolume(trade.symbol, trade.interval),
-        this.sentimentService.getSentiment(trade.symbol, trade.interval || '1h', trade.type)
+        this.sentimentService.getSentiment(trade.symbol, trade.interval || '1h', trade.type),
       ]);
 
       // Get recent closes from entry analysis
@@ -70,16 +68,18 @@ export class TradeValidator {
         isSentValid = true;
       }
 
-
       // Determine if the trade is valid
       const isValid = isEntryValid && isVolValid && isSentValid;
 
       // Set warning flag - true if entry has warning or if entry is valid but volume is invalid
-      const warning = entryAnalysis.warning || (isEntryValid && !isVolValid && trade.volume_required) || (isEntryValid && !isSentValid && (trade.sentiment_required || false));
+      const warning =
+        entryAnalysis.warning ||
+        (isEntryValid && !isVolValid && trade.volume_required) ||
+        (isEntryValid && !isSentValid && (trade.sentiment_required || false));
 
       // Generate appropriate message
       let message = '';
-      if ((!isValid) || (warning)) {
+      if (!isValid || warning) {
         if (!isEntryValid) {
           message = `Trade is invalid: ${entryAnalysis.message}`;
         }
@@ -124,16 +124,17 @@ export class TradeValidator {
         sentimentAnalysis,
         message,
         warning,
-        recentCloses
+        recentCloses,
       };
     } catch (error: any) {
       console.error(`Error validating trade for ${trade.symbol}:`, error);
 
       const errorMsg = error?.message || '';
-      const isMarketClosed = errorMsg.includes('is pause currently') ||
-                             errorMsg.includes('109415') ||
-                             errorMsg.includes('paused') ||
-                             errorMsg.includes('closed');
+      const isMarketClosed =
+        errorMsg.includes('is pause currently') ||
+        errorMsg.includes('109415') ||
+        errorMsg.includes('paused') ||
+        errorMsg.includes('closed');
 
       if (isMarketClosed) {
         return {
@@ -143,32 +144,42 @@ export class TradeValidator {
             currentClose: 0,
             hasClosePriceBeforeEntry: false,
             message: `Market is closed/paused: ${errorMsg}`,
-            warning: false
+            warning: false,
           },
           volumeAnalysis: {
             color: VolumeColor.BLUE,
             stdBar: 0,
             mean: 0,
             std: 0,
-            currentVolume: 0
+            currentVolume: 0,
           },
           sentimentAnalysis: {
             sentiment: 'Neutral',
             details: {
               side: trade.type,
-              longShortRatio: { symbol: trade.symbol, currentRatio: null, variation: { vs1h: null, vs4h: null, vs24h: null }, timestamps: { current: null, h1: null, h4: null, d1: null } },
-              openInterest: { symbol: trade.symbol, currentOpenInterestValue: null, variation: { vs1h: null, vs4h: null, vs24h: null }, timestamps: { current: null, h1: null, h4: null, d1: null } },
+              longShortRatio: {
+                symbol: trade.symbol,
+                currentRatio: null,
+                variation: { vs1h: null, vs4h: null, vs24h: null },
+                timestamps: { current: null, h1: null, h4: null, d1: null },
+              },
+              openInterest: {
+                symbol: trade.symbol,
+                currentOpenInterestValue: null,
+                variation: { vs1h: null, vs4h: null, vs24h: null },
+                timestamps: { current: null, h1: null, h4: null, d1: null },
+              },
               analysis: {
                 lsrTrend: { trend: 'Neutral', score: 0 },
                 oiTrend: { trend: 'Neutral', score: 0 },
                 lsrSignal: 'Neutral',
-                oiSignal: 'Neutral'
-              }
-            }
+                oiSignal: 'Neutral',
+              },
+            },
           },
           message: `Trade is invalid: Market is closed/paused (${errorMsg})`,
           warning: false,
-          recentCloses: []
+          recentCloses: [],
         };
       }
 

@@ -31,11 +31,15 @@ export class OrderBlockAndFVGDetector {
     const allZones = [...orderBlocks, ...fvgs];
 
     for (const zone of allZones) {
-      ({ mitigated: zone.mitigated, candle: zone.mitigatedBy } = this.isMitigated(reversedKlines, zone, side));
+      ({ mitigated: zone.mitigated, candle: zone.mitigatedBy } = this.isMitigated(
+        reversedKlines,
+        zone,
+        side
+      ));
     }
 
     // Retornar apenas não mitigados
-    const zonesNotMitigated = allZones.filter(z => !z.mitigated);
+    const zonesNotMitigated = allZones.filter((z) => !z.mitigated);
 
     // Ordenar do mais recente para o mais antigo usando closeTime
     const sortedZones = zonesNotMitigated.sort((a, b) => {
@@ -63,7 +67,7 @@ export class OrderBlockAndFVGDetector {
         candle,
         mitigated: false,
         mitigatedBy: null,
-        details: { high: obHigh, low: obLow, mid: ob50 }
+        details: { high: obHigh, low: obLow, mid: ob50 },
       };
       allOBs.push(ob);
     }
@@ -100,7 +104,7 @@ export class OrderBlockAndFVGDetector {
             candle: curr,
             mitigated: false,
             mitigatedBy: null,
-            details: { high: fvgHigh, low: fvgLow, mid: fvg50 }
+            details: { high: fvgHigh, low: fvgLow, mid: fvg50 },
           });
         }
       } else {
@@ -116,20 +120,19 @@ export class OrderBlockAndFVGDetector {
             candle: curr,
             mitigated: false,
             mitigatedBy: null,
-            details: { high: fvgHigh, low: fvgLow, mid: fvg50 }
+            details: { high: fvgHigh, low: fvgLow, mid: fvg50 },
           });
         }
       }
-
     }
     const filteredFVGs: Zone[] = [];
     allFVGs.sort((a, b) => a.candleIndex - b.candleIndex);
     for (let i = 0; i < allFVGs.length; i++) {
       if (i > 0 && allFVGs[i].candleIndex === allFVGs[i - 1].candleIndex + 1) {
         // Se for sequência, ignore o atual
-        allFVGs[i - 1].details.high = allFVGs[i].details.high
+        allFVGs[i - 1].details.high = allFVGs[i].details.high;
         allFVGs[i - 1].details.mid = (allFVGs[i - 1].details.high + allFVGs[i - 1].details.low) / 2;
-        allFVGs[i - 1].price = allFVGs[i - 1].details.mid
+        allFVGs[i - 1].price = allFVGs[i - 1].details.mid;
         continue;
       }
       filteredFVGs.push(allFVGs[i]);
@@ -137,9 +140,13 @@ export class OrderBlockAndFVGDetector {
     return filteredFVGs;
   }
 
-  private static isMitigated(klineData: KlineData[], zone: Zone, side: TradeType): {
-    mitigated: boolean,
-    candle: KlineData | null
+  private static isMitigated(
+    klineData: KlineData[],
+    zone: Zone,
+    side: TradeType
+  ): {
+    mitigated: boolean;
+    candle: KlineData | null;
   } {
     // Check if after formation, the price touched the OB or 50% of the FVG
     const { candleIndex, price, type, details } = zone;
@@ -158,11 +165,13 @@ export class OrderBlockAndFVGDetector {
     for (let i = candleIndex + 2; i < klineData.length; i++) {
       const candle = klineData[i];
       if (type === 'ORDER_BLOCK') {
-        if ((side === 'LONG') && parseFloat(candle.high) >= details.low) return { mitigated: true, candle };
-        if ((side === 'SHORT') && parseFloat(candle.low) <= details.high) return { mitigated: true, candle };
+        if (side === 'LONG' && parseFloat(candle.high) >= details.low)
+          return { mitigated: true, candle };
+        if (side === 'SHORT' && parseFloat(candle.low) <= details.high)
+          return { mitigated: true, candle };
       } else if (type === 'FVG') {
-        if ((side === 'LONG') && parseFloat(candle.high) >= price) return { mitigated: true, candle };
-        if ((side === 'SHORT') && parseFloat(candle.low) <= price) return { mitigated: true, candle };
+        if (side === 'LONG' && parseFloat(candle.high) >= price) return { mitigated: true, candle };
+        if (side === 'SHORT' && parseFloat(candle.low) <= price) return { mitigated: true, candle };
       }
     }
     return { mitigated: false, candle: null };
@@ -175,4 +184,3 @@ export class OrderBlockAndFVGDetector {
     return parseFloat(candle.close) < parseFloat(candle.open);
   }
 }
-

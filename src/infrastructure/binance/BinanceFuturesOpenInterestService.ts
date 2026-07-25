@@ -37,8 +37,7 @@ export class BinanceFuturesOpenInterestService {
   private db: any;
   private readonly dataType: string = 'open_interest_hist';
 
-  constructor() {
-  }
+  constructor() {}
 
   public static async create(): Promise<BinanceFuturesOpenInterestService> {
     const instance = new BinanceFuturesOpenInterestService();
@@ -46,12 +45,11 @@ export class BinanceFuturesOpenInterestService {
     return instance;
   }
 
-
   private async initializeDatabase() {
     const dbPath = path.join(process.cwd(), 'db/binance_futures_oi_cache.db');
     this.db = await open({
       filename: dbPath,
-      driver: sqlite3.Database
+      driver: sqlite3.Database,
     });
 
     await this.db.exec(`
@@ -90,7 +88,7 @@ export class BinanceFuturesOpenInterestService {
       minutes: cacheMinutes,
       day: now.getDate(),
       month: now.getMonth() + 1, // getMonth() returns 0-11
-      year: now.getFullYear()
+      year: now.getFullYear(),
     };
   }
 
@@ -103,7 +101,7 @@ export class BinanceFuturesOpenInterestService {
         if (error && error.code === 'SQLITE_BUSY') {
           lastError = error;
           if (i < retries - 1) {
-            await new Promise(res => setTimeout(res, delayMs * Math.pow(2, i)));
+            await new Promise((res) => setTimeout(res, delayMs * Math.pow(2, i)));
             continue;
           }
         }
@@ -113,11 +111,23 @@ export class BinanceFuturesOpenInterestService {
     throw lastError;
   }
 
-  private async getCachedData(symbol: string, timeComponents: Omit<CacheKey, 'symbol'>): Promise<OpenInterest[] | null> {
+  private async getCachedData(
+    symbol: string,
+    timeComponents: Omit<CacheKey, 'symbol'>
+  ): Promise<OpenInterest[] | null> {
     const result = await this.withRetry(() =>
       this.db.get(
         'SELECT data FROM futures_open_interest_cache WHERE data_type = ? AND symbol = ? AND interval = ? AND hour = ? AND minutes = ? AND day = ? AND month = ? AND year = ?',
-        [this.dataType, symbol, timeComponents.interval, timeComponents.hour, timeComponents.minutes, timeComponents.day, timeComponents.month, timeComponents.year]
+        [
+          this.dataType,
+          symbol,
+          timeComponents.interval,
+          timeComponents.hour,
+          timeComponents.minutes,
+          timeComponents.day,
+          timeComponents.month,
+          timeComponents.year,
+        ]
       )
     );
 
@@ -127,16 +137,35 @@ export class BinanceFuturesOpenInterestService {
     return null;
   }
 
-  private async cacheData(symbol: string, timeComponents: Omit<CacheKey, 'symbol'>, data: OpenInterest[]): Promise<void> {
+  private async cacheData(
+    symbol: string,
+    timeComponents: Omit<CacheKey, 'symbol'>,
+    data: OpenInterest[]
+  ): Promise<void> {
     await this.withRetry(() =>
       this.db.run(
         'INSERT OR REPLACE INTO futures_open_interest_cache (data_type, symbol, interval, hour, minutes, day, month, year, data, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-        [this.dataType, symbol, timeComponents.interval, timeComponents.hour, timeComponents.minutes, timeComponents.day, timeComponents.month, timeComponents.year, JSON.stringify(data), Date.now()]
+        [
+          this.dataType,
+          symbol,
+          timeComponents.interval,
+          timeComponents.hour,
+          timeComponents.minutes,
+          timeComponents.day,
+          timeComponents.month,
+          timeComponents.year,
+          JSON.stringify(data),
+          Date.now(),
+        ]
       )
     );
   }
 
-  private async fetchData(symbol: string, period: AllowedInterval, limit: number): Promise<OpenInterest[]> {
+  private async fetchData(
+    symbol: string,
+    period: AllowedInterval,
+    limit: number
+  ): Promise<OpenInterest[]> {
     const url = `${this.baseUrl}/futures/data/openInterestHist`;
     const params: OpenInterestParams = { symbol, period, limit };
     try {
@@ -148,7 +177,12 @@ export class BinanceFuturesOpenInterestService {
     }
   }
 
-  public async getOpenInterestHistory(symbol: string, period: AllowedInterval, limit: number = 30, noCache: boolean = false): Promise<OpenInterest[]> {
+  public async getOpenInterestHistory(
+    symbol: string,
+    period: AllowedInterval,
+    limit: number = 30,
+    noCache: boolean = false
+  ): Promise<OpenInterest[]> {
     const timeComponents = this.getCurrentTimeComponents(period);
 
     if (!noCache) {
