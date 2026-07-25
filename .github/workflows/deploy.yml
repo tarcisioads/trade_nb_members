@@ -52,5 +52,7 @@ jobs:
           script: |
             cd ~/trade_nb_members
             git pull origin main
+            # Prune unused Docker build cache and dangling images to avoid running out of disk space
+            docker system prune -f
             # O deploy no servidor continua usando docker-compose, que já lida com o build interno
             docker-compose up -d --build
