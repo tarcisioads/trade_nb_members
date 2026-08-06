@@ -52,7 +52,14 @@ jobs:
           script: |
             cd ~/trade_nb_members
             git pull origin main
-            # Prune unused Docker build cache and dangling images to avoid running out of disk space
-            docker system prune -f
-            # O deploy no servidor continua usando docker-compose, que já lida com o build interno
-            docker-compose up -d --build
+            # Enable BuildKit for fast, cached parallel Docker builds
+            export DOCKER_BUILDKIT=1
+            export COMPOSE_DOCKER_CLI_BUILD=1
+            # Deploy using modern docker compose CLI (V2) or fallback to docker-compose
+            if docker compose version >/dev/null 2>&1; then
+              docker compose up -d --build
+            else
+              docker-compose up -d --build
+            fi
+            # Prune dangling images AFTER build to keep build cache intact
+            docker image prune -f

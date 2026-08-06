@@ -7,31 +7,32 @@ RUN apt-get update && apt-get install -y \
     sqlite3 \
     libsqlite3-dev \
     && rm -rf /var/lib/apt/lists/*
+RUN corepack enable
 WORKDIR /app
-COPY package*.json ./
+COPY package.json pnpm-lock.yaml ./
 
 # --- Dependencies ---
 FROM base AS dependencies
-RUN npm install
+RUN pnpm install --frozen-lockfile
 
 # --- Build Backend ---
 FROM base AS backend-builder
 COPY --from=dependencies /app/node_modules ./node_modules
 COPY . .
-RUN npm run build
+RUN pnpm run build
 
 # --- Build Frontend ---
 FROM base AS frontend-builder
 COPY --from=dependencies /app/node_modules ./node_modules
 COPY . .
-RUN npm run frontend:build
+RUN pnpm run frontend:build
 
 # --- Backend Runtime ---
 FROM base AS backend-runtime
 WORKDIR /app
-COPY package*.json ./
+COPY package.json pnpm-lock.yaml ./
 # Install only production dependencies
-RUN npm install --omit=dev --ignore-scripts
+RUN pnpm install --prod --frozen-lockfile
 
 COPY --from=backend-builder /app/dist ./dist
 # Database and logs folders will be mounted as volumes
