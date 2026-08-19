@@ -2,7 +2,11 @@ node_modules
 dist
 dist-fe
 db/*.db
+db/*.db-journal
+db/*.db-wal
+coverage
 logs/*.log
 *.log
 .git
 .env
+.env.*

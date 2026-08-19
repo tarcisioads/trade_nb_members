@@ -45,12 +45,14 @@ export class BingXApiClient {
 
     // Validate credentials if auth is enabled
     if (this.useAuth && (!this.apiKey || !this.apiSecret)) {
-      logger.error('Missing API credentials', {
-        useAuth: this.useAuth,
-        hasApiKey: !!this.apiKey,
-        hasApiSecret: !!this.apiSecret,
-      });
-      throw new Error('BINGX_API_KEY and BINGX_API_SECRET must be set in environment variables');
+      logger.warn(
+        'BingXApiClient initialized without full API credentials. Authenticated requests will fail until BINGX_API_KEY and BINGX_API_SECRET are set in environment variables.',
+        {
+          useAuth: this.useAuth,
+          hasApiKey: !!this.apiKey,
+          hasApiSecret: !!this.apiSecret,
+        }
+      );
     }
 
     logger.info('BingXApiClient initialized', {
@@ -156,6 +158,12 @@ export class BingXApiClient {
       await new Promise<void>((resolve) => BingXApiClient.REQUEST_QUEUE.push(resolve));
     }
     BingXApiClient.activeRequests++;
+
+    if (this.useAuth && (!this.apiKey || !this.apiSecret)) {
+      throw new Error(
+        'BINGX_API_KEY and BINGX_API_SECRET must be set in environment variables to execute BingX authenticated requests'
+      );
+    }
 
     try {
       for (let attempt = 1; attempt <= maxRetries; attempt++) {

@@ -1,6 +1,7 @@
 import sqlite3 from 'sqlite3';
 import { open } from 'sqlite';
 import * as path from 'path';
+import * as fs from 'fs';
 import {
   Trade,
   TradeRecord,
@@ -18,6 +19,7 @@ import { ITradeDatabase } from '../../core/interfaces/ITradeDatabase';
 export class TradeDatabase implements ITradeDatabase {
   private db: any;
   private readonly dbPath: string;
+  private static initLocks: Map<string, Promise<any>> = new Map();
 
   constructor(customDbPath?: string) {
     this.dbPath = customDbPath || path.join(process.cwd(), 'db/trades.db');
@@ -25,12 +27,49 @@ export class TradeDatabase implements ITradeDatabase {
   }
 
   private async initializeDatabase() {
-    this.db = await open({
-      filename: this.dbPath,
-      driver: sqlite3.Database,
-    });
+    if (this.dbPath === ':memory:') {
+      this.db = await open({
+        filename: ':memory:',
+        driver: sqlite3.Database,
+      });
+      await this.runSchema(this.db);
+      return;
+    }
 
-    await this.db.exec(`
+    if (TradeDatabase.initLocks.has(this.dbPath)) {
+      this.db = await TradeDatabase.initLocks.get(this.dbPath);
+      return;
+    }
+
+    const initPromise = (async () => {
+      const dbDir = path.dirname(this.dbPath);
+      if (!fs.existsSync(dbDir)) {
+        fs.mkdirSync(dbDir, { recursive: true });
+      }
+
+      const db = await open({
+        filename: this.dbPath,
+        driver: sqlite3.Database,
+      });
+
+      await db.exec('PRAGMA journal_mode = WAL;');
+      await db.exec('PRAGMA busy_timeout = 10000;');
+
+      await this.runSchema(db);
+      return db;
+    })();
+
+    TradeDatabase.initLocks.set(this.dbPath, initPromise);
+    try {
+      this.db = await initPromise;
+    } catch (err) {
+      TradeDatabase.initLocks.delete(this.dbPath);
+      throw err;
+    }
+  }
+
+  private async runSchema(db: any) {
+    await db.exec(`
             CREATE TABLE IF NOT EXISTS trades (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 symbol TEXT NOT NULL,
@@ -74,10 +113,10 @@ export class TradeDatabase implements ITradeDatabase {
 
     // Adiciona a coluna positionId se não existir
     try {
-      const columns = await this.db.all('PRAGMA table_info(trades)');
+      const columns = await db.all('PRAGMA table_info(trades)');
       const hasPositionId = columns.some((col: any) => col.name === 'positionId');
       if (!hasPositionId) {
-        await this.db.exec('ALTER TABLE trades ADD COLUMN positionId TEXT');
+        await db.exec('ALTER TABLE trades ADD COLUMN positionId TEXT');
       }
     } catch (error) {
       // Se der erro (ex: coluna já existe), ignora
@@ -85,12 +124,12 @@ export class TradeDatabase implements ITradeDatabase {
 
     // Add sentiment columns if they don't exist
     try {
-      const columns = await this.db.all('PRAGMA table_info(trades)');
+      const columns = await db.all('PRAGMA table_info(trades)');
       const sentimentColumns = ['sentiment', 'lsrtrend', 'oitrend', 'lsrsignal', 'oisignal'];
       for (const colName of sentimentColumns) {
         const hasColumn = columns.some((col: any) => col.name === colName);
         if (!hasColumn) {
-          await this.db.exec(`ALTER TABLE trades ADD COLUMN ${colName} TEXT`);
+          await db.exec(`ALTER TABLE trades ADD COLUMN ${colName} TEXT`);
         }
       }
     } catch (error) {
@@ -99,27 +138,27 @@ export class TradeDatabase implements ITradeDatabase {
 
     // Adiciona a coluna sentiment_adds_margin se não existir
     try {
-      const columns = await this.db.all('PRAGMA table_info(trades)');
+      const columns = await db.all('PRAGMA table_info(trades)');
       const has = columns.some((col: any) => col.name === 'sentiment_adds_margin');
       if (!has) {
-        await this.db.exec('ALTER TABLE trades ADD COLUMN sentiment_adds_margin BOOLEAN DEFAULT 0');
+        await db.exec('ALTER TABLE trades ADD COLUMN sentiment_adds_margin BOOLEAN DEFAULT 0');
       }
     } catch (error) {
       // Se der erro (ex: coluna já existe), ignora
     }
 
-    // Adiciona a coluna sentiment_adds_margin se não existir
+    // Adiciona a coluna volume se não existir
     try {
-      const columns = await this.db.all('PRAGMA table_info(trades)');
+      const columns = await db.all('PRAGMA table_info(trades)');
       const has = columns.some((col: any) => col.name === 'volume');
       if (!has) {
-        await this.db.exec('ALTER TABLE trades ADD COLUMN volume TEXT');
+        await db.exec('ALTER TABLE trades ADD COLUMN volume TEXT');
       }
     } catch (error) {
       // Se der erro (ex: coluna já existe), ignora
     }
 
-    await this.db.exec(`
+    await db.exec(`
             CREATE TABLE IF NOT EXISTS order_details (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 tradeId INTEGER NOT NULL,
@@ -141,7 +180,7 @@ export class TradeDatabase implements ITradeDatabase {
             )
         `);
 
-    await this.db.exec(`
+    await db.exec(`
             CREATE TABLE IF NOT EXISTS trade_logs (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 tradeId INTEGER NOT NULL,
@@ -159,7 +198,7 @@ export class TradeDatabase implements ITradeDatabase {
             )
         `);
 
-    await this.db.exec(`
+    await db.exec(`
             CREATE TABLE IF NOT EXISTS trade_notifications (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 symbol TEXT NOT NULL,
@@ -185,7 +224,7 @@ export class TradeDatabase implements ITradeDatabase {
             )
         `);
 
-    await this.db.exec(`
+    await db.exec(`
             CREATE TABLE IF NOT EXISTS monitored_symbols (
                 symbol TEXT PRIMARY KEY,
                 status TEXT NOT NULL,

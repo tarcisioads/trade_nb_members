@@ -16,13 +16,22 @@ export class FileTradeRepository implements ITradeRepository {
       return JSON.parse(data);
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-        return [];
+        const examplePath = `${this.filePath}.example`;
+        try {
+          const exampleData = await fs.readFile(examplePath, 'utf-8');
+          await fs.mkdir(path.dirname(this.filePath), { recursive: true });
+          await fs.writeFile(this.filePath, exampleData, 'utf-8');
+          return JSON.parse(exampleData);
+        } catch {
+          return [];
+        }
       }
       throw error;
     }
   }
 
   async writeTrades(trades: Trade[]): Promise<void> {
+    await fs.mkdir(path.dirname(this.filePath), { recursive: true });
     const tempPath = `${this.filePath}.${Date.now()}-${Math.random().toString(36).substring(7)}.tmp`;
     try {
       await fs.writeFile(tempPath, JSON.stringify(trades, null, 2));

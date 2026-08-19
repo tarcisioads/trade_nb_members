@@ -17,6 +17,26 @@
         </button>
       </div>
     </div>
+
+    <!-- API Connection Error Alert -->
+    <div
+      v-if="apiError"
+      class="mb-6 glass-card p-4 border-l-4 border-red-500 flex items-center justify-between"
+    >
+      <div class="flex items-center gap-3">
+        <i class="bi bi-exclamation-triangle-fill text-red-400 text-xl"></i>
+        <div>
+          <h6 class="font-bold text-white">Falha na conexão com a API</h6>
+          <p class="text-sm text-gray-300">{{ apiError }}</p>
+        </div>
+      </div>
+      <button
+        class="px-3 py-1 bg-red-600/30 hover:bg-red-600/50 text-red-200 text-sm rounded transition-colors"
+        @click="loadTrades"
+      >
+        Tentar Novamente
+      </button>
+    </div>
     <div
       class="sticky top-0 z-40 glass-card p-3 mb-6 flex flex-col lg:flex-row gap-4 justify-between items-center backdrop-blur-md"
     >
@@ -285,6 +305,7 @@ const toast = reactive({
 });
 
 const trades = ref<Trade[]>([]);
+const apiError = ref<string | null>(null);
 
 const uniquePairs = computed(() => {
   const pairs = new Set(trades.value.map((trade) => trade.symbol));
@@ -314,14 +335,23 @@ const getFormattedTPs = (trade: Trade) => {
 // Load trades from API
 const loadTrades = async () => {
   try {
+    apiError.value = null;
     const response = await fetch('/api/trades');
+    if (!response.ok) {
+      throw new Error(`Erro na API: ${response.status} ${response.statusText}`);
+    }
     const loadedTrades = await response.json();
+    if (!Array.isArray(loadedTrades)) {
+      throw new Error(loadedTrades?.error || 'Formato de resposta inválido retornado pela API');
+    }
     trades.value = loadedTrades.map((trade: Trade) => ({
       ...trade,
       isLoading: false,
       isLoadingTP1: false,
     }));
   } catch (error) {
+    const message = error instanceof Error ? error.message : 'Falha ao carregar trades da API';
+    apiError.value = message;
     console.error('Failed to load trades:', error);
   }
 };
